@@ -1,0 +1,134 @@
+{% extends 'marketplace/base.html' %}
+{% block content %}
+<div class="container" style="padding: 24px 0;">
+    <div style="display:flex; flex-wrap:wrap; gap:24px;">
+        <section style="flex:1 1 460px; min-width:320px;">
+            <div class="fintech-card" style="padding:28px; background: rgba(255,255,255,0.98); border:1px solid rgba(37,99,235,0.16);">
+                <h1 style="margin-top:0; font-size:2rem; color:#0f172a;">💰 Ti Kanè Digital</h1>
+                <p style="color:#475569; font-size:1rem; line-height:1.7;">Demandez l’activation de votre compte Ti Kanè Digital. Soumettez les documents d’identité, acceptez la clause de responsabilité et suivez l’état de votre accès.</p>
+                {% if tikane_request %}
+                <div style="margin-top:18px; padding:18px; border-radius:20px; background: #eff6ff; border:1px solid rgba(59,130,246,0.18);">
+                    <h2 style="margin:0 0 8px 0;">Statut de la demande</h2>
+                    <p style="margin:0; font-weight:700;">{{ tikane_request.get_status_display }}</p>
+                    <p style="margin:10px 0 0 0;">Demande soumise le {{ tikane_request.requested_at|date:'d/m/Y H:i' }}.</p>
+                    {% if tikane_request.reviewed_at %}
+                        {% if tikane_request.reviewed_by %}
+                        <p style="margin:10px 0 0 0;">Dernière mise à jour : {{ tikane_request.reviewed_at|date:'d/m/Y H:i' }} par {{ tikane_request.reviewed_by.username }}.</p>
+                        {% else %}
+                        <p style="margin:10px 0 0 0;">Dernière mise à jour : {{ tikane_request.reviewed_at|date:'d/m/Y H:i' }} par Administrateur.</p>
+                        {% endif %}
+                    {% endif %}
+                    {% if tikane_request.admin_notes %}
+                    <p style="margin:10px 0 0 0; color:#0f172a;"><strong>Notes :</strong> {{ tikane_request.admin_notes }}</p>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                {% if tikane_account %}
+                <div style="margin-top:18px; padding:18px; border-radius:20px; background: #eef6ed; border:1px solid rgba(34,197,94,0.18);">
+                    <h2 style="margin:0 0 8px 0;">Compte Ti Kanè actif</h2>
+                    <p style="margin:0; font-weight:700;">{{ tikane_account.account_number }}</p>
+                    <p style="margin:10px 0 0 0;">Plan actif : 
+                        {% if tikane_account.plan %}
+                            {{ tikane_account.plan.name }}
+                        {% else %}
+                            Non défini
+                        {% endif %}
+                    </p>
+                    <p style="margin:10px 0 0 0;">Solde actuel : {{ tikane_account.balance|default:'0.00' }}</p>
+                </div>
+                <div style="margin-top:18px; padding:18px; border-radius:20px; background: #ffffff; border:1px solid rgba(148,163,184,0.18);">
+                    <h2 style="margin:0 0 8px 0;">Suivi des paiements journaliers</h2>
+                    {% if daily_payments %}
+                    <div style="overflow-x:auto;">
+                        <table style="width:100%; border-collapse:collapse; margin-top:12px; font-size:0.95rem;">
+                            <thead>
+                                <tr>
+                                    <th style="padding:10px; border-bottom:1px solid rgba(148,163,184,0.3); text-align:left;">Jour</th>
+                                    <th style="padding:10px; border-bottom:1px solid rgba(148,163,184,0.3); text-align:left;">Statut</th>
+                                    <th style="padding:10px; border-bottom:1px solid rgba(148,163,184,0.3); text-align:left;">Date paiement</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payment in daily_payments %}
+                                <tr style="border-bottom:1px solid rgba(148,163,184,0.12);">
+                                    <td style="padding:12px;">Jour {{ payment.day }}</td>
+                                    <td style="padding:12px;">{% if payment.paid %}Payer{% else %}Non payer{% endif %}</td>
+                                    <td style="padding:12px;">{% if payment.paid_at %}{{ payment.paid_at|date:'d/m/Y H:i' }}{% else %}-{% endif %}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p style="margin:0; color:#475569;">Aucun paiement journalier enregistré pour le moment. Dès qu'un dépôt Ti Kanè est effectué, le jour correspondant devient « Payer ».</p>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <div style="margin-top:24px; padding:24px; border-radius:24px; background: rgba(15,23,42,0.02); border:1px solid rgba(148,163,184,0.16);">
+                    <h2 style="margin-top:0;">Demande d’activation</h2>
+                    {% if can_submit_request %}
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div style="display:grid; gap:16px;">
+                            {{ form.non_field_errors }}
+                            <label style="display:block;">Nom complet</label>
+                            {{ form.full_name }}
+                            <label style="display:block;">Email</label>
+                            {{ form.email }}
+                            <label style="display:block;">Téléphone</label>
+                            {{ form.phone }}
+                            <label style="display:block;">Plan d’épargne</label>
+                            {{ form.plan }}
+                            <label style="display:block;">Carte d’identité</label>
+                            {{ form.identity_document }}
+                            <label style="display:block;">Passeport</label>
+                            {{ form.passport_document }}
+                            <label style="display:block;">Permis de conduire</label>
+                            {{ form.driver_license_document }}
+                            <label style="display:block;">Selfie en direct via caméra</label>
+                            {{ form.selfie }}
+                            <label style="display:block;">Clause de responsabilité</label>
+                            <div style="background:#f8fafc; border:1px solid rgba(148,163,184,0.32); border-radius:14px; padding:16px;">
+                                <p style="margin:0 0 10px 0; font-size:0.95rem; color:#334155;">Le système Ti Kanè SDI Marché Mondial Universal n’est pas responsable des pertes financières liées aux Ti Kanè privés gérés par des agents ou des tiers. Chaque propriétaire de Ti Kanè est entièrement responsable de la gestion de ses clients et de ses opérations.</p>
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    {{ form.acceptance_clause }}
+                                    <span>J’accepte la clause de responsabilité</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="fintech-btn btn-primary" style="margin-top:20px; width:100%;">Soumettre la demande</button>
+                    </form>
+                    {% else %}
+                    <div style="padding:20px; border-radius:18px; background:#eff6ff; border:1px solid rgba(59,130,246,0.18);">
+                        <p style="margin:0; font-weight:600; color:#0f172a;">Votre compte Ti Kanè est déjà actif ou en cours d’approbation.</p>
+                        <p style="margin:10px 0 0 0; color:#475569;">Aucune nouvelle demande n’est nécessaire pour le moment.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+
+        <aside style="flex:0 0 360px; min-width:300px;">
+            <div class="fintech-card" style="padding:24px; background: rgba(15,23,42,0.02); border:1px solid rgba(59,130,246,0.16);">
+                <h2 style="margin-top:0;">Informations Ti Kanè</h2>
+                <ul style="list-style:none; padding:0; margin:0; display:grid; gap:12px;">
+                    <li style="background:white; padding:14px; border-radius:14px; border:1px solid rgba(148,163,184,0.16);">
+                        <strong>Statuts possibles</strong>
+                        <p style="margin:8px 0 0 0;">En attente d’approbation, Approuvé, Refusé, Suspendu.</p>
+                    </li>
+                    <li style="background:white; padding:14px; border-radius:14px; border:1px solid rgba(148,163,184,0.16);">
+                        <strong>Dépôts</strong>
+                        <p style="margin:8px 0 0 0;">Les dépôts apparaissent dans le portefeuille Ti Kanè et sont bloqués pendant la durée du plan.</p>
+                    </li>
+                    <li style="background:white; padding:14px; border-radius:14px; border:1px solid rgba(148,163,184,0.16);">
+                        <strong>Carnet digital</strong>
+                        <p style="margin:8px 0 0 0;">Le suivi des journées payées sera géré automatiquement après activation du compte.</p>
+                    </li>
+                </ul>
+            </div>
+        </aside>
+    </div>
+</div>
+{% endblock %}

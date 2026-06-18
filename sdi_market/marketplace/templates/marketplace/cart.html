@@ -1,0 +1,64 @@
+{% extends 'marketplace/base.html' %}
+{% block content %}
+<div class="card">
+    <h1>🛒 Mon Panier</h1>
+
+    {% if cart_items %}
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h2>Articles dans votre panier</h2>
+                <a href="{% url 'clear_cart' %}" class="button alt" onclick="return confirm('Êtes-vous sûr de vouloir vider votre panier ?')">Vider le panier</a>
+            </div>
+
+            {% for item in cart_items %}
+            <div class="card" style="border-left: 4px solid #1a73e8; margin-bottom: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <h3>{{ item.product.name }}</h3>
+                        <p><strong>Prix HT :</strong> {{ current_currency|currency_symbol }}{{ item.product|format_product_price:current_currency }}</p>
+                        <p><strong>Boutique :</strong> {{ item.product.shop.name }}</p>
+                        <p><strong>Stock disponible :</strong> {{ item.product.quantity }}</p>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <form method="post" action="{% url 'update_cart_item' item.id %}" style="display: flex; align-items: center; gap: 8px;">
+                            {% csrf_token %}
+                            <label for="quantity_{{ item.id }}">Quantité :</label>
+                            <input type="number" id="quantity_{{ item.id }}" name="quantity" value="{{ item.quantity }}"
+                                   min="1" max="{{ item.product.quantity }}" style="width: 60px; padding: 4px;">
+                            <button type="submit" class="button" style="padding: 6px 12px;">Mettre à jour</button>
+                        </form>
+
+                        <a href="{% url 'remove_from_cart' item.id %}" class="button alt"
+                           onclick="return confirm('Retirer cet article du panier ?')">Retirer</a>
+                    </div>
+                </div>
+
+                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e0e0e0;">
+                    <strong>Sous-total : ${{ item.get_total_price }}</strong>
+                </div>
+            </div>
+            {% endfor %}
+
+            <div class="card" style="background: #f0f7ff; border: 2px solid #1a73e8;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h3>Total du panier : ${{ cart.get_total_price }}</h3>
+                        <p>{{ cart.get_total_items }} article(s)</p>
+                        <p style="color: #28a745; font-weight: bold;">💰 Cashback gagné : ${{ cashback }} ({{ total_quantity }} x 0.1)</p>
+                    </div>
+                    <a href="{% url 'checkout' %}" class="button" style="font-size: 18px; padding: 12px 24px;">
+                        🛍️ Procéder au paiement
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="card" style="text-align: center; background: #f9f9f9;">
+            <h2>Votre panier est vide</h2>
+            <p>Parcourez notre catalogue pour ajouter des produits à votre panier.</p>
+            <a href="{% url 'home' %}" class="button">Voir les produits</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

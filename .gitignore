@@ -1,0 +1,87 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+
+# Virtual environment
+.venv/
+env/
+ENV/
+venv/
+.env
+.env.*.local
+
+# Django
+*.log
+*.pot
+*.pyc
+local_settings.py
+db.sqlite3
+*.sqlite3
+media/
+staticfiles/
+static/
+/sdi_market/staticfiles/
+/sdi_market/media/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# macOS
+.DS_Store
+*.swp
+*.swo
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# Logs and runtime
+debug.log
+*.log
+*.pot
+
+# System files
+Thumbs.db
+.DS_Store
+*.tmp
+
+# Android / APK
+*.apk
+android_app/tmp_uploads/
+android_app/build_env/
+
+# Test files et temporaires
+tmp_*.py
+test_*.py
+temp_*.py
+*_test.py
+test_output*.txt
+*.json
+*.csv
+
+# Deployment files
+deploy_*.log
+backup_*.log
+backups/
+logs/
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# IDE
+.idea/
+*.swp
+*~
+.vscode/
+.DS_Store
+
+# Duplicates à nettoyer
+marketplace\ -\ Copy/
+sdi_market\ -\ Copy/
+settings\ -\ Copy.py
+models\ -\ Copy.py

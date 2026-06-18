@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Studios de Beauté{% endblock %}
+
+{% block content %}
+<div class="beauty-hero" style="padding:24px; text-align:center;">
+  <h1 style="color:#e91e63;">💄 Bienvenue dans les Studios de Beauté</h1>
+  <p>Découvrez les meilleurs studios de beauté, salons esthétiques et spécialistes près de chez vous.</p>
+</div>
+
+<div class="studio-grid" style="display:grid; grid-template-columns: repeat(auto-fit,minmax(260px,1fr)); gap:16px; padding:24px;">
+  <!-- Special create card -->
+  <div class="studio-card create-card" style="border-radius:12px; padding:18px; box-shadow:0 6px 18px rgba(10,10,10,0.08); background:#fff; display:flex; flex-direction:column; justify-content:space-between;">
+    <div>
+      <h3>➕ Créer ton Studio de Beauté</h3>
+      <p>Tu possèdes un salon de beauté ou tu offres des services esthétiques ? Crée gratuitement ta page professionnelle.</p>
+    </div>
+    <div style="text-align:right;">
+      <a class="btn btn-primary" href="{% url 'beauty:create_studio' %}">🚀 Créer mon Studio</a>
+    </div>
+  </div>
+
+  {% for studio in studios %}
+  <div class="studio-card" style="border-radius:12px; padding:16px; background:#fff; box-shadow:0 6px 18px rgba(10,10,10,0.06);">
+    <div style="height:140px; overflow:hidden; border-radius:8px; background:#f5f5f5; display:flex; align-items:center; justify-content:center;">
+      {% if studio.cover %}
+      <img src="{{ studio.cover.url }}" alt="{{ studio.name }} photo" style="width:100%; height:100%; object-fit:cover;"/>
+      {% else %}
+      <img src="/static/temp_test_cover.png" alt="placeholder" style="width:100%; height:100%; object-fit:cover;"/>
+      {% endif %}
+    </div>
+    <div style="display:flex; gap:12px; margin-top:12px; align-items:center;">
+      {% if studio.logo %}
+      <img src="{{ studio.logo.url }}" alt="logo" style="width:56px; height:56px; object-fit:cover; border-radius:8px;"/>
+      {% endif %}
+      <div style="flex:1;">
+        <h4 style="margin:0">{{ studio.name }}</h4>
+        <p style="margin:4px 0; color:#666">{{ studio.short_desc }}</p>
+        <p style="margin:0; color:#888; font-size:0.9em">📍 {{ studio.city }} &nbsp; • &nbsp; 📞 {{ studio.phone }}</p>
+      </div>
+    </div>
+    <div style="margin-top:12px; text-align:right;">
+      <a class="btn btn-outline-primary" href="{% url 'beauty:studio_detail' studio.slug %}">👁️ Voir le profil</a>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% endblock %}

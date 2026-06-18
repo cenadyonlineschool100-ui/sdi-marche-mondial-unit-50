@@ -1,0 +1,24 @@
+[Unit]
+Description=SDI Store Django Application
+After=network.target
+
+[Service]
+Type=notify
+User=www-data
+Group=www-data
+WorkingDirectory=/home/user/sdi-store/sdi_market
+EnvironmentFile=/home/user/sdi-store/.env
+ExecStart=/home/user/sdi-store/venv/bin/gunicorn \
+    --workers 4 \
+    --worker-class uvicorn.workers.UvicornWorker \
+    --bind 127.0.0.1:8000 \
+    --timeout 120 \
+    --access-logfile /var/log/sdi-store/access.log \
+    --error-logfile /var/log/sdi-store/error.log \
+    sdi_market.asgi:application
+
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

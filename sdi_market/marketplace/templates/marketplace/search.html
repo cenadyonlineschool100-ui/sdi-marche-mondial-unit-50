@@ -1,0 +1,175 @@
+{% extends 'marketplace/base.html' %}
+{% load image_tags %}
+{% block content %}
+<div class="card">
+    <div class="header-row">
+        <div>
+            <h2>Recherche avancée</h2>
+            <p>Rechercher des produits par nom, description, catégorie et plus.</p>
+        </div>
+        <div>
+            <form id="search-form" action="{% url 'search' %}" method="get" style="display:inline-flex; gap:8px; flex-wrap: wrap; align-items: center;">
+                <input id="search-query" name="q" list="search-suggestions" type="text" placeholder="Rechercher un produit" value="{{ query }}" style="width: 320px;" />
+                <button type="submit" class="button">Rechercher</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div style="margin: 10px 0; text-align: center;">
+    <button type="button" id="toggleFiltersBtn" style="background: none; border: none; color: #2563eb; cursor: pointer; font-size: 0.9rem; text-decoration: underline; padding: 4px 0;" onclick="toggleFilters()">
+        🔽 Filtres
+    </button>
+</div>
+
+<div id="filtersCard" class="card" style="display: none;">
+    <form action="{% url 'search' %}" method="get">
+        <div class="grid grid-3" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+            <div class="form-group">
+                <label for="category">Catégorie</label>
+                <select id="category" name="category">
+                    <option value="">Toutes</option>
+                    {% for category in categories %}
+                        <option value="{{ category.slug }}" {% if category.slug == selected_category %}selected{% endif %}>{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="seller">Vendeur</label>
+                <input id="seller" name="seller" type="text" placeholder="Nom du vendeur" value="{{ seller }}" />
+            </div>
+            <div class="form-group">
+                <label for="min_price">Prix min</label>
+                <input id="min_price" name="min_price" type="number" step="0.01" placeholder="0.00" value="{{ min_price }}" />
+            </div>
+            <div class="form-group">
+                <label for="max_price">Prix max</label>
+                <input id="max_price" name="max_price" type="number" step="0.01" placeholder="0.00" value="{{ max_price }}" />
+            </div>
+            <div class="form-group">
+                <label for="rating">Note minimale</label>
+                <select id="rating" name="rating">
+                    <option value="">Toutes</option>
+                    {% for value in "12345"|make_list %}
+                        <option value="{{ value }}" {% if selected_rating == value %}selected{% endif %}>{{ value }} étoiles et plus</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="stock">Stock</label>
+                <select id="stock" name="stock">
+                    <option value="">Tous</option>
+                    <option value="in_stock" {% if selected_stock == 'in_stock' %}selected{% endif %}>En stock</option>
+                    <option value="out_of_stock" {% if selected_stock == 'out_of_stock' %}selected{% endif %}>Rupture</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="sort">Trier par</label>
+                <select id="sort" name="sort">
+                    <option value="">Pertinence</option>
+                    <option value="price_asc" {% if selected_sort == 'price_asc' %}selected{% endif %}>Prix croissant</option>
+                    <option value="price_desc" {% if selected_sort == 'price_desc' %}selected{% endif %}>Prix décroissant</option>
+                    <option value="rating_desc" {% if selected_sort == 'rating_desc' %}selected{% endif %}>Meilleure note</option>
+                    <option value="popularity" {% if selected_sort == 'popularity' %}selected{% endif %}>Popularité</option>
+                </select>
+            </div>
+        </div>
+        <input name="q" type="hidden" value="{{ query }}" />
+        <div style="margin-top: 12px;">
+            <button type="submit" class="button">Appliquer</button>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <h3>Résultats de recherche</h3>
+    <p>Recherche : <strong>{{ query }}</strong></p>
+</div>
+
+<datalist id="search-suggestions"></datalist>
+
+<div class="grid grid-3">
+    {% for product in products %}
+    <div class="card product-card">
+        {% with primary_image=product.get_primary_image %}
+            {% if primary_image %}
+                <div class="product-image">
+                    {% responsive_image primary_image product.name "" %}
+                </div>
+            {% else %}
+                <div class="product-image-fallback">Image indisponible</div>
+            {% endif %}
+        {% endwith %}
+        <div class="product-info">
+            <h3 class="product-title">{{ product.name }}</h3>
+            {% if product.description %}
+                <p>{{ product.description|truncatechars:120 }}</p>
+            {% endif %}
+            <p class="product-price">Prix HT : {{ current_currency|currency_symbol }}{{ product|format_product_price:current_currency }}</p>
+            <p class="product-shop">Boutique : {{ product.shop.name }}</p>
+            {% if product.average_rating %}
+                <p>Note : <strong>{{ product.average_rating|floatformat:1 }}</strong> / 5 ({{ product.reviews_count }} avis)</p>
+            {% endif %}
+            {% if product.quantity > 0 %}
+                <p class="stock-status" style="color:#2e7d32;"><strong>En stock</strong></p>
+            {% else %}
+                <p class="stock-status" style="color:#c62828;"><strong>Rupture</strong></p>
+            {% endif %}
+            <div class="product-actions">
+                <a href="{% url 'product_detail' product.id %}" class="button">Voir détails</a>
+                <a href="{% url 'order_product' product.id %}" class="button alt">Acheter</a>
+                {% if request.user.is_authenticated %}
+                    <a href="{% url 'chat' %}?product_to_share={{ product.id }}" class="button alt">Partager</a>
+                {% else %}
+                    <a href="{% url 'login' %}" class="button alt">Connexion</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="card">Aucun produit trouvé.</div>
+    {% endfor %}
+</div>
+
+<script>
+function toggleFilters() {
+    const filtersCard = document.getElementById('filtersCard');
+    const btn = document.getElementById('toggleFiltersBtn');
+    
+    if (filtersCard.style.display === 'none') {
+        filtersCard.style.display = 'block';
+        btn.textContent = '🔼 Filtres';
+    } else {
+        filtersCard.style.display = 'none';
+        btn.textContent = '🔽 Filtres';
+    }
+}
+
+const searchInput = document.getElementById('search-query');
+const suggestions = document.getElementById('search-suggestions');
+let autocompleteTimeout;
+
+if (searchInput) {
+    searchInput.addEventListener('input', () => {
+        clearTimeout(autocompleteTimeout);
+        const value = searchInput.value.trim();
+        if (!value) {
+            suggestions.innerHTML = '';
+            return;
+        }
+        autocompleteTimeout = setTimeout(() => {
+            fetch(`{% url 'autocomplete_products' %}?q=${encodeURIComponent(value)}`)
+                .then(response => response.json())
+                .then(data => {
+                    suggestions.innerHTML = '';
+                    data.results.forEach(item => {
+                        const option = document.createElement('option');
+                        option.value = item.name;
+                        suggestions.appendChild(option);
+                    });
+                });
+        }, 250);
+    });
+}
+</script>
+{% endblock %}

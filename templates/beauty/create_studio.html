@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block title %}Créer mon Studio{% endblock %}
+
+{% block content %}
+<div style="padding:24px; max-width:720px; margin:0 auto;">
+  <h2>Créer ton Studio de Beauté</h2>
+  <p>Formulaire simple — l'implémentation complète sera ajoutée.</p>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <p>Nom: <input type="text" name="name" class="form-control"/></p>
+    <p>Description: <textarea name="full_desc" class="form-control"></textarea></p>
+    <p>Téléphone: <input type="text" name="phone" class="form-control"/></p>
+    <p><button class="btn btn-primary" type="submit">Publier</button></p>
+  </form>
+</div>
+
+{% endblock %}
