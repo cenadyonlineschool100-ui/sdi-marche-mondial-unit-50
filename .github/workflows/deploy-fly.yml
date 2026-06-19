@@ -1,0 +1,32 @@
+name: Deploy to Fly
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install flyctl
+        run: |
+          curl -L https://fly.io/install.sh | sh
+          echo "## Add flyctl to PATH"
+          echo "export PATH=$HOME/.fly/bin:$PATH" >> $GITHUB_ENV
+
+      - name: Authenticate to Fly
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          export PATH="$HOME/.fly/bin:$PATH"
+          flyctl auth login --access-token "$FLY_API_TOKEN"
+
+      - name: Deploy to Fly
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          export PATH="$HOME/.fly/bin:$PATH"
+          flyctl deploy --config fly.toml --remote-only
