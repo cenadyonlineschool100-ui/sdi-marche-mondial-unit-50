@@ -3,10 +3,6 @@
 app = "sdi-store"
 primary_region = "ord"
 
-[build]
-  builder = "paketobuildpacks"
-  buildpacks = ["gcr.io/buildpacks/python"]
-
 [env]
   DJANGO_SETTINGS_MODULE = "sdi_market.settings"
   PYTHONUNBUFFERED = "1"

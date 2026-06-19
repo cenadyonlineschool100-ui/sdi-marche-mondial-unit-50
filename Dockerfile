@@ -18,4 +18,4 @@ ENV PYTHONPATH=/app
 
 EXPOSE 8000
 
-CMD ["sh", "-c", "python sdi_market/manage.py migrate --noinput && python sdi_market/manage.py collectstatic --noinput && daphne -b 0.0.0.0 -p 8000 sdi_market.asgi:application"]
+CMD ["daphne", "-b", "0.0.0.0", "-p", "8000", "sdi_market.asgi:application"]
