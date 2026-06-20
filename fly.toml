@@ -41,7 +41,7 @@ primary_region = "ord"
   cpu_kind = "shared"
 
 [deploy]
-  release_command = "python sdi_market/manage.py migrate --noinput && python sdi_market/manage.py collectstatic --noinput"
+  release_command = "bash -lc 'python sdi_market/manage.py migrate --noinput && python sdi_market/manage.py collectstatic --noinput'"
 
 [[statics]]
   guest_path = "/app/sdi_market/staticfiles"
