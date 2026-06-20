@@ -14,7 +14,7 @@ COPY . /app
 RUN mkdir -p /app/sdi_market/staticfiles /app/sdi_market/media
 
 ENV DJANGO_SETTINGS_MODULE=sdi_market.settings
-ENV PYTHONPATH=/app
+ENV PYTHONPATH=/app/sdi_market
 
 EXPOSE 8000
 
