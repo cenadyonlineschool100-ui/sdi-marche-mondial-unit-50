@@ -33,7 +33,7 @@ git commit -m $commitMessage
 
 # 5. Push vers GitHub
 Write-Host "`n☁️  Push vers GitHub..." -ForegroundColor Yellow
-git push origin main 2>&1 | Tee-Object -Variable pushOutput
+git push origin master 2>&1 | Tee-Object -Variable pushOutput
 if ($LASTEXITCODE -ne 0) {
     Write-Host "❌ Erreur lors du push GitHub" -ForegroundColor Red
     exit 1
@@ -58,5 +58,7 @@ if (-not $skipFlyDeploy) {
         Write-Host "⚠️  flyctl non installé. GitHub Actions gère le déploiement." -ForegroundColor Yellow
     }
 }
+
+Write-Host "`n📌 Remarque : ce script pousse vos fichiers sur GitHub. Pour héberger sur PythonAnywhere, utilisez `deploy_pythonanywhere.sh` ou le guide PythonAnywhere fourni." -ForegroundColor Cyan
 
 Write-Host "`n✨ Déploiement terminé!" -ForegroundColor Green
