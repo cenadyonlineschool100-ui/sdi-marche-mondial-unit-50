@@ -21,7 +21,7 @@ cd ~/sdi_site/sdi_market
 
 ### Commande 2 : Créer un virtualenv
 ```bash
-mkvirtualenv --python=/usr/bin/python3.10 sdi_venv
+mkvirtualenv --python=/usr/bin/python3.12 sdi_venv
 workon sdi_venv
 ```
 

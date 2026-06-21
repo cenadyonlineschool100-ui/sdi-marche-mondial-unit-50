@@ -5,7 +5,7 @@
 Copie cette commande **UNE SEULE FOIS** dans la console Bash de PythonAnywhere:
 
 ```bash
-cd ~ && git clone https://github.com/cenadyonlineschool100-ui/sdi-marche-mondial-unit-50.git sdi_site && cd sdi_site/sdi_market && mkvirtualenv --python=/usr/bin/python3.10 sdi_venv && workon sdi_venv && pip install -r requirements.txt && python manage.py migrate --noinput && python manage.py collectstatic --noinput
+cd ~ && git clone https://github.com/cenadyonlineschool100-ui/sdi-marche-mondial-unit-50.git sdi_site && cd sdi_site/sdi_market && mkvirtualenv --python=/usr/bin/python3.12 sdi_venv && workon sdi_venv && pip install -r requirements.txt && python manage.py migrate --noinput && python manage.py collectstatic --noinput
 ```
 
 Puis configure dans l'interface web PythonAnywhere (5 minutes).

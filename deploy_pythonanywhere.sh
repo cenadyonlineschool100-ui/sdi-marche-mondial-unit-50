@@ -30,7 +30,7 @@ echo "🐍 Étape 2: Configuration du virtualenv..."
 
 if [ ! -d ~/venv ]; then
     echo "Création du virtualenv..."
-    mkvirtualenv --python=/usr/bin/python3.10 venv
+    mkvirtualenv --python=/usr/bin/python3.12 venv
 fi
 
 workon venv
@@ -40,7 +40,7 @@ workon venv
 # ============================================
 echo "📦 Étape 3: Installation des dépendances..."
 
-cd ~/sdi-marche-mondial-unit-50/sdi_market
+cd ~/sdi-marche-mondial-unit-50
 pip install --upgrade pip
 pip install -r requirements.txt
 

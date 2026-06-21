@@ -31,7 +31,7 @@ cd "$PA_APPDIR/sdi_market"
 echo "🐍 Création / activation du virtualenv"
 # Si mkvirtualenv n'est pas disponible, remplacez par python3 -m venv ~/.virtualenvs/$VENV_NAME
 if command -v mkvirtualenv >/dev/null 2>&1; then
-    mkvirtualenv --python=/usr/bin/python3.10 "$VENV_NAME" 2>/dev/null || true
+    mkvirtualenv --python=/usr/bin/python3.12 "$VENV_NAME" 2>/dev/null || true
     workon "$VENV_NAME"
 else
     echo "mkvirtualenv introuvable — création d'un venv standard"
