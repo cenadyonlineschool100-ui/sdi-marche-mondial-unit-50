@@ -14,14 +14,15 @@ jobs:
 
       # Option A: deploy over SSH (recommended for paid PythonAnywhere accounts)
       - name: Start SSH agent
-        if: ${{ secrets.PA_SSH_PRIVATE_KEY != '' }}
+        if: ${{ env.PA_SSH_PRIVATE_KEY != '' }}
         uses: webfactory/ssh-agent@v0.5.4
         with:
-          ssh-private-key: ${{ secrets.PA_SSH_PRIVATE_KEY }}
+          ssh-private-key: ${{ env.PA_SSH_PRIVATE_KEY }}
 
       - name: Deploy on PythonAnywhere via SSH
-        if: ${{ secrets.PA_SSH_PRIVATE_KEY != '' }}
+        if: ${{ env.PA_SSH_PRIVATE_KEY != '' }}
         env:
+          PA_SSH_PRIVATE_KEY: ${{ secrets.PA_SSH_PRIVATE_KEY }}
           SSH_USER: ${{ secrets.PA_SSH_USER }}
           SSH_HOST: ${{ secrets.PA_SSH_HOST }}
           REMOTE_DIR: ${{ secrets.PA_SSH_REMOTE_DIR }}
@@ -51,7 +52,7 @@ jobs:
 
       # Option B: if you cannot use SSH, just trigger a webapp reload via PythonAnywhere API
       - name: Reload PythonAnywhere webapp via API
-        if: ${{ secrets.PA_API_TOKEN != '' && secrets.PA_USERNAME != '' }}
+        if: ${{ env.PA_API_TOKEN != '' && env.PA_USERNAME != '' }}
         env:
           PA_USERNAME: ${{ secrets.PA_USERNAME }}
           PA_API_TOKEN: ${{ secrets.PA_API_TOKEN }}
