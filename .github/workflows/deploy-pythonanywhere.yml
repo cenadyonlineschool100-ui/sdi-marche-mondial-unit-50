@@ -28,13 +28,14 @@ jobs:
           VENV_PATH: ${{ secrets.PA_VENV_PATH }}
           BRANCH: master
         run: |
+          set -eo pipefail
           SSH_HOST=${SSH_HOST:-ssh.pythonanywhere.com}
           REMOTE_DIR=${REMOTE_DIR:-/home/${SSH_USER}/sdi_site/sdi_market}
           VENV_PATH=${VENV_PATH:-/home/${SSH_USER}/.virtualenvs/sdi_venv}
 
           echo "🛠️  Running remote deploy on ${SSH_USER}@${SSH_HOST}:${REMOTE_DIR}"
           ssh -o StrictHostKeyChecking=no ${SSH_USER}@${SSH_HOST} "
-            set -e
+            set -eo pipefail
             cd ${REMOTE_DIR}
             git fetch origin
             git checkout ${BRANCH} || true
@@ -42,10 +43,10 @@ jobs:
             if [ -f ${VENV_PATH}/bin/activate ]; then
               source ${VENV_PATH}/bin/activate
             fi
-            pip install --upgrade pip setuptools wheel || true
-            pip install -r requirements.txt || true
-            python manage.py migrate --noinput || true
-            python manage.py collectstatic --noinput || true
+            pip install --upgrade pip setuptools wheel
+            pip install -r requirements.txt
+            python manage.py migrate --noinput
+            python manage.py collectstatic --noinput
           "
 
       # Option B: if you cannot use SSH, just trigger a webapp reload via PythonAnywhere API
@@ -55,17 +56,17 @@ jobs:
           PA_USERNAME: ${{ secrets.PA_USERNAME }}
           PA_API_TOKEN: ${{ secrets.PA_API_TOKEN }}
         run: |
-          set -e
+          set -eo pipefail
           DOMAIN=${PA_USERNAME}.pythonanywhere.com
           echo "🔁 Triggering reload for ${DOMAIN}"
-          curl -s -X POST \
+          curl -fS -X POST \
             -H "Authorization: Token ${PA_API_TOKEN}" \
-            https://www.pythonanywhere.com/api/v0/user/${PA_USERNAME}/webapps/${DOMAIN}/reload/ || true
+            https://www.pythonanywhere.com/api/v0/user/${PA_USERNAME}/webapps/${DOMAIN}/reload/
 
       - name: Done
         run: echo "✅ Deploy job finished"
 
-# Required repository secrets (add in GitHub Settings > Secrets and variables > Actions):
+# Required repository secrets (add in GitHub Settings & Secrets):
 # - PA_SSH_PRIVATE_KEY : private SSH key (optional, for SSH-based deploy)
 # - PA_SSH_USER        : your PythonAnywhere username (for SSH)
 # - PA_SSH_HOST        : optional SSH host, default ssh.pythonanywhere.com
