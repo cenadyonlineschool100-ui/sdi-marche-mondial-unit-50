@@ -40,9 +40,15 @@ rm -rf "$VENV_DIR" || true
 $PYTHON -m venv "$VENV_DIR"
 source "$VENV_DIR/bin/activate"
 
-echo "📦 Installation des dépendances"
-pip install --upgrade pip setuptools wheel
-pip install -r ../requirements.txt
+echo "📦 Nettoyage du cache pip et installation des dépendances"
+rm -rf ~/.cache/pip || true
+pip install --upgrade pip setuptools wheel --no-cache-dir
+pip install --no-cache-dir -r ../requirements.txt
+
+# Supprime le cache pip après l'installation pour libérer de l'espace
+echo "🧹 Nettoyage du cache pip"
+pip cache purge || true
+rm -rf ~/.cache/pip || true
 
 echo "⚙️ Création du fichier .env minimal"
 cat > .env <<'EOF'
