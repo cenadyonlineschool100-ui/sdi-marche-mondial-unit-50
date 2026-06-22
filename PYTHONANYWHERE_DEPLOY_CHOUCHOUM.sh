@@ -43,7 +43,7 @@ source "$VENV_DIR/bin/activate"
 echo "📦 Nettoyage du cache pip et installation des dépendances"
 rm -rf ~/.cache/pip || true
 pip install --upgrade pip setuptools wheel --no-cache-dir
-pip install --no-cache-dir -r ../requirements.txt
+pip install --no-cache-dir -r ../requirements-pythonanywhere.txt
 
 # Supprime le cache pip après l'installation pour libérer de l'espace
 echo "🧹 Nettoyage du cache pip"
