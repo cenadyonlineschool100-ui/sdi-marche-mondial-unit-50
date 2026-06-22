@@ -42,7 +42,7 @@ source "$VENV_DIR/bin/activate"
 
 echo "📦 Installation des dépendances"
 pip install --upgrade pip setuptools wheel
-pip install -r requirements.txt
+pip install -r ../requirements.txt
 
 echo "⚙️ Création du fichier .env minimal"
 cat > .env <<'EOF'
