@@ -3301,6 +3301,8 @@
                         <div style="display:flex; flex-direction:column; gap:4px; text-align:right;">
                             <label for="mobile-currency-select" style="color: var(--primary-dark); font-size:0.95rem;">Devise</label>
                             <small style="color: var(--primary-dark); font-size:0.82rem;">Afficher les prix en HTG, USD, DOP ou EUR selon sélection</small>
+                            <small style="color: var(--primary-dark); font-size:0.82rem;">USD</small>
+                            <small style="color: var(--primary-dark); font-size:0.82rem;">Prix indicatif – paiement final selon la méthode choisie, message privé</small>
                         </div>
                         <select id="mobile-currency-select" name="currency" onchange="this.form.submit()">
                             {% for code, label in currency_choices %}
