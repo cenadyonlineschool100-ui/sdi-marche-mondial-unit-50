@@ -34,6 +34,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from .forms import ProductForm, ProductReviewForm, SignUpForm, SystemSettingsForm, ChatMessageForm, PrivateMessageForm, BeautyBookingForm, BeautyStudioServiceForm, BeautyStudioRequestForm, ShopCoverPhotoForm, ProfileForm, OrderForm, DeliveryLocationForm, TransferForm, TiKaneAccessRequestForm, TiKanePlanForm, AssignmentSubmissionForm, TechnicianProfileForm
+from .security_enhanced import AnomalyDetector
 from .models import (
     DeliveryAssignment, DeliveryEmployee, Order, OrderItem, Product, Shop,
     ProductImage, ProductReview, Transaction, Wallet, Agent, SystemSettings, SecurityIncident, SecurityEvent, IPBlocklist, Cart, CartItem,
@@ -1633,18 +1634,40 @@ def request_delivery_access(request):
 
 
 def login_view(request):
+    username = ''
+    remember = False
     if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            login(request, user)
-            add_user_to_global_group(user)
-            return redirect('home')
-        messages.error(request, 'Identifiants invalides')
-    return render(request, 'marketplace/login.html')
+        username = request.POST.get('username', '').strip()
+        password = request.POST.get('password', '')
+        remember = request.POST.get('remember') == 'on'
+        ip = get_client_ip(request)
+
+        if not AnomalyDetector.check_brute_force(ip, '/login/'):
+            messages.error(request, 'Trop de tentatives. Réessayez plus tard.')
+        elif username and password:
+            user = authenticate(request, username=username, password=password)
+            if user is not None:
+                login(request, user)
+                if remember:
+                    request.session.set_expiry(1209600)  # 14 jours
+                else:
+                    request.session.set_expiry(0)  # expire à la fermeture du navigateur
+                add_user_to_global_group(user)
+                messages.success(request, 'Connexion réussie.')
+                return redirect('home')
+            AnomalyDetector.record_failed_login(ip, username)
+            messages.error(request, 'Identifiants invalides.')
+        else:
+            messages.error(request, 'Veuillez renseigner le nom d’utilisateur et le mot de passe.')
+
+    return render(request, 'marketplace/login.html', {'username': username, 'remember': remember})
 
 
+def password_reset_request(request):
+    return render(request, 'marketplace/password_reset_request.html')
+
+
+@login_required
 def logout_view(request):
     logout(request)
     return redirect('home')
