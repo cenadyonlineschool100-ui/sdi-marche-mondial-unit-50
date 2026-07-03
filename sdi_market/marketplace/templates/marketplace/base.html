@@ -158,11 +158,16 @@
             scroll-behavior: smooth;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+            overflow-x: hidden;
+            max-width: 100vw;
         }
 
         body {
             margin: 0;
             min-height: 100vh;
+            width: 100%;
+            max-width: 100vw;
+            overflow-x: hidden;
             font-family: var(--font-primary);
             background: var(--page-bg);
             color: var(--text);
@@ -354,6 +359,137 @@
             background: rgba(255,255,255,0.08);
             color: #7dd3fc;
         }
+        /* Compact modern nav additions (more compact for professional look) */
+        .main-nav {
+            display: flex;
+            align-items: flex-start;
+            gap: 18px;
+            width: 100%;
+            padding-left: 4px;
+            flex-wrap: wrap;
+        }
+        .nav-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.55rem;
+            min-width: 128px;
+            max-width: 260px;
+        }
+        .nav-group-title {
+            font-size: 0.78rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: rgba(226, 232, 255, 0.85);
+            font-weight: 700;
+            margin: 0;
+        }
+        .nav-center {
+            flex: 1 1 auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: flex-start;
+            flex-wrap: wrap;
+        }
+        .header-actions,
+        .header-special-buttons {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            flex-wrap: wrap;
+        }
+        .nav-group-transactions .header-actions,
+        .nav-group-account .header-actions,
+        .nav-group-more .header-special-buttons {
+            justify-content: flex-start;
+        }
+        .nav-item {
+            color: #eef2ff;
+            font-weight: 600;
+            font-size: 0.87rem;
+            padding: 7px 10px;
+            border-radius: 12px;
+            transition: background .14s ease, transform .12s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            max-width: 180px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .nav-item::before { content: attr(data-icon); display:inline-block; margin-right:6px; font-size:1.05rem; line-height:1; }
+        .nav-label { display:inline-block; }
+        .nav-item:hover { background: rgba(255,255,255,0.12); transform: translateY(-1px); }
+        .nav-group .icon-link,
+        .nav-group .account-button,
+        .nav-group .nav-item {
+            min-height: 44px;
+            border-radius: 14px;
+            transition: transform .15s ease, box-shadow .18s ease, background .18s ease;
+        }
+        .nav-group .icon-link:hover,
+        .nav-group .account-button:hover,
+        .nav-group .nav-item:hover {
+            background: rgba(255,255,255,0.14);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+        }
+        .header-actions .icon-link,
+        .header-special-buttons a,
+        .header-special-buttons button {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.14);
+            color: #eef2ff;
+            padding: 8px 12px;
+        }
+        .nav-dropdown { position: relative; }
+        .nav-dropdown-panel {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            min-width: 180px;
+            background: rgba(12,25,62,0.98);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+            box-shadow: 0 18px 50px rgba(2,6,23,0.45);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-6px);
+            transition: opacity .16s ease, transform .16s ease, visibility .16s ease;
+            z-index: 60;
+            overflow: hidden;
+            padding: 4px 4px;
+        }
+        .nav-dropdown.open .nav-dropdown-panel { opacity: 1; visibility: visible; transform: translateY(0); }
+        .nav-dropdown-panel a { display: block; padding: 8px 10px; color: #e6f0ff; border-radius:6px; font-size:0.9rem; }
+        .nav-dropdown-panel a:hover { background: rgba(255,255,255,0.04); }
+        /* Compact account button */
+        .account-button { display:inline-flex; align-items:center; gap:6px; padding:4px 8px; border-radius:8px; background: rgba(255,255,255,0.06); font-size:0.9rem; }
+        /* Tighter header */
+        header { padding: 10px 0; }
+        .header-actions > .icon-link { padding: 6px 8px !important; min-height: 36px !important; min-width: 44px; font-size:0.82rem !important; }
+        /* Responsive: collapse text to icons on small screens */
+        @media (max-width: 900px) {
+            .nav-center { justify-content: flex-start; gap:6px; }
+            .nav-item { font-size:0.82rem; padding:6px 8px; max-width:100px; }
+            .nav-group-title { display: none; }
+            .header-special-buttons { display:none; }
+            .header-actions .icon-link { padding:6px 8px; }
+        }
+        @media (max-width: 520px) {
+            .nav-center { gap:4px; }
+            .nav-item { padding:6px; font-size:0.78rem; max-width:72px; }
+            .nav-item::before { margin-right:0; }
+            .nav-label { display:none; }
+            .brand-copy { display:none; }
+            .header-search { display:none; }
+            .mobile-nav-toggle { display:block; }
+            .main-nav { gap: 10px; }
+            .nav-group { width: 100%; min-width: auto; }
+            .header-actions, .header-special-buttons { justify-content: flex-start; }
+        }
         .notification-badge {
             min-width: 18px;
             height: 18px;
@@ -417,6 +553,15 @@
             .brand {
                 width: 100%;
                 justify-content: space-between;
+            }
+            .brand-logo {
+                width: 80px;
+                height: 80px;
+                font-size: 1.6rem;
+                border: 2px solid rgba(59, 130, 246, 0.6);
+                box-shadow:
+                    0 6px 16px rgba(30, 64, 175, 0.18),
+                    0 0 30px rgba(59, 130, 246, 0.12);
             }
             .brand-copy {
                 display: none;
@@ -522,6 +667,7 @@
             justify-content: space-between;
             gap: 1rem;
             flex-wrap: wrap;
+            position: relative;
         }
 
         .brand {
@@ -531,68 +677,45 @@
         }
 
         .brand-logo {
-            width: 120px;
-            height: 120px;
+            width: 100px;
+            height: 100px;
             background: linear-gradient(135deg, #1e40af 0%, #2563eb 45%, #3b82f6 100%);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2.2rem;
+            font-size: 2rem;
             font-weight: 900;
             color: white;
             backdrop-filter: blur(16px);
-            border: 1px solid rgba(59, 130, 246, 0.55);
+            border: 2px solid rgba(59, 130, 246, 0.6);
             box-shadow:
-                0 38px 90px rgba(30, 64, 175, 0.26),
-                0 18px 48px rgba(37, 99, 235, 0.18),
-                0 0 90px rgba(59, 130, 246, 0.25);
-            transition: all 0.46s cubic-bezier(0.33, 1.35, 0.64, 1);
+                0 8px 24px rgba(30, 64, 175, 0.2),
+                0 0 40px rgba(59, 130, 246, 0.15);
+            transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
-            animation: logo-float-premium 4s ease-in-out infinite;
-            filter: drop-shadow(0 24px 48px rgba(30, 64, 175, 0.22));
+            filter: drop-shadow(0 4px 12px rgba(30, 64, 175, 0.15));
             cursor: pointer;
+            flex-shrink: 0;
         }
 
         .brand-logo::before {
             content: '';
             position: absolute;
             inset: 0;
-            background: radial-gradient(circle at 28% 28%, rgba(255, 255, 255, 0.2), transparent 24%),
-                        radial-gradient(circle at 70% 70%, rgba(59, 130, 246, 0.18), transparent 28%);
+            background: radial-gradient(circle at 28% 28%, rgba(255, 255, 255, 0.15), transparent 24%),
+                        radial-gradient(circle at 70% 70%, rgba(59, 130, 246, 0.12), transparent 28%);
             pointer-events: none;
             mix-blend-mode: screen;
         }
 
-        @keyframes logo-float-premium {
-            0%, 100% { transform: translateY(0px) rotateZ(0deg); }
-            50% { transform: translateY(-15px) rotateZ(2deg); }
-        }
-
-        @keyframes logo-shine-premium {
-            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
-        }
-
         .brand-logo:hover {
-            transform: 
-                perspective(1200px) 
-                rotateX(8deg) 
-                rotateY(-12deg) 
-                translateZ(30px) 
-                scale(1.12);
+            transform: scale(1.08);
             box-shadow: 
-                0 60px 130px rgba(30, 64, 175, 0.5),
-                0 25px 50px rgba(30, 64, 175, 0.4),
-                0 0 120px rgba(59, 130, 246, 0.35),
-                inset -3px -3px 12px rgba(0, 0, 0, 0.25),
-                inset 3px 3px 12px rgba(255, 255, 255, 0.4);
-            filter: drop-shadow(0 30px 60px rgba(30, 64, 175, 0.3));
-            background: 
-                radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.95), transparent 50%),
-                radial-gradient(circle at 65% 65%, rgba(30, 64, 175, 1), transparent 60%),
-                linear-gradient(135deg, #1e40ae 0%, #3b82f6 40%, #60a5fa 100%);
+                0 12px 32px rgba(30, 64, 175, 0.3),
+                0 0 60px rgba(59, 130, 246, 0.2);
+            filter: drop-shadow(0 6px 16px rgba(30, 64, 175, 0.25));
         }
 
         .brand-logo img {
@@ -1062,22 +1185,146 @@
             background: #f3f6ff;
         }
         .mobile-nav-toggle {
-            display: none;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 48px;
-            height: 48px;
-            border-radius: 16px;
-            border: 1px solid rgba(255,255,255,0.18);
-            background: rgba(255,255,255,0.08);
-            color: #eef2ff;
-            font-size: 1.2rem;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            border: 1.5px solid rgba(255,255,255,0.25);
+            background: linear-gradient(135deg, rgba(255,255,255,0.10), rgba(255,255,255,0.05));
+            color: #e0e7ff;
             cursor: pointer;
-            transition: transform 0.2s ease, background 0.2s ease;
+            transition: all 0.25s ease;
+            padding: 0;
+            position: absolute;
+            top: 14px;
+            right: 16px;
+            z-index: 30;
+            overflow: hidden;
         }
+        body:not(.mobile-device) .mobile-nav-toggle,
+        body:not(.mobile-device) .mobile-nav-backdrop,
+        body:not(.mobile-device) .mobile-nav-panel,
+        body:not(.mobile-device) .mobile-bottom-tabs {
+            display: none !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+        }
+        body.mobile-device nav.main-nav {
+            display: none !important;
+        }
+        
+        .mobile-nav-toggle::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+        
+        .mobile-nav-toggle span {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            width: 20px;
+            height: 16px;
+            position: relative;
+        }
+        
+        .mobile-nav-toggle span > span {
+            width: 100%;
+            height: 2px;
+            background: #e0e7ff;
+            border-radius: 1px;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: block;
+        }
+        
         .mobile-nav-toggle:hover {
-            background: rgba(255,255,255,0.14);
+            background: linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.08));
+            border-color: rgba(255,255,255,0.35);
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.2);
+        }
+        
+        .mobile-nav-toggle:active {
+            transform: scale(0.95);
+        }
+        .mobile-bottom-tabs {
+            display: none;
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 45;
+            background: rgba(7, 18, 49, 0.98);
+            backdrop-filter: blur(16px);
+            border-top: 1px solid rgba(255,255,255,0.12);
+            box-shadow: 0 -12px 30px rgba(0, 0, 0, 0.18);
+            padding: 8px 8px 10px;
+            gap: 8px;
+            justify-content: space-between;
+            align-items: center;
+        }
+        body.mobile-device .mobile-bottom-tabs {
+            display: flex;
+        }
+        .mobile-bottom-tab {
+            display: inline-flex;
+            flex: 1;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 56px;
+            padding: 6px 4px;
+            margin: 0 2px;
+            border-radius: 18px;
+            color: #0f172a;
+            text-decoration: none;
+            background: rgba(255,255,255,0.95);
+            box-shadow: inset 0 0 0 1px rgba(15,23,42,0.06);
+            font-size: 0.72rem;
+            font-weight: 700;
+            transition: background 0.2s ease, transform 0.2s ease;
+        }
+        .mobile-bottom-tab:hover,
+        .mobile-bottom-tab:focus-visible {
+            background: rgba(255,255,255,1);
             transform: translateY(-1px);
+        }
+        .mobile-bottom-tab .tab-icon {
+            font-size: 1.25rem;
+            margin-bottom: 4px;
+            line-height: 1;
+        }
+        .mobile-bottom-tab .tab-label {
+            display: block;
+            line-height: 1.2;
+        }
+        body.mobile-device .professional-footer {
+            display: none !important;
+        }
+        body.mobile-device .professional-footer img {
+            display: none !important;
+        }
+        body.mobile-device {
+            padding-bottom: 90px;
+        }
+        /* Bouton de recherche: encore plus compact */
+        header .header-search .button.small {
+            -webkit-transform: none;
+            transform: none;
+            transform-origin: right center;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px 8px;
+            min-width: 0;
+            line-height: 1;
+            font-size: 0.72rem;
+            pointer-events: auto;
         }
         .mobile-nav-backdrop {
             display: none;
@@ -1100,6 +1347,7 @@
             top: 0;
             right: 0;
             width: min(95vw, 340px);
+            max-width: 340px;
             height: 100vh;
             background: rgba(7, 18, 49, 0.98);
             border-left: 1px solid rgba(255,255,255,0.12);
@@ -1113,6 +1361,8 @@
             visibility: hidden;
             transition: transform 0.32s ease, opacity 0.25s ease, visibility 0.25s ease;
             z-index: 20;
+            overflow-y: auto;
+            overscroll-behavior: contain;
         }
         .mobile-nav-panel.open {
             transform: translateX(0);
@@ -1132,6 +1382,31 @@
             font-size: 1.1rem;
             color: #eef2ff;
         }
+        .mobile-nav-control-row {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            align-items: stretch;
+        }
+        .mobile-nav-control-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px 12px;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.14);
+            background: rgba(255,255,255,0.08);
+            color: #eef2ff;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: background .2s ease, transform .15s ease;
+        }
+        .mobile-nav-control-button:hover {
+            background: rgba(255,255,255,0.14);
+            transform: translateY(-1px);
+        }
         .mobile-nav-panel .mobile-nav-links {
             display: grid;
             gap: 12px;
@@ -1141,21 +1416,120 @@
         .mobile-nav-panel .mobile-nav-links button,
         .mobile-nav-panel .mobile-nav-links select {
             width: 100%;
-            border-radius: 16px;
-            padding: 14px 16px;
-            border: 1px solid rgba(255,255,255,0.14);
-            background: rgba(255,255,255,0.06);
+            border-radius: 18px;
+            padding: 0;
+            border: none;
+            background: transparent;
             color: #eef2ff;
             font-size: 0.98rem;
             text-align: left;
         }
-        .mobile-nav-panel .mobile-nav-links a:hover {
+        .mobile-nav-panel .mobile-nav-links a:hover,
+        .mobile-nav-panel .mobile-nav-links button:hover {
             background: rgba(255,255,255,0.12);
+        }
+        .mobile-nav-group {
+            display: grid;
+            gap: 10px;
+            padding: 0;
+        }
+        .mobile-nav-group-title {
+            margin: 0 0 8px 0;
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: #93c5fd;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+        .mobile-nav-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+        .mobile-nav-grid-full {
+            grid-template-columns: 1fr;
+        }
+        .mobile-nav-card {
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 10px;
+            padding: 12px 14px;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.06);
+            color: #eef2ff;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.92rem;
+            transition: background .2s ease, transform .15s ease;
+        }
+        .mobile-nav-card::before {
+            content: attr(data-icon);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.12);
+            color: #ffffff;
+            font-size: 1rem;
+        }
+        .mobile-nav-card:hover {
+            background: rgba(255,255,255,0.14);
+            transform: translateY(-1px);
+        }
+        .mobile-nav-details summary {
+            list-style: none;
+            cursor: pointer;
+            outline: none;
+        }
+        .mobile-nav-details summary::-webkit-details-marker {
+            display: none;
+        }
+        .mobile-nav-details summary::marker {
+            display: none;
+        }
+        .mobile-nav-details summary {
+            display: block;
+            padding: 0;
+        }
+        .mobile-nav-details[open] .mobile-nav-group-title {
+            color: #ffffff;
+        }
+        .mobile-nav-currency {
+            width: 100%;
+            padding: 0;
+            border: none;
+            background: transparent;
+        }
+        .mobile-nav-currency select {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.14);
+            background: rgba(255,255,255,0.06);
+            color: #eef2ff;
+            font-size: 0.95rem;
+        }
+        .mobile-nav-logout-button {
+            width: 100%;
+            justify-content: flex-start;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.14);
+            border-radius: 14px;
+            color: #eef2ff;
+            gap: 10px;
+        }
+        .mobile-nav-card[data-icon]::before {
+            min-width: 28px;
         }
         .mobile-activity-menu {
             border: 1px solid rgba(255,255,255,0.14);
             border-radius: 16px;
             background: rgba(255,255,255,0.06);
+        }
             padding: 0;
         }
         .mobile-activity-menu summary {
@@ -3155,56 +3529,87 @@
                     <strong class="sdi-sol-text">sdi marche mondial unit</strong>
                     <span>e-commerce, acheteur/vendeur, wallet multi-devises</span>
                 </div>
-                <button id="mobile-nav-toggle" class="mobile-nav-toggle" aria-label="Ouvrir le menu mobile">☰</button>
+                <button id="mobile-nav-toggle" class="mobile-nav-toggle" aria-label="Ouvrir le menu mobile" aria-expanded="false">
+                    <span>
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </span>
+                </button>
             </div>
             <form action="{% url 'search' %}" method="get" class="header-search">
                 <input type="search" name="q" placeholder="Rechercher un produit, une boutique ou une catégorie" value="{{ request.GET.q|default:'' }}" aria-label="Recherche" />
                 <button type="submit" class="button small">Rechercher</button>
             </form>
             <nav class="main-nav">
-                <div class="main-nav-left">
-                    <div class="activity-dropdown" id="activity-dropdown">
-                        <button id="activity-menu-toggle" class="sdi-sol-button" type="button" aria-haspopup="true" aria-expanded="false">
-                            <span class="hamburger-icon"><span></span><span></span><span></span></span>
-                            Services
-                        </button>
-                        <div class="services-dropdown" id="services-dropdown" aria-label="Menu Services">
-                            <a href="{% url 'real_estate:home' %}"><span class="service-icon">🏠</span><div><strong>Immobilier / Maison à Louer</strong></div></a>
-                            <a href="{% url 'sdi_transport' %}"><span class="service-icon">🚍</span><div><strong>SDI Transport</strong></div></a>
-                            <a href="{% url 'formations_en_ligne' %}"><span class="service-icon">🎓</span><div><strong>Formations en Ligne</strong></div></a>
-                            <a href="{% url 'microordinateur' %}"><span class="service-icon">🌐</span><div><strong>MicroOrdinateur</strong></div></a>
-                            <a href="{% url 'technician_profiles' %}"><span class="service-icon">🔧</span><div><strong>Annuaire Techniciens</strong></div></a>
-                            <a href="{% url 'studio_beaute_request' %}"><span class="service-icon">➕</span><div><strong>Studio de Beauté</strong></div></a>
-                            <a href="{% url 'profile' %}#agent-transfer-section"><span class="service-icon">✈️</span><div><strong>SDI Transfert à l'Étranger</strong></div></a>
-                            <a href="{% url 'tikane_access' %}"><span class="service-icon">💰</span><div><strong>Ti Kanè Digital</strong></div></a>
-                            <a href="{% url 'view_peuple_commission' %}"><span class="service-icon">🎁</span><div><strong>Cadeau Argent</strong></div></a>
+                <div class="nav-group nav-group-navigation">
+                    <span class="nav-group-title">Navigation</span>
+                    <div class="nav-center">
+                        <div class="nav-dropdown activity-dropdown" id="services-dropdown-wrapper">
+                            <button id="activity-menu-toggle" class="nav-item services-button" type="button" aria-haspopup="true" aria-expanded="false" data-icon="☰" aria-label="Services">
+                                <span class="nav-label">Services</span>
+                            </button>
+                            <div class="nav-dropdown-panel services-dropdown" id="services-dropdown" aria-label="Menu Services">
+                                <a href="{% url 'real_estate:home' %}"><span class="service-icon">🏠</span><div><strong>Immobilier</strong></div></a>
+                                <a href="{% url 'sdi_transport' %}"><span class="service-icon">🚍</span><div><strong>Transport</strong></div></a>
+                                <a href="{% url 'formations_en_ligne' %}"><span class="service-icon">🎓</span><div><strong>Formations</strong></div></a>
+                                <a href="{% url 'microordinateur' %}"><span class="service-icon">🌐</span><div><strong>MicroOrdinateur</strong></div></a>
+                                <a href="{% url 'technician_profiles' %}"><span class="service-icon">🔧</span><div><strong>Techniciens</strong></div></a>
+                                <a href="{% url 'studio_beaute_request' %}"><span class="service-icon">➕</span><div><strong>Beauté</strong></div></a>
+                                <a href="{% url 'profile' %}#agent-transfer-section"><span class="service-icon">✈️</span><div><strong>Transfert</strong></div></a>
+                                <a href="{% url 'tikane_access' %}"><span class="service-icon">💰</span><div><strong>Ti Kanè</strong></div></a>
+                                <a href="{% url 'view_peuple_commission' %}"><span class="service-icon">🎁</span><div><strong>Cadeau</strong></div></a>
+                            </div>
+                        </div>
+                        <a href="{% url 'home' %}" class="nav-item" data-icon="🏠"><span class="nav-label">Accueil</span></a>
+                        <a href="{% url 'search' %}" class="nav-item" data-icon="🛍️"><span class="nav-label">Produits</span></a>
+                    </div>
+                </div>
+                <div class="nav-group nav-group-transactions">
+                    <span class="nav-group-title">Panier</span>
+                    <div class="header-actions">
+                        <a href="{% url 'cart' %}" class="icon-link" aria-label="Panier">🛒</a>
+                    </div>
+                </div>
+                <div class="nav-group nav-group-account">
+                    <span class="nav-group-title">Compte</span>
+                    <div class="header-actions">
+                        {% if request.user.is_authenticated %}
+                            <a href="{% url 'profile' %}" class="icon-link" aria-label="Mon compte">👤</a>
+                            <a href="{% url 'persistent_notifications_page' %}" class="icon-link" aria-label="Notifications">🔔<span class="notification-badge">{{ notification_count|default:0 }}</span></a>
+                        {% else %}
+                            <a href="{% url 'login' %}" class="nav-item">Connexion</a>
+                            <a href="{% url 'signup' %}" class="nav-item">Inscription</a>
+                        {% endif %}
+                        {% if request.user.is_authenticated %}
+                            <div class="nav-dropdown" id="account-dropdown-wrapper">
+                                <button id="account-toggle" class="account-button" aria-haspopup="true" aria-expanded="false">Compte</button>
+                                <div class="nav-dropdown-panel" id="account-dropdown">
+                                    <a href="{% url 'profile' %}">Mon Compte</a>
+                                    <a href="{% url 'sdi_sol' %}">SDI Sol</a>
+                                    <a href="{% url 'transfer_funds' %}">Transférer</a>
+                                    <form action="{% url 'logout' %}" method="post" style="margin:6px 0 0 0; padding:0;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="nav-item" style="width:100%; text-align:left; background:none; border:none; padding:8px 12px;">Déconnexion</button>
+                                    </form>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="nav-group nav-group-more">
+                    <span class="nav-group-title">Plus</span>
+                    <div class="header-special-buttons">
+                        <div class="nav-dropdown" id="more-dropdown-wrapper">
+                            <button id="more-toggle" class="nav-item" aria-haspopup="true" aria-expanded="false" data-icon="⋯"><span class="nav-label">Plus</span></button>
+                            <div class="nav-dropdown-panel" id="more-dropdown">
+                                <a href="{% url 'tikane_access' %}">Ti Kanè Digital</a>
+                                <a id="peuple-button" href="{% url 'view_peuple_commission' %}">Cadeau Argent</a>
+                                <a href="#" id="install-app-mobile" onclick="window.openInstaller();return false;">Installer l'Application</a>
+                                <a href="{% url 'sdi_sol' %}">SDI Sol</a>
+                            </div>
                         </div>
                     </div>
-                    <a href="{% url 'home' %}" class="sdi-sol-button">Accueil</a>
-                    <a href="{% url 'search' %}" class="sdi-sol-button">Produits</a>
-                </div>
-                <div class="header-actions">
-                    <a href="{% url 'cart' %}" class="icon-link">🛒 Panier</a>
-                    {% if request.user.is_authenticated %}
-                        <a href="{% url 'profile' %}" class="icon-link">💰 Mon Solde</a>
-                        <a href="{% url 'persistent_notifications_page' %}" class="icon-link">🔔 Notifications<span class="notification-badge">{{ notification_count|default:0 }}</span></a>
-                        <a href="{% url 'profile' %}" class="icon-link">👤 Mon Compte</a>
-                        <form action="{% url 'logout' %}" method="post" style="display:inline; margin:0;">
-                            {% csrf_token %}
-                            <button type="submit" class="icon-link" style="border:none;background:none;padding:0;">Déconnexion</button>
-                        </form>
-                    {% else %}
-                        <a href="{% url 'login' %}" class="sdi-sol-button">Connexion</a>
-                        <a href="{% url 'signup' %}" class="sdi-sol-button">Inscription</a>
-                    {% endif %}
-                </div>
-                <div class="header-special-buttons">
-                    <a href="{% url 'tikane_access' %}" class="sdi-sol-button">💰 Ti Kanè Digital</a>
-                    <a id="peuple-button" href="{% url 'view_peuple_commission' %}" class="sdi-sol-button">Votre cadeau argent</a>
-                    <button id="install-app-btn" type="button" class="sdi-sol-button" onclick="window.openInstaller()" title="Installer l'application">📱 Installer l'Application</button>
-                    {% if request.user.is_authenticated %}
-                        <a href="{% url 'sdi_sol' %}" class="sdi-sol-button">SDI Sol</a>
-                    {% endif %}
                 </div>
             </nav>
             <div id="mobile-nav-backdrop" class="mobile-nav-backdrop" aria-hidden="true"></div>
@@ -3214,112 +3619,141 @@
                     <button id="mobile-nav-close" class="mobile-nav-close" aria-label="Fermer le menu mobile">✕</button>
                 </header>
                 <div class="mobile-nav-links">
-                    <a href="{% url 'home' %}" class="sdi-sol-button">Accueil</a>
-                    <a href="{% url 'search' %}" class="sdi-sol-button">Produits</a>
-                    <a href="{% url 'sdi_transport' %}" class="button small" style="background:#2563eb; color:white;">🚍 SDI TRANSPORT</a>
-                    <a href="{% url 'chat' %}">Chat Ensemble</a>
-                    <a href="{% url 'formations_en_ligne' %}" target="_blank" rel="noopener" class="button small" style="background:#10b981; color:white;">🎓 FORMATIONS EN LIGNE</a>
-                    <a href="{% url 'microordinateur' %}" class="button small" style="background:#0ea5e9; color:white;">🌐 MicroOrdinateur</a>
-                    <a href="{% url 'technician_profiles' %}" class="button small" style="background:#06b6d4; color:white;">🔧 Annuaire Techniciens</a>
-                    <a href="{% url 'studio_beaute_request' %}" class="button small">➕ Créer mon Studio de Beauté</a>
-                    {% if request.user.is_superuser or request.user.role == 'super_admin' or perms.marketplace.manage_beauty_studio_requests %}
-                    <a href="{% url 'studio_beaute_requests_admin' %}" class="button small" style="background:#8b5cf6; color:white;">🧴 Validation Studio Beauté</a>
-                    {% endif %}
-                    <details class="mobile-activity-menu">
-                        <!-- Mobile summary 'Mes Activités SDI' removed -->
-                        <div class="mobile-activity-items">
-                            {% for item in activity_menu_items %}
-                                <a href="{{ item.url|default:'#' }}" class="mobile-activity-item">
-                                    <span><i class="{{ item.icon_class }}"></i></span>
-                                    <div>
-                                        <strong>{{ item.title }}</strong>
-                                        {% if item.description %}
-                                            <small>{{ item.description|linebreaksbr }}</small>
-                                        {% endif %}
-                                    </div>
-                                </a>
-                            {% endfor %}
-                            <a href="{% url 'transfer_funds' %}" class="mobile-activity-item">
-                                <span><i class="fa-solid fa-globe"></i></span>
-                                <div>
-                                    <strong>SDI Transfer à l’étranger</strong>
-                                    <small>Transfert international sécurisé. Le bénéficiaire reçoit son agent à domicile en USD.</small>
-                                </div>
-                            </a>
+                    <div class="mobile-nav-control-row">
+                        <button id="mobile-scroll-top" class="mobile-nav-control-button" type="button" data-icon="⬆️">Remonter</button>
+                        <button id="mobile-scroll-bottom" class="mobile-nav-control-button" type="button" data-icon="⬇️">Descendre</button>
+                    </div>
+                    <div class="mobile-nav-group">
+                        <p class="mobile-nav-group-title">Accès rapide</p>
+                        <div class="mobile-nav-grid">
+                            <a href="{% url 'home' %}" class="mobile-nav-card" data-icon="🏠">Accueil</a>
+                            <a href="{% url 'search' %}" class="mobile-nav-card" data-icon="🛍️">Produits</a>
+                            <a href="{% url 'cart' %}" class="mobile-nav-card" data-icon="🛒">Panier</a>
+                            <a href="{% url 'chat' %}" class="mobile-nav-card" data-icon="💬">Chat</a>
+                        </div>
+                    </div>
+
+                    <div class="mobile-nav-group">
+                        <p class="mobile-nav-group-title">Services</p>
+                        <div class="mobile-nav-grid">
+                            <a href="{% url 'real_estate:home' %}" class="mobile-nav-card" data-icon="🏠">Immobilier</a>
+                            <a href="{% url 'sdi_transport' %}" class="mobile-nav-card" data-icon="🚍">Transport</a>
+                            <a href="{% url 'formations_en_ligne' %}" target="_blank" rel="noopener" class="mobile-nav-card" data-icon="🎓">Formations</a>
+                            <a href="{% url 'microordinateur' %}" class="mobile-nav-card" data-icon="🌐">MicroOrdinateur</a>
+                            <a href="{% url 'technician_profiles' %}" class="mobile-nav-card" data-icon="🔧">Techniciens</a>
+                            <a href="{% url 'studio_beaute_request' %}" class="mobile-nav-card" data-icon="➕">Beauté</a>
+                            <a href="{% url 'profile' %}#agent-transfer-section" class="mobile-nav-card" data-icon="✈️">Transfert</a>
+                            <a href="{% url 'tikane_access' %}" class="mobile-nav-card" data-icon="💰">Ti Kanè</a>
+                            <a href="{% url 'view_peuple_commission' %}" class="mobile-nav-card" data-icon="🎁">Cadeau</a>
+                        </div>
+                    </div>
+
+                    <div class="mobile-nav-group">
+                        <p class="mobile-nav-group-title">Compte</p>
+                        <div class="mobile-nav-grid">
+                            {% if request.user.is_authenticated %}
+                                <a href="{% url 'profile' %}" class="mobile-nav-card" data-icon="👤">Profil</a>
+                                <a href="{% url 'order_history' %}" class="mobile-nav-card" data-icon="📦">Commandes</a>
+                                <a href="{% url 'sdi_sol' %}" class="mobile-nav-card" data-icon="💎">SDI Sol</a>
+                                <a href="{% url 'transfer_funds' %}" class="mobile-nav-card" data-icon="💸">Transférer</a>
+                            {% else %}
+                                <a href="{% url 'login' %}" class="mobile-nav-card" data-icon="🔑">Connexion</a>
+                                <a href="{% url 'signup' %}" class="mobile-nav-card" data-icon="📝">Inscription</a>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mobile-nav-group">
+                        <p class="mobile-nav-group-title">Outils</p>
+                        <div class="mobile-nav-grid">
+                            <a href="#" id="install-app-mobile" class="mobile-nav-card" data-icon="📱" onclick="window.openInstaller();return false;">Installer</a>
+                            <a href="{% url 'private_chat_contacts' %}" class="mobile-nav-card" data-icon="✉️">Messages</a>
+                            <a href="{% url 'delivery_tracking' %}" class="mobile-nav-card" data-icon="🚚">Suivi</a>
+                            <a href="{% url 'client_deposit_receipts' %}" class="mobile-nav-card" data-icon="🧾">Reçus</a>
+                        </div>
+                    </div>
+
+                    {% if request.user.is_staff %}
+                    <details class="mobile-nav-group mobile-nav-details">
+                        <summary class="mobile-nav-group-title">Administration</summary>
+                        <div class="mobile-nav-grid mobile-nav-grid-full">
+                            <a href="{% url 'admin:index' %}" class="mobile-nav-card" data-icon="⚙️">Admin</a>
+                            <a href="{% url 'admin_tikane_requests' %}" class="mobile-nav-card" data-icon="💰">Admin Ti Kanè</a>
+                            <a href="{% url 'admin_add_money' %}" class="mobile-nav-card" data-icon="➕">Ajouter Argent</a>
+                            <a href="{% url 'admin_add_agent' %}" class="mobile-nav-card" data-icon="👥">Ajouter Agent</a>
+                            <a href="{% url 'manage_agent_commissions' %}" class="mobile-nav-card" data-icon="📈">Commissions</a>
+                            <a href="{% url 'manage_withdrawal_commissions' %}" class="mobile-nav-card" data-icon="💸">Retraits</a>
+                            <a href="{% url 'manage_delivery_assignments' %}" class="mobile-nav-card" data-icon="🚗">Livreurs</a>
+                            <a href="{% url 'view_receipts' %}" class="mobile-nav-card" data-icon="📄">Reçus</a>
+                            {% if request.user.role == 'super_admin' or request.user.is_superuser %}
+                                <a href="{% url 'manage_admin_permissions' %}" class="mobile-nav-card" data-icon="🔑">Permissions</a>
+                            {% endif %}
+                            <a href="#" class="mobile-nav-card" data-icon="🎨">UI Design</a>
                         </div>
                     </details>
-                    <a href="{% url 'tikane_access' %}" class="mobile-activity-item">
-                        <span><i class="fa-solid fa-piggy-bank"></i></span>
-                        <div>
-                            <strong>Ti Kanè Digital</strong>
-                            <small>Demande d'accès et suivi épargne</small>
-                        </div>
-                    </a>
-                    {% if request.user.is_staff %}
-                        <a href="{% url 'admin_add_money' %}?action=add&amount=100&currency=HTG&target=single&account_type=principal" class="button small" style="background:#16a34a; color:white; display:inline-block; margin-top:10px;">💵 Modifier 100 HTG</a>
                     {% endif %}
-                    <!-- Mobile button 'Votre cadeau argent' removed as requested -->
-                    {% if request.user.is_authenticated %}
-                        <a id="private-chat-link-mobile" href="{% url 'private_chat_contacts' %}">
-                            Messages privés
-                            <span id="private-message-indicator-mobile" class="private-message-indicator{% if private_unread_message_count > 0 %} active{% endif %}" aria-hidden="true">
-                                <span class="dot"></span>
-                            </span>
-                        </a>
-                        <a href="{% url 'sdi_sol' %}" class="sdi-sol-button">SDI Sol</a>
-                    {% endif %}
-                    <a href="{% url 'cart' %}">Panier</a>
-                    {% if request.user.is_authenticated %}
-                        <a href="{% url 'profile' %}">Profil</a>
-                        <a href="{% url 'order_history' %}">Historique</a>
-                        <a href="{% url 'client_deposit_receipts' %}">Mes reçus</a>
-                        <a href="{% url 'transfer_receipts' %}">Reçus Transfert</a>
-                        <a href="{% url 'delivery_tracking' %}">Suivi</a>
-                        {% if request.user.is_delivery_employee %}
-                            <a href="{% url 'driver_dashboard' %}">Dashboard Livreur</a>
-                        {% endif %}
-                    {% endif %}
-                    {% if request.user.is_staff %}
-                        <a href="{% url 'admin:index' %}">Admin</a>
-                        <a href="{% url 'admin_tikane_requests' %}">💰 Admin Ti Kanè</a>
-                        <a href="{% url 'admin_add_money' %}">Admin Ajouter Argent</a>
-                        <a href="{% url 'admin_add_agent' %}">Admin Ajouter Agent</a>
-                        <a href="{% url 'manage_agent_commissions' %}">💰 Commission Dépôt Agent</a>
-                        <a href="{% url 'manage_withdrawal_commissions' %}">💸 Commission Retrait</a>
-                        <a href="{% url 'manage_delivery_assignments' %}">🚗 Gérer Livreurs</a>
-                        <a href="{% url 'view_receipts' %}">📄 Voir les reçus</a>
-                        {% if request.user.role == 'super_admin' or request.user.is_superuser %}
-                            <a href="{% url 'manage_admin_permissions' %}">🔑 Permissions Admin</a>
-                        {% endif %}
-                        <a href="#" class="ui-theme-trigger ui-design-system-open">UI Design System</a>
-                    {% endif %}
+
                     {% if request.user.is_agent %}
-                        <a href="{% url 'agent_withdrawal_dashboard' %}">💰 Retrait Utilisateur</a>
-                    {% endif %}
-                    <form action="{% url 'set_currency' %}" method="post" class="currency-selector">
-                        {% csrf_token %}
-                        <div style="display:flex; flex-direction:column; gap:4px; text-align:right;">
-                            <label for="mobile-currency-select" style="color: var(--primary-dark); font-size:0.95rem;">Devise</label>
-                            <small style="color: var(--primary-dark); font-size:0.82rem;">Afficher les prix en HTG, USD, DOP ou EUR selon sélection</small>
+                    <div class="mobile-nav-group">
+                        <p class="mobile-nav-group-title">Agent</p>
+                        <div class="mobile-nav-grid">
+                            <a href="{% url 'agent_withdrawal_dashboard' %}" class="mobile-nav-card" data-icon="💰">Retrait</a>
                         </div>
-                        <select id="mobile-currency-select" name="currency" onchange="this.form.submit()">
-                            {% for code, label in currency_choices %}
-                                <option value="{{ code }}" {% if code == current_currency %}selected{% endif %}>{{ code }}</option>
-                            {% endfor %}
-                        </select>
-                        <small style="color: var(--primary-dark); font-size:0.82rem; margin-top:4px; display:block;">{{ price_conversion_note }}</small>
-                    </form>
-                    {% if request.user.is_authenticated %}
-                        <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                    </div>
+                    {% endif %}
+
+                    <div class="mobile-nav-group">
+                        <p class="mobile-nav-group-title">Devises</p>
+                        <form action="{% url 'set_currency' %}" method="post" class="currency-selector mobile-nav-currency">
                             {% csrf_token %}
-                            <button type="submit" class="logout-button" style="background:none;border:none;color:inherit;font:inherit;cursor:pointer;padding:0;">Déconnexion</button>
+                            <select id="mobile-currency-select" name="currency" onchange="this.form.submit()">
+                                {% for code, label in currency_choices %}
+                                    <option value="{{ code }}" {% if code == current_currency %}selected{% endif %}>{{ code }}</option>
+                                {% endfor %}
+                            </select>
                         </form>
-                    {% else %}
-                        <a href="{% url 'login' %}" class="sdi-sol-button">Connexion</a>
-                        <a href="{% url 'signup' %}" class="sdi-sol-button">Inscription</a>
+                    </div>
+
+                    {% if request.user.is_authenticated %}
+                        <form action="{% url 'logout' %}" method="post" class="mobile-nav-group mobile-nav-logout">
+                            {% csrf_token %}
+                            <button type="submit" class="mobile-nav-card mobile-nav-logout-button" data-icon="🚪">Déconnexion</button>
+                        </form>
                     {% endif %}
                 </div>
-            </aside>
+            </aside>            <script>
+                (function(){
+                    const makeToggle = (btn, wrapper) => {
+                        if(!btn || !wrapper) return;
+                        btn.addEventListener('click', (e)=>{
+                            const isOpen = wrapper.classList.toggle('open');
+                            btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                        });
+                        btn.addEventListener('keydown', (e)=>{
+                            if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); btn.click(); }
+                            if(e.key === 'Escape') { wrapper.classList.remove('open'); btn.setAttribute('aria-expanded','false'); }
+                        });
+                    };
+                    // Services
+                    makeToggle(document.getElementById('activity-menu-toggle'), document.getElementById('services-dropdown-wrapper'));
+                    // Account
+                    makeToggle(document.getElementById('account-toggle'), document.getElementById('account-dropdown-wrapper'));
+                    // More
+                    makeToggle(document.getElementById('more-toggle'), document.getElementById('more-dropdown-wrapper'));
+
+                    // Click outside to close
+                    document.addEventListener('click', (e)=>{
+                        ['services-dropdown-wrapper','account-dropdown-wrapper','more-dropdown-wrapper'].forEach(id=>{
+                            const w = document.getElementById(id);
+                            if(!w) return;
+                            const btn = w.querySelector('button');
+                            if(w.classList.contains('open') && !w.contains(e.target)) {
+                                w.classList.remove('open'); if(btn) btn.setAttribute('aria-expanded','false');
+                            }
+                        });
+                    }, {capture:true});
+                })();
+            </script>
         </div>
     </header>
     
@@ -3698,21 +4132,37 @@
                     logoWrapper.classList.remove('logo-expanded');
                 }
             });
+            const mobileUserAgent = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i;
+            const isTouchDevice = ('maxTouchPoints' in navigator && navigator.maxTouchPoints > 1) || window.matchMedia('(pointer:coarse)').matches;
+            const isMobileUserAgent = mobileUserAgent.test(navigator.userAgent) || (navigator.userAgentData && navigator.userAgentData.mobile);
+            const isTouchSmallScreen = isTouchDevice && Math.max(window.screen.width, window.screen.height) <= 1100;
+            const isMobileDevice = isMobileUserAgent || isTouchSmallScreen;
+            const isAndroidBrowser = /Android/i.test(navigator.userAgent);
+            document.body.classList.toggle('mobile-device', isMobileDevice);
+            document.body.classList.toggle('android-browser', isAndroidBrowser);
+
             const mobileToggle = document.getElementById('mobile-nav-toggle');
             const mobileClose = document.getElementById('mobile-nav-close');
             const mobileBackdrop = document.getElementById('mobile-nav-backdrop');
             const mobilePanel = document.getElementById('mobile-nav-panel');
 
+            if (!isMobileDevice) {
+                if (mobileToggle) mobileToggle.style.display = 'none';
+                if (mobileBackdrop) mobileBackdrop.style.display = 'none';
+                if (mobilePanel) mobilePanel.style.display = 'none';
+            }
+
             function toggleMobileNav(open) {
+                if (!isMobileDevice || !mobilePanel) return;
                 const isOpen = open === undefined ? !mobilePanel.classList.contains('open') : open;
                 mobilePanel.classList.toggle('open', isOpen);
                 mobileBackdrop.classList.toggle('open', isOpen);
-                mobileToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                if (mobileToggle) mobileToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
                 mobilePanel.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
-                mobileBackdrop.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+                if (mobileBackdrop) mobileBackdrop.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
             }
 
-            if (mobileToggle) {
+            if (isMobileDevice && mobileToggle) {
                 mobileToggle.addEventListener('click', function () {
                     toggleMobileNav(true);
                 });
@@ -3898,6 +4348,407 @@
             transform: translateY(0) !important;
             pointer-events: auto !important;
         }
+        
+        /* Footer Professionnel */
+        .professional-footer {
+            background: linear-gradient(135deg, #04102b 0%, #0a2972 35%, #1f4ed8 100%);
+            color: #ffffff;
+            padding: 60px 0 30px;
+            margin-top: 80px;
+            border-top: 2px solid rgba(59, 130, 246, 0.4);
+        }
+        
+        .footer-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 40px;
+            padding: 0 20px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        .footer-section h3 {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            font-weight: 700;
+            color: #93c5fd;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .footer-section ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .footer-section li {
+            margin: 0;
+        }
+        
+        .footer-section a {
+            color: #bfdbfe;
+            text-decoration: none;
+            transition: color 0.3s, transform 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+        }
+        
+        .footer-section a:hover {
+            color: #ffffff;
+            transform: translateX(4px);
+        }
+        
+        .footer-divider {
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            margin: 40px 0;
+        }
+        
+        .footer-bottom {
+            text-align: center;
+            padding: 0 20px;
+            color: #bfdbfe;
+            font-size: 0.9rem;
+        }
+        
+        .footer-bottom p {
+            margin: 8px 0;
+        }
+        
+        .social-links {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+        
+        .social-links a {
+            width: 42px;
+            height: 42px;
+            background: rgba(59, 130, 246, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #93c5fd;
+            transition: all 0.3s;
+            border: 1px solid rgba(59, 130, 246, 0.4);
+        }
+        
+        .social-links a:hover {
+            background: rgba(59, 130, 246, 0.4);
+            color: #ffffff;
+            transform: translateY(-4px);
+        }
+        
+        .footer-about {
+            grid-column: 1 / -1;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 24px;
+            border-radius: 16px;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        
+        .footer-about h3 {
+            margin-top: 0;
+        }
+        
+        .footer-about p {
+            margin: 0 0 12px 0;
+            line-height: 1.7;
+            color: #dbeafe;
+        }
+        
+        @media (max-width: 768px) {
+            .professional-footer {
+                padding: 40px 0 20px;
+                margin-top: 50px;
+            }
+            
+            .footer-container {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+            
+            .footer-section h3 {
+                font-size: 1.1rem;
+            }
+            
+            .social-links {
+                justify-content: center;
+            }
+        }
     </style>
+    
+    <!-- Footer Professionnel -->
+    <footer class="professional-footer">
+        <div class="footer-container">
+            <!-- À Propos -->
+            <div class="footer-section">
+                <h3><i class="fas fa-info-circle"></i> À PROPOS</h3>
+                <ul>
+                    <li><a href="{% url 'home' %}"><i class="fas fa-arrow-right" style="font-size:0.8rem;"></i> Accueil</a></li>
+                    <li><a href="{% url 'search' %}"><i class="fas fa-arrow-right" style="font-size:0.8rem;"></i> Parcourir</a></li>
+                    <li><a href="#"><i class="fas fa-arrow-right" style="font-size:0.8rem;"></i> À propos de nous</a></li>
+                    <li><a href="#"><i class="fas fa-arrow-right" style="font-size:0.8rem;"></i> Carrières</a></li>
+                </ul>
+            </div>
+            
+            <!-- Services -->
+            <div class="footer-section">
+                <h3><i class="fas fa-concierge-bell"></i> SERVICES</h3>
+                <ul>
+                    <li><a href="{% url 'real_estate:home' %}"><i class="fas fa-arrow-right" style="font-size:0.8rem;"></i> Immobilier</a></li>
+                    <li><a href="{% url 'sdi_transport' %}"><i class="fas fa-arrow-right" style="font-size:0.8rem;"></i> Transport</a></li>
+                    <li><a href="{% url 'tikane_access' %}"><i class="fas fa-arrow-right" style="font-size:0.8rem;"></i> Ti Kanè Digital</a></li>
+                    <li><a href="{% url 'transfer_funds' %}"><i class="fas fa-arrow-right" style="font-size:0.8rem;"></i> Transfert Argent</a></li>
+                </ul>
+            </div>
+            
+            <!-- Support -->
+            <div class="footer-section">
+                <h3><i class="fas fa-headset"></i> SUPPORT</h3>
+                <ul>
+                    <li><a href="#"><i class="fas fa-arrow-right" style="font-size:0.8rem;"></i> Centre d'aide</a></li>
+                    <li><a href="#"><i class="fas fa-arrow-right" style="font-size:0.8rem;"></i> FAQ</a></li>
+                    <li><a href="#"><i class="fas fa-arrow-right" style="font-size:0.8rem;"></i> Nous contacter</a></li>
+                    <li><a href="#"><i class="fas fa-arrow-right" style="font-size:0.8rem;"></i> État du service</a></li>
+                </ul>
+            </div>
+            
+            <!-- Légal -->
+            <div class="footer-section">
+                <h3><i class="fas fa-gavel"></i> LÉGAL</h3>
+                <ul>
+                    <li><a href="#"><i class="fas fa-arrow-right" style="font-size:0.8rem;"></i> Conditions d'utilisation</a></li>
+                    <li><a href="#"><i class="fas fa-arrow-right" style="font-size:0.8rem;"></i> Politique de confidentialité</a></li>
+                    <li><a href="#"><i class="fas fa-arrow-right" style="font-size:0.8rem;"></i> Politique de cookies</a></li>
+                    <li><a href="#"><i class="fas fa-arrow-right" style="font-size:0.8rem;"></i> Sécurité</a></li>
+                </ul>
+            </div>
+            
+            <!-- À Propos du site -->
+            <div class="footer-about">
+                <h3><i class="fas fa-star"></i> SDI MARCHE MONDIAL</h3>
+                <p>
+                    Bienvenue sur SDI Marche Mondial Unit, la plateforme e-commerce complète offrant des services innovants de vente, 
+                    d'achat, et de transfert d'argent sécurisé. Notre mission est de faciliter le commerce et les transactions 
+                    financières pour tous nos utilisateurs.
+                </p>
+                <p>
+                    Rejoignez notre communauté et découvrez les multiples services disponibles: immobilier, transport, formations en ligne, 
+                    et bien d'autres pour vous permettre de réussir vos projets.
+                </p>
+            </div>
+        </div>
+        
+        <div class="footer-divider"></div>
+        
+        <!-- Footer Bottom -->
+        <div class="footer-bottom">
+            <div class="social-links">
+                <a href="#" title="Facebook" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" title="Twitter" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                <a href="#" title="Instagram" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                <a href="#" title="LinkedIn" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                <a href="#" title="YouTube" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+            </div>
+            <p>&copy; 2026 <strong>SDI Marche Mondial Unit</strong>. Tous droits réservés.</p>
+            <p><small>Développé avec <i class="fas fa-heart" style="color:#ef4444;"></i> pour vous offrir la meilleure expérience</small></p>
+        </div>
+    </footer>
+
+    <nav class="mobile-bottom-tabs" aria-label="Navigation mobile">
+        <a href="{% url 'home' %}" class="mobile-bottom-tab">
+            <span class="tab-icon">🏠</span>
+            <span class="tab-label">Home</span>
+        </a>
+        <a href="{% url 'search' %}" class="mobile-bottom-tab">
+            <span class="tab-icon">👁️</span>
+            <span class="tab-label">Tips</span>
+        </a>
+        <a href="{% url 'private_chat_contacts' %}" class="mobile-bottom-tab">
+            <span class="tab-icon">💬</span>
+            <span class="tab-label">Messenger</span>
+        </a>
+        <a href="{% url 'cart' %}" class="mobile-bottom-tab">
+            <span class="tab-icon">🛒</span>
+            <span class="tab-label">Cart</span>
+        </a>
+        <a href="{% url 'profile' %}" class="mobile-bottom-tab">
+            <span class="tab-icon">👤</span>
+            <span class="tab-label">My Alibaba</span>
+        </a>
+    </nav>
+
+    <style>
+        /* Last-resort override to ensure activity dropdown menu is visible when open */
+        .activity-dropdown.open .activity-dropdown-menu {
+            visibility: visible !important;
+            opacity: 1 !important;
+            transform: translateY(0) !important;
+            pointer-events: auto !important;
+        }
+        
+        /* Scroll to Top Button */
+        #scroll-to-top, #scroll-to-bottom {
+            position: fixed;
+            bottom: 40px;
+            right: 30px;
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #1d4ed8, #2563eb);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            z-index: 99;
+            opacity: 0;
+            transform: scale(0);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 
+                0 4px 12px rgba(30, 64, 175, 0.25),
+                0 0 0 0 rgba(37, 99, 235, 0.15);
+            backdrop-filter: blur(10px);
+        }
+        
+        #scroll-to-top.show {
+            display: flex;
+            opacity: 0.9;
+            transform: scale(1);
+            animation: button-float-top 2s ease-in-out infinite;
+        }
+        
+        #scroll-to-bottom.show {
+            display: flex;
+            opacity: 0.9;
+            transform: scale(1);
+            animation: button-float-bottom 2s ease-in-out infinite;
+            bottom: 85px;
+        }
+        
+        @keyframes button-float-top {
+            0%, 100% { transform: scale(1) translateY(0); }
+            50% { transform: scale(1) translateY(-3px); }
+        }
+        
+        @keyframes button-float-bottom {
+            0%, 100% { transform: scale(1) translateY(0); }
+            50% { transform: scale(1) translateY(3px); }
+        }
+        
+        #scroll-to-top:hover, #scroll-to-bottom:hover {
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+            transform: scale(1.15);
+            opacity: 1;
+            box-shadow: 
+                0 6px 16px rgba(30, 64, 175, 0.35),
+                0 0 0 0 rgba(37, 99, 235, 0.25);
+        }
+        
+        #scroll-to-top:active, #scroll-to-bottom:active {
+            transform: scale(0.9);
+        }
+        
+        @media (max-width: 768px) {
+            #scroll-to-top, #scroll-to-bottom {
+                width: 28px;
+                height: 28px;
+                bottom: 30px;
+                right: 15px;
+                font-size: 0.7rem;
+            }
+            
+            #scroll-to-bottom {
+                bottom: 70px;
+            }
+        }
+    </style>
+    
+    <!-- Scroll Buttons (Top & Bottom) -->
+    <button id="scroll-to-top" aria-label="Remonter en haut" title="Remonter">
+        <i class="fas fa-chevron-up"></i>
+    </button>
+    <button id="scroll-to-bottom" aria-label="Descendre en bas" title="Descendre">
+        <i class="fas fa-chevron-down"></i>
+    </button>
+    
+    <script>
+    // Scroll to Top/Bottom Button functionality
+    const scrollToTopBtn = document.getElementById('scroll-to-top');
+    const scrollToBottomBtn = document.getElementById('scroll-to-bottom');
+    const mobileScrollTopBtn = document.getElementById('mobile-scroll-top');
+    const mobileScrollBottomBtn = document.getElementById('mobile-scroll-bottom');
+    const mobileNavPanel = document.getElementById('mobile-nav-panel');
+    
+    function scrollToTop() {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+        // Close mobile menu if open
+        if (mobileNavPanel) {
+            mobileNavPanel.setAttribute('aria-hidden', 'true');
+            document.getElementById('mobile-nav-backdrop')?.setAttribute('aria-hidden', 'true');
+        }
+    }
+    
+    function scrollToBottom() {
+        window.scrollTo({
+            top: document.documentElement.scrollHeight,
+            behavior: 'smooth'
+        });
+        // Close mobile menu if open
+        if (mobileNavPanel) {
+            mobileNavPanel.setAttribute('aria-hidden', 'true');
+            document.getElementById('mobile-nav-backdrop')?.setAttribute('aria-hidden', 'true');
+        }
+    }
+    
+    // Show/hide buttons on scroll
+    window.addEventListener('scroll', function() {
+        const scrollPos = window.pageYOffset || document.documentElement.scrollTop;
+        const pageHeight = document.documentElement.scrollHeight;
+        const viewportHeight = window.innerHeight;
+        const distanceFromBottom = pageHeight - (scrollPos + viewportHeight);
+        
+        // Show top button if scrolled more than 300px
+        if (scrollPos > 300) {
+            scrollToTopBtn.classList.add('show');
+        } else {
+            scrollToTopBtn.classList.remove('show');
+        }
+        
+        // Show bottom button if not at bottom (more than 500px from bottom)
+        if (distanceFromBottom > 500) {
+            scrollToBottomBtn.classList.add('show');
+        } else {
+            scrollToBottomBtn.classList.remove('show');
+        }
+    });
+    
+    // Desktop buttons
+    scrollToTopBtn.addEventListener('click', scrollToTop);
+    scrollToBottomBtn.addEventListener('click', scrollToBottom);
+    
+    // Mobile menu buttons (if they exist)
+    if (mobileScrollTopBtn) {
+        mobileScrollTopBtn.addEventListener('click', scrollToTop);
+    }
+    if (mobileScrollBottomBtn) {
+        mobileScrollBottomBtn.addEventListener('click', scrollToBottom);
+    }
+    </script>
 </body>
 </html>
