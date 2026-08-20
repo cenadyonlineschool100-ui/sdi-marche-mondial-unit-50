@@ -50,13 +50,13 @@ def main():
         ("cd ~ && git clone https://github.com/cenadyonlineschool100-ui/sdi-marche-mondial-unit-50.git sdi_site",
          "Step 1: Clone GitHub repository"),
         
-        ("mkvirtualenv --python=/usr/bin/python3.10 sdi_venv",
+        ("mkvirtualenv --python=/usr/bin/python3.12 sdi_venv",
          "Step 2: Create virtualenv"),
         
-        ("cd ~/sdi_site/sdi_market && workon sdi_venv && pip install --upgrade pip setuptools wheel",
+        ("cd ~/sdi_site && workon sdi_venv && pip install --upgrade pip setuptools wheel",
          "Step 3a: Upgrade pip"),
         
-        ("cd ~/sdi_site/sdi_market && workon sdi_venv && pip install -r requirements.txt",
+        ("cd ~/sdi_site && workon sdi_venv && pip install -r requirements.txt",
          "Step 3b: Install dependencies"),
         
         ("cd ~/sdi_site/sdi_market && workon sdi_venv && python manage.py migrate --noinput",

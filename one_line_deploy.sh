@@ -12,7 +12,7 @@ cd ~ && git clone https://github.com/cenadyonlineschool100-ui/sdi-marche-mondial
 
 # Step 2: Create virtualenv
 echo "🐍 Step 2: Creating virtualenv..."
-mkvirtualenv --python=/usr/bin/python3.10 sdi_venv 2>/dev/null || workon sdi_venv
+mkvirtualenv --python=/usr/bin/python3.12 sdi_venv 2>/dev/null || workon sdi_venv
 
 # Step 3: Navigate and install
 echo "📦 Step 3: Installing dependencies..."
