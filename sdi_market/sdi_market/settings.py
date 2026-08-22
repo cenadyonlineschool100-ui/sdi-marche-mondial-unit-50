@@ -78,7 +78,6 @@ TEMPLATES = [
                 'marketplace.context_processors.activity_menu_context',
                 'marketplace.context_processors.private_chat_context',
                 'marketplace.context_processors.system_settings_context',
-                'marketplace.context_processors.theme_context',
                 'marketplace.context_processors.announcement_context',
             ],
         },

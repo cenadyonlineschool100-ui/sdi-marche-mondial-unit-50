@@ -16,7 +16,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <link rel="stylesheet" href="/static/css/fintech-dashboard.css">
-    <link rel="stylesheet" href="/static/css/ui-design-system.css">
 
     <style>
         :root {
@@ -2301,7 +2300,7 @@
             transform: scale(1.5);
         }
         /* Stabilisation des cartes et images: réduire tremblements et sauts */
-        .card, .promo-card, .product-card, .shop-card, .shop-detail-card, .chat-group-card, .chat-product-card, .fintech-card, .fintech-card-glass, .fintech-card-premium, .ui-theme-card {
+        .card, .promo-card, .product-card, .shop-card, .shop-detail-card, .chat-group-card, .chat-product-card, .fintech-card, .fintech-card-glass, .fintech-card-premium {
             position: relative;
             overflow: hidden;
             will-change: transform, box-shadow;
@@ -2311,7 +2310,7 @@
             z-index: 0;
             transition-property: transform, box-shadow;
         }
-        .card:hover, .promo-card:hover, .product-card:hover, .shop-card:hover, .shop-detail-card:hover, .chat-group-card:hover, .chat-product-card:hover, .fintech-card:hover, .fintech-card-glass:hover, .fintech-card-premium:hover, .ui-theme-card:hover {
+        .card:hover, .promo-card:hover, .product-card:hover, .shop-card:hover, .shop-detail-card:hover, .chat-group-card:hover, .chat-product-card:hover, .fintech-card:hover, .fintech-card-glass:hover, .fintech-card-premium:hover {
             z-index: 6;
         }
         .card::after,
@@ -2323,8 +2322,7 @@
         .chat-product-card::after,
         .fintech-card::after,
         .fintech-card-glass::after,
-        .fintech-card-premium::after,
-        .ui-theme-card::after {
+        .fintech-card-premium::after {
             content: '';
             position: absolute;
             top: -30%;
@@ -2370,7 +2368,7 @@
         /* Ensure images are block-level and have stable dimensions */
         img { display: block; max-width: 100%; height: auto; }
         .product-image, .promo-thumb img, .shop-card-image img, .thumbnail-img { display:block; width:100%; height:auto; }
-        /* Global theme integration for UI Design System */
+        /* Global theme integration */
         body {
             background: var(--background, var(--page-bg));
             color: var(--text);
@@ -2378,8 +2376,6 @@
         header,
         .nav-bar,
         .mobile-nav-panel,
-        .ui-theme-window,
-        .ui-theme-panel,
         .chat-sidebar,
         .chat-panel,
         .chat-group-card,
@@ -2524,76 +2520,6 @@
         </div>
     </header>
     
-
-    <div id="ui-design-system-modal" class="ui-theme-modal" aria-hidden="true">
-        <div class="ui-theme-window" role="dialog" aria-modal="true" aria-labelledby="ui-design-system-title">
-            <header>
-                <div>
-                    <h2 id="ui-design-system-title">UI Design System</h2>
-                    <p>Gestionnaire de thèmes premium en glassmorphism pour un design futuriste et des transitions instantanées.</p>
-                </div>
-                <div style="display: flex; gap: 8px;">
-                    <button id="ui-design-system-back" class="ui-theme-back" aria-label="Retour" title="Retour à la page précédente">← Retour</button>
-                    <button id="ui-design-system-close" class="ui-theme-close" aria-label="Fermer">✕</button>
-                </div>
-            </header>
-            <div class="ui-theme-sidebar">
-                <section class="ui-theme-panel ui-theme-section">
-                    <div class="ui-theme-banner">
-                        <h3>Thèmes disponibles</h3>
-                        <p>Sélectionnez un thème pour appliquer instantanément un style nouveau et premium à votre interface.</p>
-                    </div>
-                    <div class="ui-theme-grid"></div>
-                </section>
-                <section class="ui-theme-panel ui-theme-picker">
-                    <div>
-                        <h4>Personnalisation avancée</h4>
-                        <p>Modifiez les couleurs principales du système et observez le rendu en temps réel.</p>
-                    </div>
-                    <div class="ui-color-row">
-                        <label for="color-brand">Couleur principale</label>
-                        <input type="color" id="color-brand" data-color-var="--brand" value="#4f46e5">
-                    </div>
-                    <div class="ui-color-row">
-                        <label for="color-glow">Glow</label>
-                        <input type="color" id="color-glow" data-color-var="--glow" value="#4fd8ff">
-                    </div>
-                    <div class="ui-color-row">
-                        <label for="color-background">Background</label>
-                        <input type="color" id="color-background" data-color-var="--background" value="#07101f">
-                    </div>
-                    <div class="ui-color-row">
-                        <label for="color-navbar">Navbar</label>
-                        <input type="color" id="color-navbar" data-color-var="--navbar" value="#08111f">
-                    </div>
-                    <div class="ui-color-row">
-                        <label for="color-sidebar">Sidebar</label>
-                        <input type="color" id="color-sidebar" data-color-var="--sidebar" value="#0f1a34">
-                    </div>
-                    <div class="ui-color-row">
-                        <label for="color-card">Cards</label>
-                        <input type="color" id="color-card" data-color-var="--card" value="#111f3d">
-                    </div>
-                    <div class="ui-color-row">
-                        <label for="color-button">Buttons</label>
-                        <input type="color" id="color-button" data-color-var="--button" value="#0ea5e9">
-                    </div>
-                    <div class="ui-theme-custom-preview">
-                        <span>Navbar</span>
-                        <span>Sidebar</span>
-                        <span>Cards</span>
-                    </div>
-                    <div class="ui-theme-footer">
-                        <button type="button" id="theme-reset-btn" class="ui-theme-button secondary">Reset</button>
-                        <button type="button" id="theme-export-btn" class="ui-theme-button secondary">Exporter</button>
-                        <button type="button" id="theme-import-btn" class="ui-theme-button secondary">Importer</button>
-                    </div>
-                    <textarea id="theme-import-export" placeholder="Coller ou copier le JSON du thème ici" style="width:100%; min-height:100px; border:1px solid rgba(255,255,255,0.12); border-radius:12px; background: rgba(255,255,255,0.05); color: #fff; padding:12px; margin-top:10px; resize:vertical;"></textarea>
-                    <div class="ui-theme-note">Les personnalisations sont enregistrées automatiquement et appliquées immédiatement. Vous pouvez exporter et importer vos thèmes en JSON.</div>
-                </section>
-            </div>
-        </div>
-    </div>
     <div class="container">
         
         
@@ -2774,7 +2700,6 @@
         };
     </script>
     
-    <script src="/static/js/ui-design-system.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const logoWrapper = document.getElementById('site-logo');

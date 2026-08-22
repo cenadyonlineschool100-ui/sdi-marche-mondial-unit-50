@@ -163,42 +163,6 @@ def system_settings_context(request):
     return {'system_settings': settings_obj}
 
 
-import json
-
-
-def theme_context(request):
-    """Context processor pour injecter les données de thème utilisateur dans tous les templates."""
-    theme_name = 'blue-mirror'
-    theme_settings = {}
-    
-    try:
-        if request.user.is_authenticated:
-            profile = getattr(request.user, 'profile', None)
-            if profile:
-                theme_name = profile.theme_name or 'blue-mirror'
-                theme_settings = profile.theme_settings or {}
-        else:
-            cookie_theme_name = request.COOKIES.get('ui_theme_name')
-            cookie_theme_settings = request.COOKIES.get('ui_theme_settings')
-            if cookie_theme_name:
-                theme_name = cookie_theme_name
-            if cookie_theme_settings:
-                try:
-                    parsed_settings = json.loads(cookie_theme_settings)
-                    if isinstance(parsed_settings, dict):
-                        theme_settings = parsed_settings
-                except (json.JSONDecodeError, TypeError):
-                    pass
-    except Exception:
-        # En cas d'erreur, utiliser les valeurs par défaut
-        pass
-    
-    return {
-        'user_theme_name': theme_name,
-        'user_theme_settings': theme_settings,
-    }
-
-
 def announcement_context(request):
     """
     Add active announcements to template context

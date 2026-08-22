@@ -3058,30 +3058,6 @@ def profile(request):
                 messages.error(request, 'Utilisateur admin introuvable.')
             return redirect('profile')
 
-        # Gestion des thèmes UI (Super Admin seulement)
-        if request.user.is_staff and request.user.role in ['super_admin', 'admin_secondary'] and 'save_theme' in request.POST:
-            theme_name = request.POST.get('theme_name')
-            theme_settings = request.POST.get('theme_settings', '{}')
-            
-            try:
-                theme_settings_dict = json.loads(theme_settings)
-                
-                profile.theme_name = theme_name
-                profile.theme_settings = theme_settings_dict
-                profile.save(update_fields=['theme_name', 'theme_settings'])
-                
-                messages.success(request, f'Thème "{theme_name}" sauvegardé avec succès.')
-                response = redirect('profile')
-                response.set_cookie('ui_theme_name', theme_name or '', max_age=31536000, samesite='Lax', path='/')
-                response.set_cookie('ui_theme_settings', json.dumps(theme_settings_dict or {}), max_age=31536000, samesite='Lax', path='/')
-                return response
-            except json.JSONDecodeError:
-                messages.error(request, 'Données de thème invalides.')
-                return redirect('profile')
-            except Exception as e:
-                messages.error(request, f'Erreur lors de la sauvegarde du thème: {str(e)}')
-                return redirect('profile')
-
         # Gestion du profil - mise à jour du formulaire de profil
         if 'profile_form_submit' in request.POST or (request.method == 'POST' and 'update_withdrawal_codes' not in request.POST and 'update_commission' not in request.POST and 'update_category_commission' not in request.POST and 'security_action' not in request.POST and 'withdrawal_decision' not in request.POST and 'grant_withdrawal_permission' not in request.POST and 'grant_secondary_admin' not in request.POST and 'toggle_global_withdrawal_access' not in request.POST and 'save_theme' not in request.POST and 'transfer_submit' not in request.POST):
             form = ProfileForm(request.POST, request.FILES, instance=profile)
@@ -3425,8 +3401,6 @@ def profile(request):
         'system_settings': system_settings,
         'security_incidents': security_incidents,
         'blocked_ips': blocked_ips,
-        'user_theme_name': profile.theme_name,
-        'user_theme_settings': profile.theme_settings,
         'is_principal_admin': is_principal_admin,
         'can_use_agent_financial_tools': can_use_agent_financial_tools,
         'can_use_full_admin_actions': can_use_full_admin_actions,
@@ -3827,48 +3801,6 @@ def process_receipt(request, receipt_id):
         messages.error(request, 'Action invalide.')
     
     return redirect('view_receipts')
-
-
-@login_required
-@require_POST
-def save_theme_settings(request):
-    """API endpoint pour sauvegarder les paramètres de thème via AJAX"""
-    try:
-        import json
-        data = json.loads(request.body)
-        theme_name = data.get('theme_name')
-        theme_settings = data.get('theme_settings', {})
-
-        profile = getattr(request.user, 'profile', None)
-        if profile is None:
-            profile = Profile.objects.create(user=request.user)
-
-        profile.theme_name = theme_name
-        profile.theme_settings = theme_settings
-        profile.save(update_fields=['theme_name', 'theme_settings'])
-
-        response = JsonResponse({'success': True, 'message': f'Thème "{theme_name}" sauvegardé.'})
-        response.set_cookie('ui_theme_name', theme_name or '', max_age=31536000, samesite='Lax', path='/')
-        response.set_cookie('ui_theme_settings', json.dumps(theme_settings or {}), max_age=31536000, samesite='Lax', path='/')
-        return response
-    except Exception as e:
-        return JsonResponse({'success': False, 'message': str(e)}, status=400)
-
-
-@login_required
-def get_theme_settings(request):
-    """API endpoint pour récupérer les paramètres de thème de l'utilisateur"""
-    profile = getattr(request.user, 'profile', None)
-    if profile is None:
-        return JsonResponse({
-            'theme_name': 'blue-mirror',
-            'theme_settings': {}
-        })
-
-    return JsonResponse({
-        'theme_name': profile.theme_name,
-        'theme_settings': profile.theme_settings
-    })
 
 
 @login_required

@@ -517,9 +517,6 @@
             <div class="dashboard-actions">
                 <button class="btn-fintech btn-primary" id="btn-withdraw">💸 Retirer</button>
                 <button class="btn-fintech btn-success" id="btn-transfer">🔄 Transférer</button>
-                {% if request.user.is_superuser or request.user.role == 'super_admin' or request.user.role == 'admin_secondary' %}
-                    <button class="btn-fintech btn-secondary ui-design-system-open" type="button">🎨 UI Design System</button>
-                {% endif %}
                 <button class="btn-fintech btn-outline" onclick="location.href='{% url 'profile' %}'">⚙️ Paramètres</button>
             </div>
         </div>

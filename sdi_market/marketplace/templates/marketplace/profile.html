@@ -239,7 +239,6 @@
             <div id="d-ui-maison-items-container" style="display:flex; flex-direction:column; gap:10px;">
                 <a href="#product-access-requests-section" class="d-ui-maison-item" style="padding:12px 14px; background:white; border:1px solid #f59e0b; border-radius:8px; text-decoration:none; color:#0f172a; font-weight:500; cursor:pointer; display:none;">📋 Aller aux demandes à approuver</a>
                 <a href="{% url 'real_estate:admin_membership_requests' %}" class="d-ui-maison-item" style="padding:12px 14px; background:white; border:1px solid #f59e0b; border-radius:8px; text-decoration:none; color:#0f172a; font-weight:500; cursor:pointer; display:none;">🏠 Maison Louer Client</a>
-                <button class="d-ui-maison-item ui-design-system-open" style="padding:12px 14px; background:white; border:1px solid #f59e0b; border-radius:8px; color:#0f172a; font-weight:500; cursor:pointer; display:none; text-align:left;">🎨 UI Design System</button>
             </div>
             <div style="margin-top:12px; display:flex; align-items:center; justify-content:center; gap:8px;">
                 <button id="d-ui-maison-prev" class="fintech-btn btn-secondary" style="padding:6px 10px; font-size:0.9rem;">← Précédent</button>
@@ -249,17 +248,6 @@
         </div>
     </div>
 
-    <div class="fintech-panel" style="margin-top:16px; background: linear-gradient(135deg, rgba(56, 189, 248, 0.12), rgba(79, 70, 229, 0.08)); border: 1px solid rgba(59, 130, 246, 0.14);">
-        <div class="fintech-title">
-            <span class="wallet-icon">🎛️</span>
-            <span>Theme Control Center</span>
-        </div>
-        <div class="fintech-section">
-            <p style="margin:0 0 8px 0; color:#1e293b; font-weight: 500;">Accès rapide au gestionnaire de thèmes UI professionnel. Ouvre la fenêtre de sélection de design et applique instantanément un style premium.</p>
-            <p style="margin:0 0 8px 0; color:#1e293b; font-weight: 500;"><strong>Thème actif :</strong> {{ user_theme_name|default:'Par défaut' }}</p>
-            <button type="button" class="fintech-btn btn-primary ui-design-system-open" style="padding:10px 14px;">Ouvrir UI Design System</button>
-        </div>
-    </div>
     <div id="performance-management-section" class="fintech-panel" style="margin-top:16px; background: linear-gradient(135deg, rgba(236, 72, 153, 0.08), rgba(168, 85, 247, 0.1)); border: 1px solid rgba(192, 132, 252, 0.18);">
         <div class="fintech-title">
             <span class="wallet-icon">⚡</span>
@@ -281,14 +269,14 @@
     </div>
     {% endif %}
 
-    <!-- Theme Customizer (does not alter UI Design System) -->
+    <!-- Theme Customizer -->
     <div class="fintech-panel" style="margin-top:16px;">
         <div class="fintech-title">
             <span class="wallet-icon">🎨</span>
             <span>Personnaliser la couleur du site</span>
         </div>
         <div class="fintech-section">
-            <p style="margin:0 0 8px 0; color:#1e293b; font-weight: 500;">Choisis une couleur principale pour ton site. Ceci n'altère pas le UI Design System global.</p>
+            <p style="margin:0 0 8px 0; color:#1e293b; font-weight: 500;">Choisis une couleur principale pour ton site.</p>
                 <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-top:12px;">
                 <button type="button" class="fintech-btn btn-secondary theme-swatch" data-preset="blue" title="Bleu" style="background:linear-gradient(135deg,#2563eb,#00a3ff); border:1px solid rgba(0,0,0,0.06); width:54px; height:40px; padding:0;"></button>
                 <button type="button" class="fintech-btn btn-secondary theme-swatch" data-preset="teal" title="Cyan" style="background:linear-gradient(135deg,#06b6d4,#00d4ff); border:1px solid rgba(0,0,0,0.06); width:54px; height:40px; padding:0;"></button>
@@ -309,7 +297,7 @@
                 <div class="fintech-section">
                     <form method="POST" id="commission-button-color-form" style="display:flex; flex-direction:column; gap:12px;">
                         {% csrf_token %}
-                        <input type="hidden" id="commission-button-gradient-input" name="commission_button_gradient" value="{{ user_theme_settings.commission_button_gradient|default:'' }}">
+                        <input type="hidden" id="commission-button-gradient-input" name="commission_button_gradient" value="{{ profile.theme_settings.commission_button_gradient|default:'' }}">
                         <p style="margin:0 0 8px 0; color:#1e293b; font-weight: 500;">Change la couleur du bouton `Votre cadeau argent`. La modification est enregistrée dans ton profil et sera restaurée automatiquement.</p>
                         <div style="display:flex; align-items:center; gap:12px; margin-top:12px; flex-wrap:wrap;">
                             <div id="button-color-preview" style="width:72px; height:44px; border-radius:10px; border:1px solid rgba(0,0,0,0.06); background:var(--sdi-sol-gradient);"></div>
@@ -320,7 +308,6 @@
                                 <input type="color" id="button-color-input" style="display:none;" aria-label="Choisir couleur du bouton">
                             </div>
                         </div>
-                        <p style="margin:8px 0 0 0; color:#64748b; font-size:0.9rem;">Astuce : utilise le UI Design System pour changer le thème global.</p>
                     </form>
                 </div>
             </div>
@@ -2565,7 +2552,7 @@
 
         function savePreset(name) {
             try {
-                localStorage.setItem('ui_design_system_settings', JSON.stringify({ activeTheme: 'custom', custom: { '--brand': presets[name]['--brand'], '--glow': presets[name]['--cyan-accent'] } }));
+                localStorage.setItem('sdi_theme_preset', name);
             } catch (e) {
                 console.warn('Impossible de sauvegarder le thème localement.', e);
             }
@@ -2573,7 +2560,6 @@
 
         function clearPreset() {
             try {
-                localStorage.removeItem('ui_design_system_settings');
                 localStorage.removeItem('sdi_theme_preset');
             } catch (e) {
                 console.warn('Impossible de réinitialiser le thème localement.', e);
@@ -2587,18 +2573,8 @@
                 const name = btn.dataset.preset;
                 const preset = presets[name];
                 if (!preset) return;
-                // Map lightweight preset to ui-design-system expected vars and dispatch event
-                const vars = {
-                    '--brand': preset['--brand'] || preset['--primary-blue'] || '',
-                    '--glow': preset['--cyan-accent'] || preset['--glow'] || ''
-                };
-                try {
-                    window.dispatchEvent(new CustomEvent('sdi_apply_preset', { detail: { vars } }));
-                } catch (e) {
-                    // Fallback: apply locally if event dispatch fails
-                    applyPreset(preset);
-                    savePreset(name);
-                }
+                applyPreset(preset);
+                savePreset(name);
             });
         });
 
@@ -2611,17 +2587,6 @@
         }
 
         try {
-            const stored = localStorage.getItem('ui_design_system_settings');
-            if (stored) {
-                const settings = JSON.parse(stored);
-                if (settings && settings.activeTheme === 'custom' && settings.custom) {
-                    const vars = {
-                        '--brand': settings.custom['--brand'],
-                        '--cyan-accent': settings.custom['--glow']
-                    };
-                    applyPreset(vars);
-                }
-            }
             const fallback = localStorage.getItem('sdi_theme_preset');
             if (fallback && presets[fallback]) applyPreset(presets[fallback]);
         } catch (e) {

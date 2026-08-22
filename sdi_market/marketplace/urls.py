@@ -28,7 +28,6 @@ from .views import (
     confirm_delivery_buyer, confirm_delivery_driver,
     withdraw_funds, upload_receipt, upload_identity, save_recharge_message, upload_selfie, view_receipts, process_receipt, view_withdrawal_receipt,
     transfer_receipts, view_transfer_receipt,
-    save_theme_settings, get_theme_settings,
     sdi_sol_page, sdi_sol_join, sdi_sol_payments, sdi_sol_make_payment, sdi_sol_payment_receipt, sdi_sol_admin, sdi_sol_admin_remove_member, sdi_sol_admin_approve_member,
     tikane_access, formations_en_ligne, live_room_webrtc, live_room_jitsi, admin_tikane_requests, admin_tikane_plans,
     demo_page, microordinateur, manage_projet,
@@ -269,10 +268,6 @@ urlpatterns = [
     path('agent/withdrawal/dashboard/', agent_withdrawal_dashboard, name='agent_withdrawal_dashboard'),
     path('agent/withdrawal/process/', agent_process_withdrawal, name='agent_process_withdrawal'),
     path('api/agent/user-search/', agent_user_search, name='agent_user_search'),
-    # API pour les thèmes UI
-    path('api/theme/save/', save_theme_settings, name='save_theme_settings'),
-    path('api/theme/get/', get_theme_settings, name='get_theme_settings'),
-    
     # Gestion des Annonces Administratives
     path('announcements/', announcements_list, name='announcements_list'),
     path('announcements/create/', announcement_create, name='announcement_create'),

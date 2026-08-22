@@ -233,9 +233,6 @@
                 {% csrf_token %}
                 <button type="submit" class="button" style="background-color: #2563eb; color: white;">🔄 Actualiser le taux de change</button>
             </form>
-             {% if request.user.is_superuser or request.user.role == 'super_admin' or request.user.role == 'admin_secondary' %}
-                <button class="button ui-design-system-open" style="background-color: #0ea5e9; color: white; border: 1px solid #0ea5e9;">🎨 UI Design System</button>
-            {% endif %}
             <a href="{% url 'profile' %}" class="button" style="background-color: #6b7280; color: white;">Retour au profil</a>
         </div>
     </div>

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 {% load marketplace_filters %}
 {% load announcement_tags %}
@@ -95,8 +95,6 @@
 
     <link rel="preload" href="{% static 'css/fintech-dashboard.css' %}" as="style" onload="this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="{% static 'css/fintech-dashboard.css' %}"></noscript>
-    <link rel="preload" href="{% static 'css/ui-design-system.css' %}" as="style" onload="this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="{% static 'css/ui-design-system.css' %}"></noscript>
     {% block extra_css %}{% endblock %}
     
     <!-- Performance Optimization Styles -->
@@ -577,12 +575,12 @@
         header::before {
             content: '';
             position: absolute;
-            left: -25%;
+            left: 0;
             top: -40%;
-            width: 170%;
+            width: 100%;
             height: 240px;
             background: linear-gradient(160deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.7) 48%, rgba(255,255,255,0.05) 82%);
-            transform: rotate(-25deg);
+            transform: none;
             filter: blur(16px);
             pointer-events: none;
             opacity: 0.85;
@@ -1203,9 +1201,6 @@
             z-index: 30;
             overflow: hidden;
         }
-        body:not(.mobile-device) .mobile-nav-toggle,
-        body:not(.mobile-device) .mobile-nav-backdrop,
-        body:not(.mobile-device) .mobile-nav-panel,
         body:not(.mobile-device) .mobile-bottom-tabs {
             display: none !important;
             visibility: hidden !important;
@@ -1368,6 +1363,18 @@
             transform: translateX(0);
             opacity: 1;
             visibility: visible;
+        }
+
+        @media (max-width: 1199px) {
+            .mobile-nav-panel {
+                display: none;
+            }
+            .mobile-nav-panel.open {
+                display: flex;
+                transform: translateX(0);
+                opacity: 1;
+                visibility: visible;
+            }
         }
         .mobile-nav-panel header {
             display: flex;
@@ -3386,7 +3393,7 @@
             transform: scale(1.5);
         }
         /* Stabilisation des cartes et images: réduire tremblements et sauts */
-        .card, .promo-card, .product-card, .shop-card, .shop-detail-card, .chat-group-card, .chat-product-card, .fintech-card, .fintech-card-glass, .fintech-card-premium, .ui-theme-card {
+        .card, .promo-card, .product-card, .shop-card, .shop-detail-card, .chat-group-card, .chat-product-card, .fintech-card, .fintech-card-glass, .fintech-card-premium {
             position: relative;
             overflow: hidden;
             will-change: transform, box-shadow;
@@ -3396,7 +3403,7 @@
             z-index: 0;
             transition-property: transform, box-shadow;
         }
-        .card:hover, .promo-card:hover, .product-card:hover, .shop-card:hover, .shop-detail-card:hover, .chat-group-card:hover, .chat-product-card:hover, .fintech-card:hover, .fintech-card-glass:hover, .fintech-card-premium:hover, .ui-theme-card:hover {
+        .card:hover, .promo-card:hover, .product-card:hover, .shop-card:hover, .shop-detail-card:hover, .chat-group-card:hover, .chat-product-card:hover, .fintech-card:hover, .fintech-card-glass:hover, .fintech-card-premium:hover {
             z-index: 6;
         }
         .card::after,
@@ -3408,8 +3415,7 @@
         .chat-product-card::after,
         .fintech-card::after,
         .fintech-card-glass::after,
-        .fintech-card-premium::after,
-        .ui-theme-card::after {
+        .fintech-card-premium::after {
             content: '';
             position: absolute;
             top: -30%;
@@ -3455,7 +3461,7 @@
         /* Ensure images are block-level and have stable dimensions */
         img { display: block; max-width: 100%; height: auto; }
         .product-image, .promo-thumb img, .shop-card-image img, .thumbnail-img { display:block; width:100%; height:auto; }
-        /* Global theme integration for UI Design System */
+        /* Global theme integration */
         body {
             background: var(--background, var(--page-bg));
             color: var(--text);
@@ -3463,8 +3469,6 @@
         header,
         .nav-bar,
         .mobile-nav-panel,
-        .ui-theme-window,
-        .ui-theme-panel,
         .chat-sidebar,
         .chat-panel,
         .chat-group-card,
@@ -3510,8 +3514,447 @@
         .detail-grid {
             background: var(--surface) !important;
         }
+
+        /* Keep the full desktop header on one compact line when space allows. */
+        @media (min-width: 1200px) {
+            header {
+                padding: 8px 0;
+            }
+            .nav-bar {
+                flex-wrap: nowrap;
+                gap: 12px;
+            }
+            .brand {
+                flex: 0 1 360px;
+                min-width: 0;
+                gap: 8px;
+            }
+            .brand-logo {
+                width: 72px;
+                height: 72px;
+                flex: 0 0 72px;
+            }
+            header .brand-copy {
+                min-width: 0;
+                gap: 2px;
+            }
+            header .brand-copy strong.sdi-sol-text,
+            header .brand .brand-copy strong.sdi-sol-text {
+                font-size: 1rem !important;
+            }
+            header .brand-copy span {
+                font-size: 0.72rem;
+                white-space: nowrap;
+            }
+            .header-search {
+                flex: 0 1 340px;
+                width: 340px;
+                max-width: 340px;
+                padding: 6px;
+                gap: 6px;
+            }
+            .header-search input {
+                padding: 8px 10px;
+            }
+            .header-search button {
+                min-width: 92px;
+                min-height: 36px;
+                padding: 8px 10px;
+            }
+            .main-nav {
+                flex: 1 1 auto;
+                min-width: 0;
+                flex-wrap: nowrap;
+                justify-content: flex-end;
+                gap: 6px;
+            }
+            .nav-group {
+                min-width: 0;
+                max-width: none;
+                flex-direction: row;
+                align-items: center;
+                gap: 4px;
+            }
+            .nav-group-title {
+                font-size: 0.62rem;
+                letter-spacing: 0.08em;
+            }
+            .nav-center,
+            .header-actions,
+            .header-special-buttons {
+                flex-wrap: nowrap;
+                gap: 4px;
+            }
+            .nav-item {
+                max-width: none;
+                padding: 5px 7px;
+                font-size: 0.78rem;
+            }
+            .nav-group .icon-link,
+            .nav-group .account-button,
+            .nav-group .nav-item {
+                min-height: 34px;
+            }
+            .header-actions > .icon-link {
+                min-width: 40px;
+                min-height: 34px !important;
+                padding: 4px 6px !important;
+            }
+            .header-special-buttons a,
+            .header-special-buttons button {
+                padding: 5px 7px;
+            }
+        }
         /* Improve tappable areas */
         a, button, .button { -webkit-tap-highlight-color: rgba(0,0,0,0.05); touch-action: manipulation; }
+
+        /* Responsive header system */
+        header .nav-bar {
+            width: min(100% - 32px, 1440px);
+            margin-inline: auto;
+            display: grid;
+            grid-template-columns: minmax(280px, 1fr) minmax(280px, 1.15fr) auto;
+            grid-template-areas: "brand search nav";
+            align-items: center;
+            gap: clamp(12px, 2vw, 28px);
+        }
+        header .brand {
+            grid-area: brand;
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            gap: clamp(10px, 1.2vw, 18px);
+        }
+        header .brand-logo {
+            flex: 0 0 clamp(56px, 5vw, 82px);
+            width: clamp(56px, 5vw, 82px);
+            height: clamp(56px, 5vw, 82px);
+        }
+        header .site-logo-img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        header .brand-copy {
+            min-width: 0;
+            flex: 1 1 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+        header .brand-copy strong.sdi-sol-text {
+            font-size: clamp(0.82rem, 1.15vw, 1.18rem) !important;
+            line-height: 1.15;
+            letter-spacing: 0;
+            white-space: normal !important;
+            overflow-wrap: anywhere;
+            max-width: 100%;
+        }
+        header .brand-copy span {
+            font-size: clamp(0.62rem, 0.72vw, 0.78rem);
+            line-height: 1.25;
+            white-space: normal;
+        }
+        header .header-search {
+            grid-area: search;
+            min-width: 0;
+            width: 100%;
+            max-width: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        header .header-search input {
+            min-width: 0;
+            flex: 1 1 auto;
+            width: 100%;
+        }
+        header .header-search button {
+            flex: 0 0 auto;
+            min-width: 104px;
+            min-height: 44px;
+            white-space: nowrap;
+        }
+        header .main-nav {
+            grid-area: nav;
+            width: auto;
+            min-width: 0;
+            align-items: center;
+            justify-content: flex-end;
+            flex-wrap: nowrap;
+            gap: clamp(8px, 1vw, 16px);
+        }
+        @media (min-width: 1200px) and (max-width: 1399px) {
+            header .main-nav {
+                gap: 4px;
+            }
+            header .nav-group {
+                gap: 2px;
+            }
+            header .nav-group-title {
+                font-size: 0.56rem;
+                letter-spacing: 0.08em;
+            }
+            header .nav-item,
+            header .account-button {
+                padding: 4px 5px;
+                font-size: 0.68rem;
+            }
+            header .header-actions > .icon-link {
+                min-width: 40px;
+                padding-inline: 5px !important;
+            }
+        }
+        header .nav-group {
+            min-width: 0;
+            max-width: none;
+        }
+        header .mobile-nav-toggle strong {
+            display: none;
+        }
+        @media (max-width: 1199px) {
+            header .nav-bar {
+                grid-template-columns: minmax(0, 1fr) auto;
+                grid-template-areas: "brand nav" "search search";
+                row-gap: 14px;
+            }
+            header .main-nav {
+                display: none;
+            }
+            header .mobile-nav-toggle {
+                position: static;
+                display: inline-flex;
+                flex: 0 0 auto;
+            }
+            body:not(.mobile-device) header .mobile-nav-toggle {
+                display: inline-flex !important;
+                visibility: visible !important;
+                pointer-events: auto !important;
+            }
+            header .mobile-nav-toggle strong {
+                display: inline;
+                font-size: 0.82rem;
+                line-height: 1;
+            }
+        }
+        @media (max-width: 599px) {
+            header .nav-bar {
+                width: min(100% - 24px, 480px);
+                gap: 12px;
+                row-gap: 12px;
+            }
+            header .brand {
+                gap: 9px;
+            }
+            header .brand-logo {
+                flex-basis: 52px;
+                width: 52px;
+                height: 52px;
+            }
+            header .brand-copy strong.sdi-sol-text {
+                font-size: clamp(0.74rem, 3.5vw, 0.94rem) !important;
+            }
+            header .brand-copy span {
+                display: none;
+            }
+            header .mobile-nav-toggle {
+                width: auto;
+                min-width: 82px;
+                min-height: 48px;
+                padding: 0 12px;
+                gap: 9px;
+            }
+            header .header-search {
+                padding: 6px;
+            }
+            header .header-search input {
+                min-height: 44px;
+                padding-inline: 10px;
+            }
+            header .header-search button {
+                min-width: 96px;
+                padding-inline: 10px;
+            }
+        }
+        @media (min-width: 1200px) {
+            header .mobile-nav-toggle {
+                display: inline-flex;
+                position: static;
+                flex: 0 0 auto;
+            }
+        }
+        @media (min-width: 1200px) {
+            header .nav-bar {
+                grid-template-columns: minmax(390px, 0.9fr) minmax(300px, 0.9fr) minmax(0, 1.35fr);
+                gap: clamp(16px, 1.6vw, 28px);
+            }
+            header .brand {
+                min-width: 0;
+            }
+            header .brand-copy {
+                min-width: 0;
+                flex: 1 1 auto;
+            }
+            header .brand-copy strong.sdi-sol-text {
+                white-space: normal !important;
+                overflow-wrap: normal;
+                word-break: normal;
+            }
+            header .main-nav {
+                min-width: 0;
+                gap: 6px;
+            }
+            header .nav-group {
+                min-width: 0;
+            }
+            header .nav-group-title {
+                white-space: nowrap;
+            }
+        }
+        @media (min-width: 1200px) and (max-width: 1599px) {
+            header .main-nav {
+                display: none;
+            }
+        }
+        @media (orientation: landscape) and (max-width: 900px) {
+            header .nav-bar {
+                grid-template-columns: minmax(0, 1fr) minmax(260px, 1.2fr) auto;
+                grid-template-areas: "brand search nav";
+                align-items: center;
+            }
+            header .mobile-nav-toggle {
+                grid-area: nav;
+            }
+        }
+        header .nav-dropdown-panel {
+            display: none;
+        }
+        header .nav-dropdown.open > .nav-dropdown-panel {
+            display: block;
+        }
+
+        header .mobile-nav-toggle {
+            min-width: 82px;
+            min-height: 48px;
+            gap: 9px;
+            padding-inline: 12px;
+        }
+        header .mobile-nav-toggle strong {
+            display: inline;
+            font-size: 0.82rem;
+            line-height: 1;
+        }
+        .mobile-nav-panel {
+            inset-block-start: env(safe-area-inset-top);
+            inset-inline-start: calc(100% - min(88vw, 380px));
+            inset-inline-end: auto;
+            width: min(88vw, 380px);
+            max-width: calc(100vw - env(safe-area-inset-left) - env(safe-area-inset-right));
+            height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+            max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+            transform: translateX(100%);
+        }
+        .mobile-nav-panel.open {
+            transform: translateX(0);
+        }
+        .mobile-nav-panel.open {
+            display: flex;
+        }
+        .mobile-nav-backdrop.open {
+            display: block;
+        }
+        .mobile-nav-panel {
+            display: none;
+        }
+        .mobile-nav-panel.open {
+            display: flex;
+        }
+
+        /* Mobile menu: opaque, readable and independently scrollable. */
+        .mobile-nav-backdrop.open {
+            background: rgba(2, 8, 23, 0.78);
+            backdrop-filter: blur(3px);
+        }
+        .mobile-nav-panel {
+            top: env(safe-area-inset-top);
+            right: env(safe-area-inset-right);
+            width: min(88vw, 380px);
+            max-width: calc(100vw - env(safe-area-inset-left) - env(safe-area-inset-right));
+            height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+            max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+            padding: 20px max(18px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
+            background: #081a36 !important;
+            color: #f8fafc !important;
+            border-left: 1px solid rgba(147, 197, 253, 0.32);
+            box-shadow: -18px 0 48px rgba(2, 6, 23, 0.42);
+            isolation: isolate;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+        }
+        .mobile-nav-panel header {
+            background: #081a36 !important;
+            color: #f8fafc !important;
+            padding-top: 0;
+        }
+        .mobile-nav-panel h2,
+        .mobile-nav-panel .mobile-nav-group-title,
+        .mobile-nav-panel .mobile-nav-links a,
+        .mobile-nav-panel .mobile-nav-links button,
+        .mobile-nav-panel .mobile-nav-links select {
+            color: #f8fafc !important;
+        }
+        .mobile-nav-panel .mobile-nav-group-title {
+            color: #93c5fd !important;
+            font-size: 0.82rem;
+            letter-spacing: 0.08em;
+        }
+        .mobile-nav-panel .mobile-nav-card,
+        .mobile-nav-panel .mobile-nav-control-button,
+        .mobile-nav-panel .mobile-nav-currency select,
+        .mobile-nav-panel .mobile-nav-logout-button {
+            min-height: 48px;
+            padding: 12px 14px;
+            background: #102b52 !important;
+            border: 1px solid rgba(147, 197, 253, 0.28);
+            color: #f8fafc !important;
+            line-height: 1.25;
+        }
+        .mobile-nav-panel .mobile-nav-card:hover,
+        .mobile-nav-panel .mobile-nav-card:focus-visible,
+        .mobile-nav-panel .mobile-nav-control-button:hover,
+        .mobile-nav-panel .mobile-nav-control-button:focus-visible {
+            background: #164275 !important;
+        }
+        .mobile-nav-panel .mobile-nav-card::before {
+            flex: 0 0 28px;
+            background: #1d4f82;
+            color: #ffffff;
+        }
+        .mobile-nav-close {
+            min-width: 48px;
+            min-height: 48px;
+            color: #ffffff !important;
+            background: #164275 !important;
+            border: 1px solid rgba(191, 219, 254, 0.4);
+        }
+        .mobile-nav-panel .mobile-nav-links {
+            gap: 18px;
+            padding-bottom: 12px;
+        }
+        .mobile-nav-panel .mobile-nav-grid {
+            gap: 12px;
+        }
+        @media (max-width: 380px) {
+            .mobile-nav-panel {
+                padding-inline: 16px;
+            }
+            .mobile-nav-panel .mobile-nav-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
@@ -3520,13 +3963,13 @@
             <div class="brand">
                 <div class="brand-logo" id="site-logo" aria-label="Logo du site">
                     {% if site_configs.main and site_configs.main.image %}
-                        <img class="site-logo-img" src="{{ site_configs.main.image.url }}" alt="{{ site_configs.main.alt_text|default:'SDI Marché Mondial' }}">
+                        <img class="site-logo-img" src="{{ site_configs.main.image.url }}" alt="{{ site_configs.main.alt_text|default:'SDI MICROTECH GLOBAL MARKET UNIT' }}">
                     {% else %}
-                        <img class="site-logo-img" src="{% static 'img/logo.png' %}" alt="SDI Marché Mondial">
+                        <img class="site-logo-img" src="{% static 'img/logo.png' %}" alt="SDI MICROTECH GLOBAL MARKET UNIT">
                     {% endif %}
                 </div>
                 <div class="brand-copy">
-                    <strong class="sdi-sol-text">sdi marche mondial unit</strong>
+                    <strong class="sdi-sol-text">SDI MICROTECH GLOBAL MARKET UNIT</strong>
                     <span>e-commerce, acheteur/vendeur, wallet multi-devises</span>
                 </div>
                 <button id="mobile-nav-toggle" class="mobile-nav-toggle" aria-label="Ouvrir le menu mobile" aria-expanded="false">
@@ -3535,6 +3978,7 @@
                         <span></span>
                         <span></span>
                     </span>
+                    <strong>Menu</strong>
                 </button>
             </div>
             <form action="{% url 'search' %}" method="get" class="header-search">
@@ -3762,75 +4206,6 @@
     
     {% block hero %}{% endblock %}
 
-    <div id="ui-design-system-modal" class="ui-theme-modal" aria-hidden="true">
-        <div class="ui-theme-window" role="dialog" aria-modal="true" aria-labelledby="ui-design-system-title">
-            <header>
-                <div>
-                    <h2 id="ui-design-system-title">UI Design System</h2>
-                    <p>Gestionnaire de thèmes premium en glassmorphism pour un design futuriste et des transitions instantanées.</p>
-                </div>
-                <div style="display: flex; gap: 8px;">
-                    <button id="ui-design-system-back" class="ui-theme-back" aria-label="Retour" title="Retour à la page précédente">← Retour</button>
-                    <button id="ui-design-system-close" class="ui-theme-close" aria-label="Fermer">✕</button>
-                </div>
-            </header>
-            <div class="ui-theme-sidebar">
-                <section class="ui-theme-panel ui-theme-section">
-                    <div class="ui-theme-banner">
-                        <h3>Thèmes disponibles</h3>
-                        <p>Sélectionnez un thème pour appliquer instantanément un style nouveau et premium à votre interface.</p>
-                    </div>
-                    <div class="ui-theme-grid"></div>
-                </section>
-                <section class="ui-theme-panel ui-theme-picker">
-                    <div>
-                        <h4>Personnalisation avancée</h4>
-                        <p>Modifiez les couleurs principales du système et observez le rendu en temps réel.</p>
-                    </div>
-                    <div class="ui-color-row">
-                        <label for="color-brand">Couleur principale</label>
-                        <input type="color" id="color-brand" data-color-var="--brand" value="#4f46e5">
-                    </div>
-                    <div class="ui-color-row">
-                        <label for="color-glow">Glow</label>
-                        <input type="color" id="color-glow" data-color-var="--glow" value="#4fd8ff">
-                    </div>
-                    <div class="ui-color-row">
-                        <label for="color-background">Background</label>
-                        <input type="color" id="color-background" data-color-var="--background" value="#07101f">
-                    </div>
-                    <div class="ui-color-row">
-                        <label for="color-navbar">Navbar</label>
-                        <input type="color" id="color-navbar" data-color-var="--navbar" value="#08111f">
-                    </div>
-                    <div class="ui-color-row">
-                        <label for="color-sidebar">Sidebar</label>
-                        <input type="color" id="color-sidebar" data-color-var="--sidebar" value="#0f1a34">
-                    </div>
-                    <div class="ui-color-row">
-                        <label for="color-card">Cards</label>
-                        <input type="color" id="color-card" data-color-var="--card" value="#111f3d">
-                    </div>
-                    <div class="ui-color-row">
-                        <label for="color-button">Buttons</label>
-                        <input type="color" id="color-button" data-color-var="--button" value="#0ea5e9">
-                    </div>
-                    <div class="ui-theme-custom-preview">
-                        <span>Navbar</span>
-                        <span>Sidebar</span>
-                        <span>Cards</span>
-                    </div>
-                    <div class="ui-theme-footer">
-                        <button type="button" id="theme-reset-btn" class="ui-theme-button secondary">Reset</button>
-                        <button type="button" id="theme-export-btn" class="ui-theme-button secondary">Exporter</button>
-                        <button type="button" id="theme-import-btn" class="ui-theme-button secondary">Importer</button>
-                    </div>
-                    <textarea id="theme-import-export" placeholder="Coller ou copier le JSON du thème ici" style="width:100%; min-height:100px; border:1px solid rgba(255,255,255,0.12); border-radius:12px; background: rgba(255,255,255,0.05); color: #fff; padding:12px; margin-top:10px; resize:vertical;"></textarea>
-                    <div class="ui-theme-note">Les personnalisations sont enregistrées automatiquement et appliquées immédiatement. Vous pouvez exporter et importer vos thèmes en JSON.</div>
-                </section>
-            </div>
-        </div>
-    </div>
     <div class="container">
         {% if messages %}
             {% for message in messages %}
@@ -3864,7 +4239,6 @@
                             {% endif %}
                             {% if request.user.is_staff %}
                                 <a href="{% url 'admin_add_money' %}?action=add&amount=100&currency=HTG&target=single&account_type=principal" class="footer-button" style="width:100%; text-align:left;">💵 Modifier 100 HTG</a>
-                                <a href="#" class="footer-button ui-theme-trigger ui-design-system-open" style="width:100%; text-align:left;">UI Design System</a>
                             {% endif %}
                             {% if request.user.is_agent %}
                                 <a href="{% url 'agent_withdrawal_dashboard' %}" class="footer-button" style="width:100%; text-align:left;">💰 Retrait Utilisateur</a>
@@ -4105,17 +4479,13 @@
     <script defer src="{% static 'js/optimized-ajax.js' %}"></script>
     <script defer src="{% static 'js/fintech-dashboard.js' %}"></script>
     
-    <!-- Theme Data Injection -->
     <script>
-        window.initialThemeData = {
-            theme_name: '{{ user_theme_name|default:"blue-mirror" }}',
-            theme_settings: {{ user_theme_settings|default:"{}"|safe }},
-            isAuthenticated: {{ request.user.is_authenticated|yesno:"true,false" }}
-        };
-    </script>
-    
-    <script defer src="{% static 'js/ui-design-system.js' %}"></script>
-    <script>
+        try {
+            localStorage.removeItem('ui_design_system_settings');
+            sessionStorage.removeItem('ui_design_system_settings');
+            document.cookie = 'ui_theme_name=; Max-Age=0; path=/';
+            document.cookie = 'ui_theme_settings=; Max-Age=0; path=/';
+        } catch (error) {}
         document.addEventListener('DOMContentLoaded', function () {
             const logoWrapper = document.getElementById('site-logo');
             if (!logoWrapper) {
@@ -4136,7 +4506,8 @@
             const isTouchDevice = ('maxTouchPoints' in navigator && navigator.maxTouchPoints > 1) || window.matchMedia('(pointer:coarse)').matches;
             const isMobileUserAgent = mobileUserAgent.test(navigator.userAgent) || (navigator.userAgentData && navigator.userAgentData.mobile);
             const isTouchSmallScreen = isTouchDevice && Math.max(window.screen.width, window.screen.height) <= 1100;
-            const isMobileDevice = isMobileUserAgent || isTouchSmallScreen;
+            const isSmallViewport = window.matchMedia('(max-width: 900px)').matches;
+            const isMobileDevice = isMobileUserAgent || isTouchSmallScreen || isSmallViewport;
             const isAndroidBrowser = /Android/i.test(navigator.userAgent);
             document.body.classList.toggle('mobile-device', isMobileDevice);
             document.body.classList.toggle('android-browser', isAndroidBrowser);
@@ -4146,14 +4517,12 @@
             const mobileBackdrop = document.getElementById('mobile-nav-backdrop');
             const mobilePanel = document.getElementById('mobile-nav-panel');
 
-            if (!isMobileDevice) {
-                if (mobileToggle) mobileToggle.style.display = 'none';
-                if (mobileBackdrop) mobileBackdrop.style.display = 'none';
-                if (mobilePanel) mobilePanel.style.display = 'none';
+            if (mobileBackdrop && mobilePanel && mobilePanel.parentElement !== document.body) {
+                document.body.append(mobileBackdrop, mobilePanel);
             }
 
             function toggleMobileNav(open) {
-                if (!isMobileDevice || !mobilePanel) return;
+                if (!mobilePanel || !mobileBackdrop) return;
                 const isOpen = open === undefined ? !mobilePanel.classList.contains('open') : open;
                 mobilePanel.classList.toggle('open', isOpen);
                 mobileBackdrop.classList.toggle('open', isOpen);
@@ -4162,7 +4531,7 @@
                 if (mobileBackdrop) mobileBackdrop.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
             }
 
-            if (isMobileDevice && mobileToggle) {
+            if (mobileToggle) {
                 mobileToggle.addEventListener('click', function () {
                     toggleMobileNav(true);
                 });
@@ -4235,7 +4604,7 @@
     </script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            var savedGradient = "{{ user_theme_settings.commission_button_gradient|default:''|escapejs }}";
+            var savedGradient = "{{ request.user.profile.theme_settings.commission_button_gradient|default:''|escapejs }}";
             var peupleButton = document.getElementById('peuple-button');
             if (savedGradient && peupleButton) {
                 peupleButton.style.background = savedGradient;
@@ -4584,7 +4953,7 @@
         </a>
         <a href="{% url 'profile' %}" class="mobile-bottom-tab">
             <span class="tab-icon">👤</span>
-            <span class="tab-label">My Alibaba</span>
+            <span class="tab-label">My SDI</span>
         </a>
     </nav>
 
