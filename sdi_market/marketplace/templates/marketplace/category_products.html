@@ -63,10 +63,10 @@
         {% endif %}
         <h3>{{ product.name }}</h3>
         <p>Prix HT : <strong>{{ current_currency|currency_symbol }}{{ product|format_product_price:current_currency }}</strong></p>
-        <p>Boutique : {{ product.shop.name }}</p>
-        <p>Quantité : {{ product.quantity }}</p>
+        <p class="product-secondary">Boutique : {{ product.shop.name }}</p>
+        <p class="product-secondary">Quantité : {{ product.quantity }}</p>
         {% if product.average_rating %}
-            <p>Note : <strong>{{ product.average_rating|floatformat:1 }}</strong> / 5
+            <p class="product-secondary">Note : <strong>{{ product.average_rating|floatformat:1 }}</strong> / 5
                 {% for _ in "12345"|make_list %}
                     <span style="color: {% if forloop.counter <= product.average_rating %}#ffc107{% else %}#ddd{% endif %};">★</span>
                 {% endfor %}

@@ -103,17 +103,17 @@
         <div class="product-info">
             <h3 class="product-title">{{ product.name }}</h3>
             {% if product.description %}
-                <p>{{ product.description|truncatechars:120 }}</p>
+                <p class="product-secondary">{{ product.description|truncatechars:120 }}</p>
             {% endif %}
             <p class="product-price">Prix HT : {{ current_currency|currency_symbol }}{{ product|format_product_price:current_currency }}</p>
             <p class="product-shop">Boutique : {{ product.shop.name }}</p>
             {% if product.average_rating %}
-                <p>Note : <strong>{{ product.average_rating|floatformat:1 }}</strong> / 5 ({{ product.reviews_count }} avis)</p>
+                <p class="product-secondary">Note : <strong>{{ product.average_rating|floatformat:1 }}</strong> / 5 ({{ product.reviews_count }} avis)</p>
             {% endif %}
             {% if product.quantity > 0 %}
-                <p class="stock-status" style="color:#2e7d32;"><strong>En stock</strong></p>
+                <p class="stock-status product-secondary" style="color:#2e7d32;"><strong>En stock</strong></p>
             {% else %}
-                <p class="stock-status" style="color:#c62828;"><strong>Rupture</strong></p>
+                <p class="stock-status product-secondary" style="color:#c62828;"><strong>Rupture</strong></p>
             {% endif %}
             <div class="product-actions">
                 <a href="{% url 'product_detail' product.id %}" class="button">Voir détails</a>
