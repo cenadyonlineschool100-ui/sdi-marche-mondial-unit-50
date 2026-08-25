@@ -1,8 +1,9 @@
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from app_installer import views as app_installer_views
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.static import serve
 from marketplace.views import admin_add_money, admin_add_agent, manage_delivery_assignments
 from django.urls import include as dj_include
 
@@ -18,9 +19,12 @@ urlpatterns = [
     path('savings/', include('savings.urls')),
 ]
 
-# Servir les fichiers médias en développement
+# Servir les fichiers médias pour l'instance locale
+urlpatterns += [
+    re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
+]
+
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     try:
         import debug_toolbar
         urlpatterns = [

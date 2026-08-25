@@ -96,7 +96,8 @@ urlpatterns = [
     path('api/generate-image/', generate_product_image_api, name='generate_product_image'),
     path('api/image-suggestions/', get_image_suggestions_api, name='image_suggestions'),
 
-    path('', home, name='home'),
+    path('', search, name='site_root'),
+    path('home/', home, name='home'),
     path('marche-mondial/', marche_mondial, name='marche_mondial'),
     path('demo/', demo_page, name='demo'),
     path('sdi-transport/', sdi_transport, name='sdi_transport'),

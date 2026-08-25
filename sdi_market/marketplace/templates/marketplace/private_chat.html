@@ -6,7 +6,7 @@
         <h2>Chat privé avec {{ other_user.get_full_name|default:other_user.username }}</h2>
         <p>Conversation privée entre vous et {{ other_user.get_full_name|default:other_user.username }}.</p>
     </div>
-    <div class="chat-wrapper" style="grid-template-columns: 300px minmax(0, 1fr); gap: 24px;">
+    <div class="chat-wrapper">
         <aside class="chat-sidebar">
             <div class="chat-group-card">
                 <h3>Contacts</h3>

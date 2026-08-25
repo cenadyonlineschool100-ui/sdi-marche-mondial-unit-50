@@ -79,6 +79,7 @@ TEMPLATES = [
                 'marketplace.context_processors.private_chat_context',
                 'marketplace.context_processors.system_settings_context',
                 'marketplace.context_processors.announcement_context',
+                'marketplace.context_processors.navigation_context',
             ],
         },
     },
@@ -178,6 +179,8 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+MARKETPLACE_INACTIVITY_TIMEOUT_SECONDS = 600
 
 # Clé API Unsplash pour génération automatique d'images
 # À remplacer par une vraie clé API depuis https://unsplash.com/developers

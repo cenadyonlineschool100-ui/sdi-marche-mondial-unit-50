@@ -1,19 +1,42 @@
 {% extends 'marketplace/base.html' %}
 {% load image_tags %}
 {% block content %}
-<div class="card">
-    <div class="header-row">
-        <div>
-            <h2>Recherche avancée</h2>
-            <p>Rechercher des produits par nom, description, catégorie et plus.</p>
+<section class="product-priority" aria-labelledby="products-title">
+    {% for shelf in "12"|make_list %}
+        <div class="product-shelf" data-product-shelf>
+            <div class="product-shelf-heading">
+                <h2>Ligne {{ forloop.counter }}</h2>
+                <button type="button" class="product-shelf-arrow" data-shelf-next aria-label="Faire défiler la ligne {{ forloop.counter }}">&#8594;</button>
+            </div>
+            <div class="product-shelf-track">
+                {% if forloop.first %}{% for product in products|slice:":10" %}
+                    <a class="product-card product-card-compact" href="{% url 'product_detail' product.id %}">
+                        {% with primary_image=product.get_primary_image %}{% if primary_image %}{% responsive_image primary_image product.name "product-image" %}{% else %}<div class="product-image-fallback">Pas d'image</div>{% endif %}{% endwith %}
+                        <span class="product-info"><strong class="product-title">{{ product.name }}</strong><span class="product-price">{{ current_currency|currency_symbol }}{{ product|format_product_price:current_currency }}</span></span>
+                    </a>
+                {% endfor %}{% else %}{% for product in products|slice:"10:20" %}
+                    <a class="product-card product-card-compact" href="{% url 'product_detail' product.id %}">
+                        {% with primary_image=product.get_primary_image %}{% if primary_image %}{% responsive_image primary_image product.name "product-image" %}{% else %}<div class="product-image-fallback">Pas d'image</div>{% endif %}{% endwith %}
+                        <span class="product-info"><strong class="product-title">{{ product.name }}</strong><span class="product-price">{{ current_currency|currency_symbol }}{{ product|format_product_price:current_currency }}</span></span>
+                    </a>
+                {% endfor %}{% endif %}
+            </div>
         </div>
-        <div>
-            <form id="search-form" action="{% url 'search' %}" method="get" style="display:inline-flex; gap:8px; flex-wrap: wrap; align-items: center;">
-                <input id="search-query" name="q" list="search-suggestions" type="text" placeholder="Rechercher un produit" value="{{ query }}" style="width: 320px;" />
-                <button type="submit" class="button">Rechercher</button>
-            </form>
-        </div>
+    {% endfor %}
+    <div class="product-catalog-grid">
+        {% for product in products|slice:"20:" %}
+            <a class="product-card product-card-compact" href="{% url 'product_detail' product.id %}">
+                {% with primary_image=product.get_primary_image %}{% if primary_image %}{% responsive_image primary_image product.name "product-image" %}{% else %}<div class="product-image-fallback">Pas d'image</div>{% endif %}{% endwith %}
+                <span class="product-info"><strong class="product-title">{{ product.name }}</strong><span class="product-price">{{ current_currency|currency_symbol }}{{ product|format_product_price:current_currency }}</span></span>
+            </a>
+        {% endfor %}
     </div>
+</section>
+<div class="product-search-bar" aria-label="Recherche de produits">
+    <form id="search-form" action="{% url 'search' %}" method="get">
+        <input id="search-query" name="q" list="search-suggestions" type="text" placeholder="Rechercher un produit" value="{{ query }}" />
+        <button type="submit" class="button">Rechercher</button>
+    </form>
 </div>
 
 <div style="margin: 10px 0; text-align: center;">
@@ -81,14 +104,16 @@
     </form>
 </div>
 
-<div class="card">
-    <h3>Résultats de recherche</h3>
-    <p>Recherche : <strong>{{ query }}</strong></p>
+<div class="section-header product-results-heading">
+    <div>
+        <h2>Produits</h2>
+        <p>Résultats pour : <strong>{{ query|default:'tous les produits' }}</strong></p>
+    </div>
 </div>
 
 <datalist id="search-suggestions"></datalist>
 
-<div class="grid grid-3">
+<div class="grid grid-3 product-results-grid">
     {% for product in products %}
     <div class="card product-card">
         {% with primary_image=product.get_primary_image %}
@@ -171,5 +196,16 @@ if (searchInput) {
         }, 250);
     });
 }
+</script>
+<script>
+document.querySelectorAll('[data-shelf-next]').forEach((button) => {
+    const shelf = button.closest('[data-product-shelf]');
+    const track = shelf.querySelector('.product-shelf-track');
+    if (!track.querySelector('.product-card-compact')) {
+        shelf.remove();
+        return;
+    }
+    button.addEventListener('click', () => track.scrollBy({ left: 260, behavior: 'smooth' }));
+});
 </script>
 {% endblock %}

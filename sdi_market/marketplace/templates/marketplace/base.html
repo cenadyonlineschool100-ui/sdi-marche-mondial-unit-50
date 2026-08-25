@@ -1537,8 +1537,6 @@
             border-radius: 16px;
             background: rgba(255,255,255,0.06);
         }
-            padding: 0;
-        }
         .mobile-activity-menu summary {
             display: flex;
             align-items: center;
@@ -1608,6 +1606,8 @@
         .thumbnail-img:hover { border-color: rgba(37,99,235,.6); }
         .product-detail-status { display: inline-flex; align-items: center; gap: 8px; background: rgba(59,130,246,.12); color: #1d4ed8; border-radius: 999px; padding: 8px 14px; font-weight: 600; }
         .product-detail-meta { display: grid; gap: 8px; margin-bottom: 18px; }
+        .products-return-link { display: inline-flex; align-items: center; gap: 6px; margin: 16px 0 4px; color: #1d4ed8; font-size: .9rem; font-weight: 600; text-decoration: none; }
+        .products-return-link:hover { text-decoration: underline; }
         .hero {
             position: relative;
             padding: 48px 0 14px;
@@ -3106,6 +3106,161 @@
             gap: 20px;
             grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
         }
+        .product-priority {
+            margin: 26px auto 42px;
+        }
+        .product-priority-header {
+            align-items: flex-end;
+            margin-bottom: 18px;
+        }
+        .product-priority-header h1 {
+            margin: 4px 0 6px;
+            font-size: clamp(1.8rem, 3vw, 2.6rem);
+        }
+        .product-priority-header p {
+            margin: 0;
+        }
+        .product-priority-header .product-priority-copy .eyebrow,
+        .product-priority-header .product-priority-copy h1,
+        .product-priority-header .product-priority-copy p {
+            font-size: 0.35rem !important;
+            line-height: 1.2 !important;
+        }
+        .product-shelf {
+            margin: 0 0 22px;
+        }
+        .product-shelf-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+        .product-shelf-heading h2 {
+            margin: 0;
+            font-size: 1rem;
+            color: #334155;
+        }
+        .product-shelf-arrow {
+            display: inline-grid;
+            place-items: center;
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            border: 1px solid rgba(30,64,175,.18);
+            border-radius: 50%;
+            background: #fff;
+            color: #1d4ed8;
+            cursor: pointer;
+        }
+        .product-shelf-track {
+            display: flex;
+            gap: 14px;
+            overflow-x: auto;
+            overscroll-behavior-x: contain;
+            scroll-snap-type: x proximity;
+            padding: 2px 2px 10px;
+            scrollbar-width: thin;
+        }
+        .product-shelf-track > .product-card-compact {
+            flex: 0 0 clamp(168px, 19vw, 215px);
+        }
+        .product-card-compact {
+            min-height: 0;
+            height: auto;
+            color: inherit;
+            text-decoration: none;
+            scroll-snap-align: start;
+            overflow: hidden;
+        }
+        .product-card-compact > * {
+            min-width: 0;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+        .product-card-compact > .product-image,
+        .product-card-compact > .product-image-fallback {
+            min-height: 0;
+            height: 132px;
+            aspect-ratio: 4 / 3;
+        }
+        .product-card-compact .product-info {
+            display: grid;
+            gap: 4px;
+            padding: 10px;
+            min-width: 0;
+        }
+        .product-card-compact .product-title {
+            display: block;
+            overflow-wrap: anywhere;
+            line-height: 1.2;
+            font-size: 1rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .product-card-compact .product-price {
+            margin: 0;
+            font-size: .9rem;
+        }
+        .product-results-grid .product-card {
+            border-radius: 16px;
+        }
+        .product-results-grid .product-image,
+        .product-results-grid .product-image-fallback {
+            height: 180px;
+        }
+        .product-results-grid .product-info {
+            padding: 14px;
+            gap: 8px;
+        }
+        .product-results-grid .product-title {
+            font-size: 1rem;
+            line-height: 1.25;
+        }
+        .product-results-grid .product-price {
+            font-size: .95rem;
+        }
+        .product-results-grid .product-shop {
+            font-size: .82rem;
+        }
+        .product-results-grid .product-secondary {
+            font-size: .76rem;
+        }
+        .product-results-grid .product-actions {
+            gap: 6px;
+        }
+        .product-results-grid .product-actions .button {
+            min-height: 38px;
+            padding: 8px 10px;
+            font-size: .8rem;
+        }
+        .product-catalog-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+            margin-top: 26px;
+        }
+        .product-catalog-grid:empty {
+            display: none;
+        }
+        .product-search-bar {
+            margin: 24px 0 14px;
+        }
+        .product-search-bar form {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .product-search-bar input {
+            flex: 1 1 260px;
+            min-width: 0;
+        }
+        .product-results-heading {
+            margin: 18px 0;
+        }
         .promo-card,
         .product-card,
         .shop-card {
@@ -4034,6 +4189,18 @@
             height: auto;
             aspect-ratio: 4 / 3;
         }
+        .product-card > .product-image {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .product-card > .product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+        }
         .product-card .product-info,
         .promo-card .promo-body,
         .shop-card .shop-card-body {
@@ -4075,7 +4242,474 @@
             .shops-grid { gap: 8px; }
             .product-actions { display: grid; grid-template-columns: 1fr; }
         }
-        }
+        
+            /* ============================================================================
+               RESPONSIVE MOBILE & TABLET OPTIMIZATION
+               Fix excessive heights, padding, margins on small screens
+               ============================================================================ */
+
+            /* Phone: max-width 767px */
+            @media (max-width: 767px) {
+                /* Chat privé - Fix excessive heights */
+                .chat-wrapper {
+                    grid-template-columns: 1fr;
+                    gap: 16px;
+                    margin: 16px 0 24px;
+                }
+            
+                .chat-sidebar {
+                    padding: 16px;
+                    gap: 12px;
+                    max-height: none;
+                }
+            
+                .chat-sidebar h3 {
+                    font-size: 1.2rem;
+                    margin: 0 0 8px;
+                }
+            
+                .chat-group-card,
+                .chat-product-card {
+                    padding: 12px;
+                    border-radius: 16px;
+                    gap: 8px;
+                }
+            
+                .private-contact-list {
+                    gap: 8px;
+                    max-height: min(360px, 42vh);
+                    overflow-y: auto;
+                    padding-right: 4px;
+                }
+            
+                .contact-card,
+                .contact-pill {
+                    padding: 10px 12px;
+                    border-radius: 12px;
+                    font-size: 0.9rem;
+                }
+            
+                .contact-avatar {
+                    width: 36px;
+                    height: 36px;
+                    font-size: 0.8rem;
+                }
+            
+                .contact-body {
+                    gap: 2px;
+                }
+            
+                .contact-name {
+                    font-size: 0.9rem;
+                }
+            
+                .contact-snippet {
+                    font-size: 0.8rem;
+                }
+            
+                /* Chat panel - Fix min-height 720px */
+                .chat-panel {
+                    min-height: auto;
+                    height: auto;
+                    flex-direction: column;
+                    background: linear-gradient(180deg, #eff6ff 0%, #ffffff 100%);
+                }
+            
+                .chat-header {
+                    padding: 16px;
+                    gap: 10px;
+                    flex-direction: column;
+                    border-bottom: 1px solid rgba(148,163,184,.14);
+                }
+            
+                .chat-header h2 {
+                    font-size: 1.2rem;
+                    margin: 0;
+                }
+            
+                .chat-header-subtitle {
+                    margin: 4px 0 0;
+                    font-size: 0.85rem;
+                }
+            
+                .chat-status {
+                    flex-wrap: wrap;
+                    gap: 6px;
+                }
+            
+                .chat-status span {
+                    padding: 6px 10px;
+                    font-size: 0.75rem;
+                }
+            
+                /* Chat feed - Fix min-height 520px + max-height 720px */
+                .chat-feed {
+                    min-height: auto;
+                    max-height: none;
+                    height: auto;
+                    gap: 12px;
+                    padding: 12px;
+                    border-bottom: 1px solid rgba(148,163,184,.14);
+                    flex: 0 1 auto;
+                    max-height: 60vh;
+                    overflow-y: auto;
+                }
+            
+                .chat-message {
+                    padding: 12px 14px;
+                    border-radius: 18px;
+                    max-width: 100%;
+                    font-size: 0.9rem;
+                }
+            
+                .chat-message.incoming {
+                    grid-template-columns: 36px 1fr;
+                }
+            
+                .chat-message.outgoing {
+                    grid-template-columns: 1fr 36px;
+                }
+            
+                .message-avatar {
+                    width: 36px;
+                    height: 36px;
+                    font-size: 0.75rem;
+                }
+            
+                .chat-message .message-header {
+                    font-size: 0.85rem;
+                    gap: 8px;
+                }
+            
+                .chat-message .message-text {
+                    padding: 10px 12px;
+                    font-size: 0.9rem;
+                    border-radius: 16px;
+                }
+            
+                .chat-product-preview {
+                    grid-template-columns: 80px 1fr;
+                    gap: 10px;
+                    padding: 10px;
+                    border-radius: 16px;
+                }
+            
+                .chat-product-preview img {
+                    width: 80px;
+                    height: 80px;
+                    border-radius: 12px;
+                }
+            
+                .chat-product-placeholder {
+                    width: 80px;
+                    height: 80px;
+                    border-radius: 12px;
+                    font-size: 0.75rem;
+                }
+            
+                .chat-product-details h4 {
+                    font-size: 0.9rem;
+                    margin: 0 0 4px;
+                }
+            
+                .chat-product-price,
+                .chat-product-shop {
+                    font-size: 0.85rem;
+                    margin: 0;
+                }
+            
+                .chat-message-image {
+                    max-height: 220px;
+                    border-radius: 14px;
+                }
+            
+                /* Chat form */
+                .chat-form {
+                    gap: 10px;
+                    padding: 12px;
+                    background: #ffffff;
+                    border-top: 1px solid rgba(148,163,184,.14);
+                }
+            
+                .chat-form textarea,
+                .chat-form select,
+                .chat-form input[type="file"] {
+                    padding: 12px 14px;
+                    border-radius: 14px;
+                    font-size: 0.9rem;
+                }
+            
+                .chat-form button {
+                    padding: 10px 18px;
+                    font-size: 0.9rem;
+                    border-radius: 8px;
+                }
+            
+                /* General card fixes for mobile */
+                .card,
+                .fintech-card,
+                .fintech-card-glass {
+                    padding: 16px;
+                    border-radius: 16px;
+                }
+            
+                .card h2,
+                .fintech-card h2,
+                .card h3,
+                .fintech-card h3 {
+                    font-size: 1.3rem;
+                    margin: 0 0 10px;
+                }
+            
+                /* Form fields optimization */
+                .form-input,
+                .form-select,
+                .form-textarea {
+                    padding: 12px 14px;
+                    border-radius: 12px;
+                    font-size: 0.95rem;
+                    height: auto;
+                }
+            
+                .form-textarea {
+                    min-height: auto;
+                    resize: vertical;
+                }
+            
+                /* Section spacing */
+                .section {
+                    padding: 12px 0 20px;
+                    margin: 0;
+                }
+            
+                .section-header {
+                    padding: 12px 16px 8px;
+                    margin: 0;
+                }
+            
+                .section-header h2 {
+                    font-size: 1.4rem;
+                    margin: 0 0 6px;
+                }
+            
+                .section-header p {
+                    margin: 0;
+                    font-size: 0.9rem;
+                }
+
+                /* Content-only compact layout. Header and footer are intentionally excluded. */
+                .container > .section,
+                .container > .card,
+                .container > form,
+                .container > section {
+                    min-height: 0;
+                    height: auto;
+                    margin-top: 16px;
+                    margin-bottom: 16px;
+                }
+
+                .promo-grid,
+                .products-grid,
+                .shops-grid,
+                .grid,
+                .grid-3 {
+                    gap: 12px;
+                }
+
+                .product-priority {
+                    margin: 14px auto 28px;
+                }
+                .product-priority-header {
+                    align-items: flex-start;
+                    margin-bottom: 14px;
+                }
+                .product-priority-header h1 {
+                    font-size: 1.8rem;
+                }
+                .product-shelf-track {
+                    gap: 10px;
+                    margin-inline: -2px;
+                }
+                .product-shelf-track > .product-card-compact {
+                    flex-basis: 148px;
+                }
+                .product-card-compact > .product-image,
+                .product-card-compact > .product-image-fallback {
+                    height: 104px;
+                }
+                .product-card-compact .product-info {
+                    padding: 8px;
+                    gap: 4px;
+                }
+                .product-card-compact .product-title {
+                    font-size: .95rem;
+                }
+                .product-card-compact .product-price {
+                    font-size: .88rem;
+                }
+                .product-results-grid .product-image,
+                .product-results-grid .product-image-fallback {
+                    height: 140px;
+                }
+                .product-results-grid .product-info {
+                    padding: 10px;
+                    gap: 6px;
+                }
+                .product-results-grid .product-actions .button {
+                    min-height: 40px;
+                    padding: 8px;
+                    font-size: .78rem;
+                }
+                .product-catalog-grid {
+                    gap: 10px;
+                    margin-top: 20px;
+                }
+
+                .promo-card,
+                .product-card,
+                .shop-card,
+                .feature-card,
+                .learning-card,
+                .property-card,
+                .category-card,
+                .stat-card {
+                    min-height: 0;
+                    height: auto;
+                }
+
+                .promo-card > .promo-thumb,
+                .product-card > .product-image,
+                .shop-card > .product-image,
+                .product-image-fallback {
+                    min-height: 120px;
+                }
+
+                /* Preserve useful map areas without letting them dominate a phone. */
+                #map,
+                #map-container,
+                #zone-map-container,
+                #location-map,
+                #order-map {
+                    height: min(320px, 55vh) !important;
+                    min-height: 0 !important;
+                }
+
+                img[style*="height: 200px"],
+                img[style*="height: 160px"] {
+                    height: auto !important;
+                    aspect-ratio: 1 / 1;
+                    object-fit: cover;
+                }
+            }
+        
+            /* Tablet: 768px - 1199px */
+            @media (min-width: 768px) and (max-width: 1199px) {
+                /* Chat - Optimize for tablet */
+                .chat-wrapper {
+                    grid-template-columns: 280px 1fr;
+                    gap: 18px;
+                    margin: 20px 0 32px;
+                }
+            
+                .chat-sidebar {
+                    padding: 18px;
+                    gap: 14px;
+                }
+
+                .private-contact-list {
+                    max-height: min(520px, 58vh);
+                    overflow-y: auto;
+                    padding-right: 4px;
+                }
+            
+                .chat-sidebar h3 {
+                    font-size: 1.3rem;
+                }
+            
+                .chat-panel {
+                    min-height: auto;
+                    height: auto;
+                }
+            
+                .chat-feed {
+                    min-height: auto;
+                    max-height: 70vh;
+                    height: auto;
+                    gap: 14px;
+                    padding: 16px;
+                }
+            
+                .chat-message {
+                    padding: 14px 16px;
+                    border-radius: 22px;
+                    max-width: min(85%, 700px);
+                    font-size: 0.95rem;
+                }
+            
+                .message-avatar {
+                    width: 40px;
+                    height: 40px;
+                }
+            
+                .chat-form {
+                    gap: 12px;
+                    padding: 16px;
+                }
+            
+                /* Cards optimization for tablet */
+                .card,
+                .fintech-card,
+                .fintech-card-glass {
+                    padding: 18px;
+                }
+
+                .container > .section,
+                .container > .card,
+                .container > form,
+                .container > section {
+                    min-height: 0;
+                    height: auto;
+                    margin-top: 20px;
+                    margin-bottom: 20px;
+                }
+
+                .promo-grid,
+                .products-grid,
+                .shops-grid,
+                .grid,
+                .grid-3 {
+                    gap: 16px;
+                }
+
+                .product-shelf-track > .product-card-compact {
+                    flex-basis: 190px;
+                }
+                .product-card-compact > .product-image,
+                .product-card-compact > .product-image-fallback {
+                    height: 135px;
+                }
+
+                .promo-card,
+                .product-card,
+                .shop-card,
+                .feature-card,
+                .learning-card,
+                .property-card,
+                .category-card,
+                .stat-card {
+                    min-height: 0;
+                    height: auto;
+                }
+
+                #map,
+                #map-container,
+                #zone-map-container,
+                #location-map,
+                #order-map {
+                    height: min(420px, 58vh) !important;
+                    min-height: 0 !important;
+                }
+            }
     </style>
 </head>
 <body>
@@ -4328,6 +4962,9 @@
     {% block hero %}{% endblock %}
 
     <div class="container">
+        {% if request.path != '/' and request.path != '/search/' and request.path != '/s/' and request.path != '/home/' and not request.path|slice:':7' == '/admin/' and not request.path|slice:':10' == '/checkout/' and not request.path|slice:':8' == '/payment/' %}
+            <a href="{% url 'search' %}" class="products-return-link" aria-label="Retour aux produits">&#8592; Produits</a>
+        {% endif %}
         {% if messages %}
             {% for message in messages %}
                 <div class="message {% if message.tags %}{{ message.tags }}{% endif %}">{{ message }}</div>
@@ -5239,6 +5876,26 @@
     if (mobileScrollBottomBtn) {
         mobileScrollBottomBtn.addEventListener('click', scrollToBottom);
     }
+
+    (function () {
+        const timeout = Number('{{ marketplace_inactivity_timeout_seconds|default:600 }}') * 1000;
+        const excludedPath = /^(\/admin\/|\/checkout\/|\/payment\/|\/order\/|\/cart\/add\/|\/cart\/update\/|\/cart\/remove\/)/.test(window.location.pathname);
+        let timer;
+        function resetInactivityTimer() {
+            clearTimeout(timer);
+            timer = window.setTimeout(function () {
+                if (/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName || '')) {
+                    resetInactivityTimer();
+                    return;
+                }
+                if (!excludedPath) window.location.href = '{% url "search" %}';
+            }, timeout);
+        }
+        ['click', 'keydown', 'mousemove', 'touchstart', 'scroll'].forEach(function (eventName) {
+            document.addEventListener(eventName, resetInactivityTimer, { passive: true });
+        });
+        resetInactivityTimer();
+    }());
     </script>
 </body>
 </html>

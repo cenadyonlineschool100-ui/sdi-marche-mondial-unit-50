@@ -1654,7 +1654,7 @@ def login_view(request):
                     request.session.set_expiry(0)  # expire à la fermeture du navigateur
                 add_user_to_global_group(user)
                 messages.success(request, 'Connexion réussie.')
-                return redirect('home')
+                return redirect('search')
             AnomalyDetector.record_failed_login(ip, username)
             messages.error(request, 'Identifiants invalides.')
         else:
@@ -1670,7 +1670,7 @@ def password_reset_request(request):
 @login_required
 def logout_view(request):
     logout(request)
-    return redirect('home')
+    return redirect('search')
 
 
 def category_products(request, category_slug):

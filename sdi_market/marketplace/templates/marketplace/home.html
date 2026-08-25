@@ -5,8 +5,8 @@
 <div class="hero">
     <div class="container hero-inner">
         <div class="hero-copy">
-            <span class="eyebrow">Bienvenue sur SDI Marché Mondial</span>
-            <h1 class="hero-title">Une marketplace claire et rapide, comme les plus grands sites.</h1>
+            <span class="eyebrow">Bienvenue sur SDI microtech Marché Mondial unit</span>
+            <h1 class="hero-title">Une marketplace claire et rapide, qui réunit tous les marchés du monde en un seul espace.</h1>
             <p class="hero-subtitle">Trouvez des produits, comparez des boutiques et commandez en toute confiance depuis un seul endroit.</p>
             <form action="{% url 'search' %}" method="get" class="search-form">
                 <input type="search" name="q" placeholder="Recherchez un produit, une boutique ou une catégorie" value="{{ query }}" aria-label="Recherche" />
@@ -112,39 +112,6 @@
     </div>
     <div class="hero-actions" style="margin-top:24px;">
         <a href="{% url 'manage_projet' %}" class="button" style="background:#2563eb; color:white;">Voir Manage Projet</a>
-    </div>
-</div>
-
-<div class="section">
-    <div class="section-header">
-        <h2>Produits recommandés</h2>
-        <p>Les meilleures sélections disponibles en ce moment.</p>
-    </div>
-    <div class="products-grid">
-        {% for product in recommendations|slice:":6" %}
-            <div class="product-card">
-                {% with primary_image=product.get_primary_image %}
-                    {% if primary_image %}
-                        {% responsive_image primary_image product.name "product-image" %}
-                    {% else %}
-                        <div class="product-image-fallback">Pas d'image</div>
-                    {% endif %}
-                {% endwith %}
-                <div class="product-info">
-                    <h3 class="product-title">{{ product.name }}</h3>
-                    <p class="product-shop">{{ product.shop.name }}</p>
-                    <p class="product-price">{{ current_currency|currency_symbol }}{{ product|format_product_price:current_currency }}</p>
-                    <div class="product-actions">
-                        <a href="{% url 'product_detail' product.id %}" class="button small">Voir</a>
-                        {% if request.user.is_authenticated %}
-                            <a href="{% url 'chat' %}?product_to_share={{ product.id }}" class="button alt small">Partager</a>
-                        {% else %}
-                            <a href="{% url 'login' %}" class="button alt small">Connexion</a>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        {% endfor %}
     </div>
 </div>
 

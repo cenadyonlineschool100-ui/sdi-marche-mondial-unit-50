@@ -3,6 +3,16 @@ from .models import ActivityMenuItem, SiteConfiguration, SystemSettings, Private
 
 CURRENCY_DEFAULT = 'USD'
 
+
+def navigation_context(request):
+    from django.conf import settings
+
+    return {
+        'marketplace_inactivity_timeout_seconds': getattr(
+            settings, 'MARKETPLACE_INACTIVITY_TIMEOUT_SECONDS', 600
+        ),
+    }
+
 COUNTRY_CODE_TO_CURRENCY = {
     'HT': 'HTG',
     'DO': 'DOP',
