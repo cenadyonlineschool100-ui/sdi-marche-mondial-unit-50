@@ -33,7 +33,7 @@ from rest_framework import filters, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from .forms import ProductForm, ProductReviewForm, SignUpForm, SystemSettingsForm, ChatMessageForm, PrivateMessageForm, BeautyBookingForm, BeautyStudioServiceForm, BeautyStudioRequestForm, ShopCoverPhotoForm, ProfileForm, OrderForm, DeliveryLocationForm, TransferForm, TiKaneAccessRequestForm, TiKanePlanForm, AssignmentSubmissionForm, TechnicianProfileForm
+from .forms import ProductForm, ProductReviewForm, SignUpForm, SystemSettingsForm, ChatMessageForm, PrivateMessageForm, BeautyBookingForm, BeautyStudioServiceForm, BeautyStudioRequestForm, ShopCoverPhotoForm, ProfileForm, OrderForm, DeliveryLocationForm, TransferForm, TiKaneAccessRequestForm, TiKanePlanForm, AssignmentSubmissionForm, TechnicianProfileForm, SiteBannerForm, SiteBannerImageForm
 from .security_enhanced import AnomalyDetector
 from .models import (
     DeliveryAssignment, DeliveryEmployee, Order, OrderItem, Product, Shop,
@@ -44,7 +44,7 @@ from .models import (
     PersistentNotification, AuditLog, ExchangeRate, Receipt, WithdrawalRequest, AdminWithdrawalPermission,
     Transfer, TransferReceipt, TransferLog, TransferNotification, TransferCommissionTier,
     SiteConfigurationPermission, Course, CourseAssignment, AssignmentSubmission, CourseCertificate,
-    ProductAccessRequest, ResellerProduct, MarketplaceSettings, SDISolSettings, SDISolMember, SDISolPayment,
+    ProductAccessRequest, ResellerProduct, MarketplaceSettings, SDISolSettings, SDISolMember, SDISolPayment, SiteBanner, SiteBannerImage, SiteBannerPermission, SiteBannerAccess, SiteBannerPayment, SiteBannerEvent,
     # Security-related models used by the security dashboard API
     PortMonitoring, AIThreatAnalysis, HoneypotEvent, SecurityAlert, SecurityLog, SecurityMetrics
 )
@@ -58,6 +58,7 @@ from .recommendations import (
     refresh_recommendation_engine
 )
 from .utils import calcul_cashback
+from .image_utils import generate_banner_variants
 from .business_logic import (
     DeliveryAssignmentManager, DeliveryStatusManager,
     NotificationManager, PaymentManager, ReturnManager,
@@ -96,6 +97,44 @@ def get_client_ip(request):
     if x_forwarded_for:
         return x_forwarded_for.split(',')[0].strip()
     return request.META.get('REMOTE_ADDR')
+
+
+def get_banner_eligible_products(limit=8):
+    """
+    Retourne les produits éligibles pour affichage dans la bannière/carrousel.
+    
+    RÈGLES D'AFFICHAGE:
+    - Image valide (custom_image ou image)
+    - banner_display_allowed = True
+    - banner_blocked_by_admin IS NULL (pas bloqué par admin)
+    - Stock > 0
+    
+    Args:
+        limit (int): Nombre maximum de produits à retourner (default: 8)
+    
+    Returns:
+        QuerySet: Les produits éligibles avec les relations préchargées
+    """
+    products = Product.objects.filter(
+        quantity__gt=0,  # Stock disponible
+        banner_display_allowed=True,  # Autorisé par défaut
+        banner_blocked_by_admin__isnull=True  # NOT bloqué par admin
+    ).select_related(
+        'shop',
+        'category'
+    ).annotate(
+        average_rating=Avg('reviews__rating', filter=Q(reviews__is_approved=True)),
+        reviews_count=Count('reviews', filter=Q(reviews__is_approved=True))
+    ).order_by(
+        '-average_rating',  # Trier par note d'abord
+        '-reviews_count'    # Puis par nombre d'avis
+    )[:limit]
+    
+    # Filtrer les produits qui ont une image valide
+    # (custom_image ou image générée)
+    eligible = [p for p in products if p.has_valid_image()]
+    
+    return eligible
 
 
 @login_required
@@ -977,6 +1016,9 @@ def home(request):
     else:
         recommendations = get_trending_products(limit=6)
     
+    # Récupérer les produits éligibles pour le carrousel de bannière
+    banner_carousel_products = get_banner_eligible_products(limit=8)
+    
     # Récupérer les catégories principales pour le menu
     main_categories = CategoryManager.get_main_categories()
     # Filtrer les catégories avec slugs invalides et ajouter le nombre de produits
@@ -987,6 +1029,7 @@ def home(request):
     # Attacher les stats d'avis
     attach_reviews_stats(products)
     attach_reviews_stats(recommendations)
+    attach_reviews_stats(banner_carousel_products)
     
     return render(request, 'marketplace/home.html', {
         'products': products,
@@ -995,6 +1038,7 @@ def home(request):
         'current_category': category_slug,
         'main_categories': main_categories,
         'recommendations': recommendations,
+        'banner_carousel_products': banner_carousel_products,
     })
 
 
@@ -1357,9 +1401,6 @@ def search(request):
         products = products.order_by('-reviews_count')
     else:
         products = products.order_by('-average_rating', '-reviews_count')
-
-    # Attacher les stats d'avis pour affichage sur le template
-    attach_reviews_stats(products)
 
     categories = Category.objects.filter(is_active=True)
 
@@ -4280,6 +4321,262 @@ def system_view(request):
 
 
 @login_required
+def site_banner_dashboard(request):
+    is_principal = request.user.is_superuser or request.user.role == 'super_admin'
+    if not (is_principal or SiteBannerPermission.objects.filter(user=request.user, can_manage=True).exists()):
+        messages.error(request, 'Accès refusé. Vous devez être administrateur.')
+        return redirect('dashboard')
+
+    edit_id = request.GET.get('edit')
+    instance = SiteBanner.objects.filter(id=edit_id).first() if edit_id else None
+    if request.method == 'POST':
+        instance = SiteBanner.objects.filter(id=request.POST.get('banner_id')).first() if request.POST.get('banner_id') else None
+        previous_scope = instance.scope if instance else None
+        form = SiteBannerForm(request.POST, request.FILES, instance=instance, is_principal=is_principal)
+        if form.is_valid():
+            previous_access_mode = instance.access_mode if instance else None
+            banner = form.save()
+            generate_banner_variants(banner.image)
+            event_type = 'created' if not instance else ('image_replaced' if request.FILES.get('image') else 'updated')
+            SiteBannerEvent.objects.create(banner=banner, user=request.user, event_type=event_type)
+            if instance and previous_scope != banner.scope:
+                SiteBannerEvent.objects.create(banner=banner, user=request.user, event_type='scope_changed', details={'from': previous_scope, 'to': banner.scope})
+            if instance and previous_access_mode != banner.access_mode:
+                SiteBannerEvent.objects.create(banner=banner, user=request.user, event_type='access_mode_changed', details={'from': previous_access_mode, 'to': banner.access_mode})
+            messages.success(request, 'Bannière enregistrée avec succès.')
+            return redirect('site_banner_dashboard')
+    else:
+        form = SiteBannerForm(instance=instance, is_principal=is_principal)
+
+    banners = SiteBanner.objects.select_related('product', 'product__shop').prefetch_related('images', 'shops', 'permissions', 'access_grants').order_by('display_order', '-created_at')
+    users = User.objects.filter(is_active=True).order_by('username') if is_principal else []
+    stats = {banner.id: {
+        'impressions': banner.events.filter(event_type='impression').count(),
+        'clicks': banner.events.filter(event_type='click').count(),
+    } for banner in banners}
+    for item in stats.values():
+        item['ctr'] = round((item['clicks'] / item['impressions']) * 100, 2) if item['impressions'] else 0
+    for banner in banners:
+        banner.audit_stats = stats[banner.id]
+    history = SiteBannerEvent.objects.select_related('user', 'banner').order_by('-created_at')[:50] if is_principal else []
+    return render(request, 'marketplace/site_banner_dashboard.html', {'banners': banners, 'form': form, 'editing_banner': instance, 'banner_users': users, 'is_principal_admin': is_principal, 'banner_stats': stats, 'banner_history': history})
+
+
+def _can_manage_site_banner(user, banner=None):
+    if not user.is_authenticated:
+        return False
+    if user.is_superuser or user.role == 'super_admin':
+        return True
+    return banner is not None and SiteBannerPermission.objects.filter(banner=banner, user=user, can_manage=True).exists()
+
+
+@login_required
+@require_POST
+def site_banner_permission(request, banner_id):
+    if not (request.user.is_superuser or request.user.role == 'super_admin'):
+        return HttpResponseForbidden('Accès réservé à l’administrateur principal')
+    banner = get_object_or_404(SiteBanner, id=banner_id)
+    target = get_object_or_404(User, id=request.POST.get('user_id'))
+    permission, created = SiteBannerPermission.objects.get_or_create(banner=banner, user=target, defaults={'granted_by': request.user})
+    action = request.POST.get('action', 'grant')
+    if action == 'remove':
+        permission.delete()
+    SiteBannerEvent.objects.create(banner=banner, user=request.user, event_type='permission_revoked' if action == 'remove' else 'permission_granted', details={'target_user_id': target.id})
+    return redirect('site_banner_dashboard')
+
+
+@login_required
+@require_POST
+def site_banner_access(request, banner_id):
+    if not (request.user.is_superuser or request.user.role == 'super_admin'):
+        return HttpResponseForbidden('Accès réservé à l’administrateur principal')
+    banner = get_object_or_404(SiteBanner, id=banner_id)
+    target = get_object_or_404(User, id=request.POST.get('user_id'))
+    action = request.POST.get('action', 'grant')
+    access, _ = SiteBannerAccess.objects.get_or_create(banner=banner, user=target, defaults={'granted_by': request.user})
+    if action == 'remove':
+        access.delete()
+        event_type = 'access_revoked'
+    else:
+        event_type = 'access_granted'
+    SiteBannerEvent.objects.create(banner=banner, user=request.user, event_type=event_type, details={'target_user_id': target.id})
+    return redirect('site_banner_dashboard')
+
+
+@login_required
+@require_POST
+def site_banner_purchase(request, banner_id):
+    banner = get_object_or_404(SiteBanner, id=banner_id)
+    if banner.access_mode != 'paid' or banner.access_price <= 0:
+        return JsonResponse({'success': False, 'error': 'Paiement non requis.'}, status=400)
+    with transaction.atomic():
+        SiteBannerEvent.objects.create(banner=banner, user=request.user, event_type='payment_required', details={'amount': str(banner.access_price)})
+        payment, _ = SiteBannerPayment.objects.select_for_update().get_or_create(
+            banner=banner, user=request.user, defaults={'amount': banner.access_price}
+        )
+        if payment.status == 'confirmed':
+            return JsonResponse({'success': True, 'already_paid': True})
+        wallet = Wallet.objects.select_for_update().filter(user=request.user).first()
+        if not wallet or wallet.balance < banner.access_price:
+            payment.status = 'failed'
+            payment.save(update_fields=['status'])
+            SiteBannerEvent.objects.create(banner=banner, user=request.user, event_type='payment_failed', details={'reason': 'insufficient_balance', 'amount': str(banner.access_price)})
+            return JsonResponse({'success': False, 'error': 'Solde MicroCash insuffisant.'}, status=400)
+        wallet.balance -= banner.access_price
+        wallet.save(update_fields=['balance'])
+        tx = Transaction.objects.create(sender=request.user, receiver=get_system_admin_wallet().user if get_system_admin_wallet() else None, amount=banner.access_price, currency='USD', type='site_banner_payment', status='approved')
+        payment.amount = banner.access_price
+        payment.transaction = tx
+        payment.status = 'confirmed'
+        payment.confirmed_at = timezone.now()
+        payment.save(update_fields=['amount', 'transaction', 'status', 'confirmed_at'])
+        SiteBannerEvent.objects.create(banner=banner, user=request.user, event_type='payment_confirmed', details={'amount': str(banner.access_price), 'transaction_id': tx.id})
+    return JsonResponse({'success': True})
+
+
+@require_POST
+def site_banner_impression(request, banner_id):
+    banner = get_object_or_404(SiteBanner, id=banner_id)
+    if not request.session.session_key:
+        request.session.save()
+    key = f'site-banner-impression-{banner.id}'
+    if not request.session.get(key):
+        SiteBannerEvent.objects.create(banner=banner, user=request.user if request.user.is_authenticated else None, event_type='impression', session_key=request.session.session_key)
+        request.session[key] = True
+    return JsonResponse({'success': True})
+
+
+def site_banner_click(request, banner_id):
+    banner = get_object_or_404(SiteBanner, id=banner_id)
+    if not banner.can_access(request.user):
+        return HttpResponseForbidden('Accès à la bannière refusé')
+    SiteBannerEvent.objects.create(banner=banner, user=request.user if request.user.is_authenticated else None, event_type='click')
+    return redirect('product_detail', banner.product_id)
+
+
+@login_required
+@require_POST
+def site_banner_image_add(request, banner_id):
+    banner = get_object_or_404(SiteBanner, id=banner_id)
+    if not _can_manage_site_banner(request.user, banner):
+        return HttpResponseForbidden('Accès refusé')
+    form = SiteBannerImageForm(request.POST, request.FILES)
+    if form.is_valid():
+        image = form.save(commit=False)
+        image.banner = banner
+        image.save()
+        SiteBannerEvent.objects.create(banner=banner, user=request.user, event_type='image_added', details={'image_id': image.id})
+        messages.success(request, 'Image ajoutée à la bannière.')
+    else:
+        messages.error(request, 'Image invalide.')
+    return redirect('site_banner_dashboard')
+
+
+@login_required
+@require_POST
+def site_banner_image_delete(request, image_id):
+    image = get_object_or_404(SiteBannerImage, id=image_id)
+    if not _can_manage_site_banner(request.user, image.banner):
+        return HttpResponseForbidden('Accès refusé')
+    banner = image.banner
+    image.image.delete(save=False)
+    image.delete()
+    SiteBannerEvent.objects.create(banner=banner, user=request.user, event_type='image_deleted', details={'image_id': image_id})
+    messages.success(request, 'Image supprimée.')
+    return redirect('site_banner_dashboard')
+
+
+@login_required
+@require_POST
+def site_banner_image_crop(request, image_id):
+    image = get_object_or_404(SiteBannerImage, id=image_id)
+    if not _can_manage_site_banner(request.user, image.banner):
+        return HttpResponseForbidden('Accès refusé')
+    try:
+        from PIL import Image
+        left = max(0, int(request.POST.get('left', 0)))
+        top = max(0, int(request.POST.get('top', 0)))
+        width = int(request.POST.get('width', 0))
+        height = int(request.POST.get('height', 0))
+        with Image.open(image.image.path) as source:
+            right = min(source.width, left + width)
+            bottom = min(source.height, top + height)
+            if width <= 0 or height <= 0 or right <= left or bottom <= top:
+                raise ValueError('Zone de recadrage invalide')
+            cropped = source.crop((left, top, right, bottom)).convert('RGB')
+            output = io.BytesIO()
+            cropped.save(output, format='WEBP', quality=84, method=6)
+        image.image.save(f'{os.path.basename(os.path.splitext(image.image.name)[0])}_cropped.webp', ContentFile(output.getvalue()), save=True)
+        SiteBannerEvent.objects.create(banner=image.banner, user=request.user, event_type='cropped', details={'image_id': image.id})
+        messages.success(request, 'Image recadrée et enregistrée.')
+    except (OSError, ValueError, TypeError):
+        messages.error(request, 'Zone de recadrage invalide.')
+    return redirect('site_banner_dashboard')
+
+
+@login_required
+@require_POST
+def site_banner_crop(request, banner_id):
+    banner = get_object_or_404(SiteBanner, id=banner_id)
+    if not _can_manage_site_banner(request.user, banner):
+        return HttpResponseForbidden('Accès refusé')
+    try:
+        from PIL import Image
+        with Image.open(banner.image.path) as source:
+            left, top = max(0, int(request.POST.get('left', 0))), max(0, int(request.POST.get('top', 0)))
+            width, height = int(request.POST.get('width', 0)), int(request.POST.get('height', 0))
+            right, bottom = min(source.width, left + width), min(source.height, top + height)
+            if width <= 0 or height <= 0 or right <= left or bottom <= top:
+                raise ValueError('Zone de recadrage invalide')
+            cropped = source.crop((left, top, right, bottom)).convert('RGB')
+            output = io.BytesIO(); cropped.save(output, format='WEBP', quality=84, method=6)
+        banner.image.save(f'{os.path.basename(os.path.splitext(banner.image.name)[0])}_cropped.webp', ContentFile(output.getvalue()), save=True)
+        generate_banner_variants(banner.image)
+        SiteBannerEvent.objects.create(banner=banner, user=request.user, event_type='cropped', details={'target': 'primary'})
+        messages.success(request, 'Image principale recadrée et enregistrée.')
+    except (OSError, ValueError, TypeError, AttributeError):
+        messages.error(request, 'Image principale indisponible ou zone invalide.')
+    return redirect('site_banner_dashboard')
+
+
+@login_required
+@require_POST
+def site_banner_toggle(request, banner_id):
+    banner = get_object_or_404(SiteBanner, id=banner_id)
+    if not _can_manage_site_banner(request.user, banner):
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'error': 'Accès refusé'}, status=403)
+        messages.error(request, 'Accès refusé.')
+        return redirect('site_banner_dashboard')
+
+    banner.is_active = not banner.is_active
+    banner.save(update_fields=['is_active'])
+    SiteBannerEvent.objects.create(banner=banner, user=request.user, event_type='activated' if banner.is_active else 'deactivated')
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({'success': True, 'is_active': banner.is_active})
+    messages.success(request, 'Statut de la bannière mis à jour.')
+    return redirect('site_banner_dashboard')
+
+
+@login_required
+@require_POST
+def site_banner_delete(request, banner_id):
+    banner = get_object_or_404(SiteBanner, id=banner_id)
+    if not _can_manage_site_banner(request.user, banner):
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'error': 'Accès refusé'}, status=403)
+        messages.error(request, 'Accès refusé.')
+        return redirect('site_banner_dashboard')
+
+    SiteBannerEvent.objects.create(banner=banner, user=request.user, event_type='deleted')
+    banner.delete()
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({'success': True, 'message': 'Bannière supprimée.'})
+    messages.success(request, 'Bannière supprimée.')
+    return redirect('site_banner_dashboard')
+
+
+@login_required
 def dashboard(request):
     wallet = Wallet.objects.filter(user=request.user).first()
     recent_orders = Order.objects.filter(buyer=request.user).order_by('-created_at')[:5]
@@ -4307,6 +4604,32 @@ def dashboard(request):
             'DOP': getattr(wallet, 'commission_balance_peso', 0),
         }
 
+    wallet_supervision = None
+    if request.user.is_superuser or request.user.role == 'super_admin':
+        wallet_supervision = {'wallet_count': Wallet.objects.count(), 'rows': [], 'totals': {}}
+        withdrawal_totals = {}
+        for withdrawal in WithdrawalRequest.objects.filter(status__in=['approved', 'completed']).values('user_id', 'currency').annotate(total=Sum('amount')):
+            withdrawal_totals[(withdrawal['user_id'], withdrawal['currency'].upper())] = withdrawal['total']
+        currency_fields = (
+            ('USD', 'balance', 'Principal'), ('USD', 'balance_usd', 'Compte devise'),
+            ('HTG', 'balance_htg', 'Compte devise'), ('PESO', 'balance_peso', 'Compte devise'),
+            ('EUR', 'balance_eur', 'Compte devise'), ('USD', 'commission_balance_usd', 'Commission'),
+            ('HTG', 'commission_balance_htg', 'Commission'), ('PESO', 'commission_balance_peso', 'Commission'),
+            ('EUR', 'commission_balance_eur', 'Commission'),
+        )
+        for current_wallet in Wallet.objects.select_related('user').order_by('user__username'):
+            for currency, field_name, account_type in currency_fields:
+                balance = getattr(current_wallet, field_name) or Decimal('0')
+                if balance == 0 and account_type != 'Principal':
+                    continue
+                withdrawal_total = withdrawal_totals.get((current_wallet.user_id, currency), Decimal('0'))
+                wallet_supervision['rows'].append({
+                    'username': current_wallet.user.username, 'account_type': account_type,
+                    'currency': currency, 'balance': balance, 'withdrawals': withdrawal_total,
+                    'available': balance, 'status': 'Bloqué' if current_wallet.is_blocked else 'Actif',
+                })
+                wallet_supervision['totals'][currency] = wallet_supervision['totals'].get(currency, Decimal('0')) + balance
+
     return render(request, 'marketplace/dashboard.html', {
         'wallet': wallet,
         'recent_orders': recent_orders,
@@ -4320,6 +4643,7 @@ def dashboard(request):
         'recent_withdrawals': recent_withdrawals,
         'recent_deposits': recent_deposits,
         'agent_commission_summary': agent_commission_summary,
+        'wallet_supervision': wallet_supervision,
     })
 
 

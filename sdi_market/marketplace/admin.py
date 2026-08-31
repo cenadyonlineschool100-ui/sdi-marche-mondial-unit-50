@@ -513,10 +513,10 @@ admin.site.register(Shop)
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('name', 'shop', 'price_ht', 'quantity', 'largeur', 'hauteur', 'longueur', 'poids', 'created_at')
-    list_filter = ('shop', 'category', 'created_at')
+    list_display = ('name', 'shop', 'price_ht', 'quantity', 'get_image_status', 'get_banner_status', 'created_at')
+    list_filter = ('shop', 'category', 'created_at', 'banner_display_allowed', 'banner_blocked_by_admin')
     search_fields = ('name', 'description', 'shop__name')
-    readonly_fields = ('created_at',)
+    readonly_fields = ('created_at', 'banner_blocked_by_admin', 'banner_blocked_at')
     
     fieldsets = (
         ('Informations générales', {
@@ -531,10 +531,90 @@ class ProductAdmin(admin.ModelAdmin):
         ('Images', {
             'fields': ('image', 'custom_image')
         }),
+        ('Contrôle d\'affichage en bannière', {
+            'fields': ('banner_display_allowed', 'banner_blocked_by_admin', 'banner_blocked_at', 'banner_block_reason'),
+            'description': 'Contrôlez si ce produit peut apparaître dans le carrousel de la bannière. '
+                          'Seuls les produits avec une image valide et non bloqués seront affichés.'
+        }),
         ('Informations temporelles', {
             'fields': ('created_at',)
         }),
     )
+    
+    actions = ['block_from_banner', 'unblock_from_banner', 'allow_banner_display']
+    
+    def get_image_status(self, obj):
+        """Affiche le statut de l'image du produit"""
+        if obj.has_valid_image():
+            return '✅ Image valide'
+        return '❌ Pas d\'image'
+    get_image_status.short_description = 'Image'
+    
+    def get_banner_status(self, obj):
+        """Affiche le statut d'affichage en bannière"""
+        if obj.banner_blocked_by_admin:
+            return f'🚫 Bloqué par {obj.banner_blocked_by_admin.username}'
+        if not obj.banner_display_allowed:
+            return '⏸️ Désactivé'
+        if obj.has_valid_image():
+            return '✅ Éligible'
+        return '⚠️ Pas d\'image'
+    get_banner_status.short_description = 'Statut Bannière'
+    
+    def block_from_banner(self, request, queryset):
+        """Action pour bloquer des produits du carrousel"""
+        if not request.user.is_staff or not request.user.is_superuser:
+            self.message_user(request, 'Vous n\'avez pas la permission de bloquer des produits.', level=messages.ERROR)
+            return
+        
+        now = timezone.now()
+        count = 0
+        for product in queryset:
+            if not product.banner_blocked_by_admin:
+                product.banner_blocked_by_admin = request.user
+                product.banner_blocked_at = now
+                product.banner_display_allowed = False
+                product.save()
+                count += 1
+        
+        if count > 0:
+            self.message_user(request, f'✅ {count} produit(s) bloqué(s) de la bannière.', level=messages.SUCCESS)
+        else:
+            self.message_user(request, 'Aucun produit n\'a été bloqué (certains étaient déjà bloqués).', level=messages.WARNING)
+    block_from_banner.short_description = '🚫 Bloquer de la bannière'
+    
+    def unblock_from_banner(self, request, queryset):
+        """Action pour débloquer des produits du carrousel"""
+        if not request.user.is_staff or not request.user.is_superuser:
+            self.message_user(request, 'Vous n\'avez pas la permission de débloquer des produits.', level=messages.ERROR)
+            return
+        
+        count = 0
+        for product in queryset:
+            if product.banner_blocked_by_admin:
+                product.banner_blocked_by_admin = None
+                product.banner_blocked_at = None
+                product.banner_block_reason = ''
+                product.banner_display_allowed = True
+                product.save()
+                count += 1
+        
+        if count > 0:
+            self.message_user(request, f'✅ {count} produit(s) débloqué(s) de la bannière.', level=messages.SUCCESS)
+        else:
+            self.message_user(request, 'Aucun produit n\'a été débloqué (certains ne sont pas bloqués).', level=messages.WARNING)
+    unblock_from_banner.short_description = '✅ Débloquer de la bannière'
+    
+    def allow_banner_display(self, request, queryset):
+        """Action pour autoriser l'affichage en bannière"""
+        if not request.user.is_staff or not request.user.is_superuser:
+            self.message_user(request, 'Vous n\'avez pas la permission d\'autoriser des produits.', level=messages.ERROR)
+            return
+        
+        count = queryset.update(banner_display_allowed=True)
+        if count > 0:
+            self.message_user(request, f'✅ {count} produit(s) autorisé(s) pour la bannière.', level=messages.SUCCESS)
+    allow_banner_display.short_description = '✅ Autoriser pour la bannière'
 
 @admin.register(ProductReview)
 class ProductReviewAdmin(admin.ModelAdmin):

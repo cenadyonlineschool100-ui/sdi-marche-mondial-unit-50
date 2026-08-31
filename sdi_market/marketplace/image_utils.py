@@ -7,6 +7,7 @@ from django.core.files.base import ContentFile
 import os
 import requests
 from django.conf import settings
+from django.core.files.storage import default_storage
 from urllib.parse import quote_plus
 
 
@@ -213,3 +214,33 @@ def convert_to_webp(image_path, quality=80):
     except Exception as e:
         print(f"Erreur conversion WebP pour {image_path}: {e}")
         return None
+
+
+def generate_banner_variants(image_field, widths=(480, 768, 1024, 1280, 1600)):
+    """Create real, non-upscaled WebP/AVIF banner variants in local storage."""
+    if not image_field or not image_field.name or image_field.name.startswith(('http://', 'https://')):
+        return []
+    try:
+        with default_storage.open(image_field.name, 'rb') as source_file:
+            source = Image.open(source_file).convert('RGB')
+            base, _ = os.path.splitext(image_field.name)
+            generated = []
+            for width in widths:
+                if source.width < width:
+                    continue
+                resized = source.copy()
+                resized.thumbnail((width, 800), Image.Resampling.LANCZOS)
+                for extension, image_format, save_options in (
+                    ('webp', 'WEBP', {'quality': 84, 'method': 6}),
+                    ('avif', 'AVIF', {'quality': 55}),
+                ):
+                    name = f'{base}_{width}w.{extension}'
+                    output = BytesIO()
+                    resized.save(output, format=image_format, **save_options)
+                    if default_storage.exists(name):
+                        default_storage.delete(name)
+                    default_storage.save(name, ContentFile(output.getvalue()))
+                    generated.append(name)
+            return generated
+    except (OSError, ValueError):
+        return []

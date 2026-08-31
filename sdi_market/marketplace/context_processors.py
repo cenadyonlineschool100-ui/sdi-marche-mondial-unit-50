@@ -1,3 +1,5 @@
+from django.db import models
+
 from .business_logic import CURRENCY_SYMBOLS, SUPPORTED_CURRENCIES, normalize_currency
 from .models import ActivityMenuItem, SiteConfiguration, SystemSettings, PrivateMessage
 
@@ -180,15 +182,13 @@ def announcement_context(request):
     try:
         from django.utils import timezone
         from marketplace.models import AdminAnnouncement
-        
-        # Get active announcements
+
         now = timezone.now()
         announcements = AdminAnnouncement.objects.filter(
             is_active=True,
             status='active'
         ).order_by('-is_priority', '-created_at')
-        
-        # Filter by date if start/end dates are set
+
         active_announcements = []
         for announcement in announcements:
             if announcement.start_date and announcement.start_date > now:
@@ -196,27 +196,48 @@ def announcement_context(request):
             if announcement.end_date and announcement.end_date < now:
                 continue
             active_announcements.append(announcement)
-        
-        # Get priority announcement if exists
-        priority_announcement = None
-        for announcement in active_announcements:
-            if announcement.is_priority:
-                priority_announcement = announcement
-                break
-        
-        # Get first announcement if no priority
+
+        priority_announcement = next((announcement for announcement in active_announcements if announcement.is_priority), None)
         active_announcement = priority_announcement or (active_announcements[0] if active_announcements else None)
-        
+
         return {
             'active_announcement': active_announcement,
             'all_active_announcements': active_announcements,
         }
     except Exception as e:
-        # Log error but don't break the site
         print(f"Error in announcement_context: {e}")
         return {
             'active_announcement': None,
             'all_active_announcements': [],
         }
+
+
+def site_banner_context(request):
+    """Expose the active banner at the top of the site."""
+    try:
+        from .models import SiteBanner, Product
+        banners = SiteBanner.get_active_banners().prefetch_related('images', 'shops')
+        shop_id = getattr(getattr(request, 'resolver_match', None), 'kwargs', {}).get('shop_id')
+        if shop_id:
+            banners = banners.filter(models.Q(scope='all') | models.Q(scope='selected', shops__id=shop_id)).distinct()
+        banner = next((item for item in banners if item.can_access(request.user) or (item.access_mode == 'paid' and request.user.is_authenticated)), None)
+
+        products = Product.objects.filter(
+            quantity__gt=0,
+            banner_display_allowed=True,
+            banner_blocked_by_admin__isnull=True,
+        ).select_related('shop', 'category').annotate(
+            average_rating=models.Avg('reviews__rating', filter=models.Q(reviews__is_approved=True)),
+            reviews_count=models.Count('reviews', filter=models.Q(reviews__is_approved=True)),
+        ).order_by('-average_rating', '-reviews_count')[:6]
+        eligible_products = [product for product in products if product.has_valid_image()]
+
+        return {
+            'site_banner': banner,
+            'site_banner_access_granted': banner.can_access(request.user) if banner else False,
+            'banner_carousel_products': eligible_products,
+        }
+    except Exception:
+        return {'site_banner': None, 'banner_carousel_products': []}
 
 

@@ -1,5 +1,152 @@
 {% extends 'marketplace/base.html' %}
 {% load image_tags %}
+{% block extra_css %}
+<style>
+    .products-results-section,
+    .products-results-section * {
+        box-sizing: border-box;
+    }
+    .products-results-section {
+        width: 100%;
+        max-width: 1180px;
+        margin: 40px auto;
+        padding: 0 16px;
+    }
+    .products-results-section .product-results-heading {
+        margin-bottom: 20px;
+    }
+    .products-results-section .product-results-heading h2 {
+        margin: 0 0 6px;
+        color: #0f172a;
+        font-size: clamp(1.6rem, 3vw, 2.2rem);
+        line-height: 1.2;
+    }
+    .products-results-section .product-results-heading p {
+        margin: 0;
+        color: #475569;
+        line-height: 1.5;
+        overflow-wrap: anywhere;
+    }
+    .products-results-section .product-results-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        width: 100%;
+    }
+    .products-results-section .product-card {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        min-width: 0;
+        margin: 0;
+        padding: 12px;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    .products-results-section .product-image,
+    .products-results-section .product-image-fallback {
+        width: 100%;
+        height: clamp(110px, 18vw, 220px);
+        min-height: 110px;
+        margin: 0 0 12px;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .products-results-section .product-image img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+    .products-results-section .product-info {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        min-width: 0;
+        gap: 8px;
+    }
+    .products-results-section .product-title,
+    .products-results-section .product-secondary,
+    .products-results-section .product-price,
+    .products-results-section .product-shop,
+    .products-results-section .stock-status {
+        max-width: 100%;
+        margin: 0;
+        overflow-wrap: anywhere;
+        word-break: normal;
+    }
+    .products-results-section .product-title {
+        color: #0f172a;
+        font-size: 1rem;
+        line-height: 1.35;
+    }
+    .products-results-section .product-price {
+        color: #1d4ed8;
+        font-size: 1.05rem;
+        font-weight: 800;
+        line-height: 1.3;
+    }
+    .products-results-section .product-shop,
+    .products-results-section .product-secondary {
+        color: #475569;
+        font-size: .9rem;
+        line-height: 1.45;
+    }
+    .products-results-section .product-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+        width: 100%;
+        margin-top: auto;
+        padding-top: 8px;
+    }
+    .products-results-section .product-actions .button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        min-width: 0;
+        min-height: 40px;
+        margin: 0;
+        padding: 8px 10px;
+        overflow-wrap: anywhere;
+        text-align: center;
+    }
+    @media (max-width: 480px) {
+        .products-results-section {
+            margin: 28px auto;
+            padding: 0 10px;
+        }
+        .products-results-section .product-results-grid {
+            gap: 10px;
+        }
+        .products-results-section .product-card {
+            padding: 8px;
+        }
+        .products-results-section .product-image,
+        .products-results-section .product-image-fallback {
+            height: 110px;
+            min-height: 110px;
+            margin-bottom: 8px;
+        }
+        .products-results-section .product-title {
+            font-size: .9rem;
+        }
+        .products-results-section .product-price {
+            font-size: .95rem;
+        }
+        .products-results-section .product-shop,
+        .products-results-section .product-secondary {
+            font-size: .82rem;
+        }
+        .products-results-section .product-actions .button {
+            min-height: 38px;
+            padding: 7px 6px;
+            font-size: .82rem;
+        }
+    }
+</style>
+{% endblock %}
 {% block content %}
 <section class="product-priority" aria-labelledby="products-title">
     {% for shelf in "12"|make_list %}
@@ -104,16 +251,17 @@
     </form>
 </div>
 
-<div class="section-header product-results-heading">
-    <div>
-        <h2>Produits</h2>
-        <p>Résultats pour : <strong>{{ query|default:'tous les produits' }}</strong></p>
+<section class="products-results-section" aria-labelledby="products-results-title">
+    <div class="section-header product-results-heading">
+        <div>
+            <h2 id="products-results-title">Produits</h2>
+            <p>Résultats pour : <strong>{{ query|default:'tous les produits' }}</strong></p>
+        </div>
     </div>
-</div>
 
-<datalist id="search-suggestions"></datalist>
+    <datalist id="search-suggestions"></datalist>
 
-<div class="grid grid-3 product-results-grid">
+    <div class="grid grid-3 product-results-grid">
     {% for product in products %}
     <div class="card product-card">
         {% with primary_image=product.get_primary_image %}
@@ -155,6 +303,7 @@
     <div class="card">Aucun produit trouvé.</div>
     {% endfor %}
 </div>
+</section>
 
 <script>
 function toggleFilters() {

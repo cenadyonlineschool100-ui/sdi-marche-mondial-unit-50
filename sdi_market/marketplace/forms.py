@@ -1,10 +1,14 @@
 from decimal import Decimal
+from io import BytesIO
+import os
+from PIL import Image
 
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
-from .models import BeautyAppointment, BeautyStudioRequest, BeautyStudioService, Product, ProductReview, SystemSettings, ProductImage, ChatMessage, PrivateMessage, Profile, Order, AdminAnnouncement, TiKaneAccessRequest, TiKanePlan, TechnicianProfile
+from django.core.files.uploadedfile import UploadedFile, SimpleUploadedFile
+from .models import BeautyAppointment, BeautyStudioRequest, BeautyStudioService, Product, ProductReview, SystemSettings, ProductImage, ChatMessage, PrivateMessage, Profile, Order, AdminAnnouncement, TiKaneAccessRequest, TiKanePlan, TechnicianProfile, SiteBanner, SiteBannerImage, Shop
 
 User = get_user_model()
 
@@ -181,6 +185,88 @@ class SignUpForm(UserCreationForm):
             raise ValidationError('Veuillez télécharger une pièce d\'identité ou un reçu SDI MicroSDICash.')
 
         return cleaned
+
+class SiteBannerForm(forms.ModelForm):
+    class Meta:
+        model = SiteBanner
+        fields = [
+            'product', 'title', 'subtitle', 'button_text', 'image',
+            'is_active', 'display_order', 'start_date', 'end_date', 'display_mode', 'autoplay_seconds', 'scope', 'shops', 'access_mode', 'access_price'
+        ]
+        widgets = {
+            'product': forms.Select(attrs={'class': 'form-control'}),
+            'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: Offre du moment'}),
+            'subtitle': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Sous-titre'}),
+            'button_text': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Voir le produit'}),
+            'image': forms.ClearableFileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'display_order': forms.NumberInput(attrs={'class': 'form-control', 'min': '0'}),
+            'start_date': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
+            'end_date': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
+            'display_mode': forms.Select(attrs={'class': 'form-control'}),
+            'autoplay_seconds': forms.NumberInput(attrs={'class': 'form-control', 'min': '0', 'max': '300'}),
+            'scope': forms.Select(attrs={'class': 'form-control'}),
+            'shops': forms.SelectMultiple(attrs={'class': 'form-control'}),
+            'access_mode': forms.Select(attrs={'class': 'form-control'}),
+            'access_price': forms.NumberInput(attrs={'class': 'form-control', 'min': '0', 'step': '0.01'}),
+        }
+        labels = {
+            'product': 'Produit réel',
+            'title': 'Titre',
+            'subtitle': 'Sous-titre',
+            'button_text': 'Texte du bouton',
+            'image': 'Image de bannière',
+            'is_active': 'Activer la bannière',
+            'display_order': 'Ordre d’affichage',
+            'start_date': 'Date de début',
+            'end_date': 'Date de fin',
+            'display_mode': 'Mode d’affichage',
+            'autoplay_seconds': 'Autoplay en secondes (0 = désactivé)',
+            'scope': 'Portée de la bannière',
+            'shops': 'Boutiques autorisées',
+            'access_mode': 'Mode d’accès à la bannière',
+            'access_price': 'Prix MicroCash (USD)',
+        }
+
+    def __init__(self, *args, **kwargs):
+        is_principal = kwargs.pop('is_principal', False)
+        super().__init__(*args, **kwargs)
+        if not is_principal:
+            self.fields.pop('access_mode', None)
+            self.fields.pop('access_price', None)
+        self.fields['product'].queryset = Product.objects.order_by('name')
+        self.fields['shops'].queryset = Shop.objects.order_by('name')
+
+    def clean_image(self):
+        image = self.cleaned_data.get('image')
+        if not image or not isinstance(image, UploadedFile):
+            return image
+        try:
+            with Image.open(image) as source:
+                optimized = source.convert('RGB')
+                optimized.thumbnail((1600, 800), Image.Resampling.LANCZOS)
+                output = BytesIO()
+                optimized.save(output, format='WEBP', quality=84, method=6)
+            output.seek(0)
+            image = SimpleUploadedFile(
+                f'{os.path.splitext(image.name)[0]}.webp',
+                output.getvalue(),
+                content_type='image/webp',
+            )
+        except (OSError, ValueError):
+            raise ValidationError('Téléversez une image valide.')
+        return image
+
+
+class SiteBannerImageForm(forms.ModelForm):
+    class Meta:
+        model = SiteBannerImage
+        fields = ['image', 'display_order']
+        widgets = {
+            'image': forms.ClearableFileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
+            'display_order': forms.NumberInput(attrs={'class': 'form-control', 'min': '0'}),
+        }
+
 
 class ProductForm(forms.ModelForm):
     images = forms.FileField(

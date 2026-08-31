@@ -9,7 +9,7 @@ from .admin import MarketplaceSettingsAdmin
 from .models import (
     User, Profile, Wallet, Agent, DepositCommissionConfig, Deposit, Transaction, CommissionRule,
     DepositReceipt, Shop, Product, ProductAccessRequest, ResellerProduct, MarketplaceSettings, Order, OrderItem,
-    Transfer, SDISolSettings, SDISolMember, SDISolPayment, RealEstateMembershipRequest
+    Transfer, SDISolSettings, SDISolMember, SDISolPayment, RealEstateMembershipRequest, SiteBanner, SiteBannerAccess, SiteBannerPayment, SiteBannerEvent
 )
 from .business_logic import PaymentManager
 from .views_commission import get_commission_eligible_users
@@ -193,6 +193,184 @@ class MicrosDiCashAgentDepositTest(TestCase):
         response = self.client.get(view_url)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Reçu de dépôt')
+
+
+class SiteBannerAdminAccessTest(TestCase):
+    def setUp(self):
+        self.admin_user = User.objects.create_superuser(username='banneradmin', email='banneradmin@example.com', password='admin123')
+        self.shop = Shop.objects.create(owner=self.admin_user, name='Boutique de test')
+        self.product = Product.objects.create(
+            shop=self.shop,
+            category=None,
+            name='Produit banner test',
+            description='Desc',
+            price_ht=Decimal('49.99'),
+            quantity=10,
+            image='https://example.com/banner.jpg',
+        )
+        self.client = Client()
+
+    def test_banner_dashboard_requires_admin_login(self):
+        response = self.client.get(reverse('site_banner_dashboard'))
+        self.assertEqual(response.status_code, 302)
+
+        self.client.login(username='banneradmin', password='admin123')
+        response = self.client.get(reverse('site_banner_dashboard'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Gestion des bannières')
+
+
+class HomePageRouteTest(TestCase):
+    def setUp(self):
+        self.admin_user = User.objects.create_superuser(username='banneradmin', email='banneradmin@example.com', password='admin123')
+        self.shop = Shop.objects.create(owner=self.admin_user, name='Boutique de test')
+        self.product = Product.objects.create(
+            shop=self.shop,
+            category=None,
+            name='Produit banner test',
+            description='Desc',
+            price_ht=Decimal('49.99'),
+            quantity=10,
+            image='https://example.com/banner.jpg',
+        )
+        self.banner = SiteBanner.objects.create(
+            product=self.product,
+            title='Offre du moment',
+            subtitle='Produit phare',
+            button_text='Voir le produit',
+            is_active=True,
+            display_mode='static',
+            access_mode='free',
+        )
+        self.client = Client()
+
+    def test_root_url_renders_home_page_with_banner(self):
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Produits en vedette')
+        self.assertContains(response, 'shop-carousel')
+
+    def test_home_page_renders_compact_banner_product_carousel(self):
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'site-top-banner-product-carousel')
+        self.assertContains(response, 'Produit banner test')
+
+    def test_banner_management_link_is_visible_only_to_principal_admin(self):
+        self.client.login(username='banneradmin', password='admin123')
+        response = self.client.get(reverse('home'))
+        self.assertContains(response, 'Bannière Gestion')
+        self.assertContains(response, reverse('site_banner_dashboard'))
+
+        secondary = User.objects.create_user(
+            username='banner_secondary',
+            password='admin123',
+            role='admin_secondary',
+            is_staff=True,
+        )
+        self.client.force_login(secondary)
+        response = self.client.get(reverse('home'))
+        self.assertNotContains(response, 'Bannière Gestion')
+        self.assertNotEqual(self.client.get(reverse('site_banner_dashboard')).status_code, 200)
+
+        normal = User.objects.create_user(username='banner_normal', password='admin123')
+        self.client.force_login(normal)
+        response = self.client.get(reverse('home'))
+        self.assertNotContains(response, 'Bannière Gestion')
+        self.assertNotEqual(self.client.get(reverse('site_banner_dashboard')).status_code, 200)
+
+    def test_active_banner_is_exposed_in_template_context(self):
+        SiteBanner.objects.create(
+            product=self.product,
+            title='Promo flash',
+            subtitle='Grande réduction',
+            button_text='Voir le produit',
+            is_active=True,
+            display_order=1,
+        )
+        response = self.client.get(reverse('home'))
+        self.assertContains(response, 'Promo flash')
+
+
+class SiteBannerAccessModeTest(TestCase):
+    def setUp(self):
+        self.admin = User.objects.create_superuser(username='banner_access_admin', password='pass12345', email='banner-access-admin@example.com')
+        self.user = User.objects.create_user(username='banner_access_user', password='pass12345', email='banner-access-user@example.com')
+        self.shop = Shop.objects.create(owner=self.admin, name='Banner Access Shop')
+        self.product = Product.objects.create(shop=self.shop, name='Banner Access Product', description='test', price_ht=10, quantity=1, image='https://example.com/banner.jpg')
+        self.banner = SiteBanner.objects.create(product=self.product, title='Banner Access Test', access_mode='free')
+        self.client.login(username='banner_access_user', password='pass12345')
+
+    def test_free_banner_is_accessible(self):
+        self.assertTrue(self.banner.can_access(self.user))
+        self.assertEqual(self.client.get(reverse('site_banner_click', args=[self.banner.id])).status_code, 302)
+
+    def test_selected_banner_requires_grant_and_revocation_is_immediate(self):
+        self.banner.access_mode = 'selected'
+        self.banner.save(update_fields=['access_mode'])
+        self.assertFalse(self.banner.can_access(self.user))
+        self.assertEqual(self.client.get(reverse('site_banner_click', args=[self.banner.id])).status_code, 403)
+        self.client.logout()
+        self.client.login(username='banner_access_admin', password='pass12345')
+        self.client.post(reverse('site_banner_access', args=[self.banner.id]), {'user_id': self.user.id})
+        self.banner.refresh_from_db()
+        self.assertTrue(self.banner.can_access(self.user))
+        self.client.post(reverse('site_banner_access', args=[self.banner.id]), {'user_id': self.user.id, 'action': 'remove'})
+        self.assertFalse(self.banner.can_access(self.user))
+
+    def test_access_mode_transitions_and_secondary_admin_protection(self):
+        self.client.logout()
+        secondary = User.objects.create_user(username='banner_access_secondary', password='pass12345', email='banner-access-secondary@example.com', role='admin_secondary')
+        self.client.login(username='banner_access_secondary', password='pass12345')
+        banner_data = {
+            'banner_id': self.banner.id,
+            'product': self.product.id,
+            'title': self.banner.title,
+            'subtitle': self.banner.subtitle,
+            'button_text': self.banner.button_text,
+            'is_active': 'on',
+            'display_order': self.banner.display_order,
+            'display_mode': self.banner.display_mode,
+            'autoplay_seconds': self.banner.autoplay_seconds,
+            'scope': self.banner.scope,
+            'access_price': self.banner.access_price,
+        }
+        response = self.client.post(reverse('site_banner_dashboard'), {**banner_data, 'access_mode': 'selected'})
+        self.assertNotEqual(response.status_code, 200)
+        self.banner.refresh_from_db()
+        self.assertEqual(self.banner.access_mode, 'free')
+        self.client.logout()
+        self.client.login(username='banner_access_admin', password='pass12345')
+        self.client.post(reverse('site_banner_dashboard'), {**banner_data, 'access_mode': 'selected'})
+        self.banner.refresh_from_db()
+        self.assertEqual(self.banner.access_mode, 'selected')
+        self.assertFalse(self.banner.can_access(self.user))
+        self.client.post(reverse('site_banner_dashboard'), {**banner_data, 'access_mode': 'free'})
+        self.banner.refresh_from_db()
+        self.assertEqual(self.banner.access_mode, 'free')
+        self.assertTrue(self.banner.can_access(self.user))
+
+    def test_paid_banner_debits_microcash_once_and_rejects_insufficient_balance(self):
+        self.banner.access_mode = 'paid'
+        self.banner.access_price = Decimal('25.00')
+        self.banner.save(update_fields=['access_mode', 'access_price'])
+        wallet, _ = Wallet.objects.get_or_create(user=self.user)
+        wallet.balance = Decimal('20.00')
+        wallet.save(update_fields=['balance'])
+        response = self.client.post(reverse('site_banner_purchase', args=[self.banner.id]))
+        self.assertEqual(response.status_code, 400)
+        wallet.refresh_from_db()
+        self.assertEqual(wallet.balance, Decimal('20.00'))
+        wallet.balance = Decimal('30.00')
+        wallet.save(update_fields=['balance'])
+        response = self.client.post(reverse('site_banner_purchase', args=[self.banner.id]))
+        self.assertEqual(response.status_code, 200)
+        wallet.refresh_from_db()
+        self.assertEqual(wallet.balance, Decimal('5.00'))
+        self.assertTrue(SiteBannerPayment.objects.get(banner=self.banner, user=self.user).status == 'confirmed')
+        self.assertEqual(self.client.post(reverse('site_banner_purchase', args=[self.banner.id])).json()['already_paid'], True)
+        wallet.refresh_from_db()
+        self.assertEqual(wallet.balance, Decimal('5.00'))
 
 
 class RealEstateMembershipApprovalTest(TestCase):

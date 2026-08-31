@@ -1,5 +1,6 @@
 import uuid
 import secrets
+import os
 from decimal import Decimal
 import datetime
 from datetime import datetime, timedelta
@@ -16,6 +17,7 @@ from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.hashers import make_password, check_password
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db.models import JSONField
+from django.core.files.storage import default_storage
 
 # -------------------------------
 # Utilisateur (acheteur + vendeur + employé livraison)
@@ -754,9 +756,24 @@ class Product(models.Model):
     poids = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, help_text="Poids en kg")
     created_at = models.DateTimeField(auto_now_add=True)
     
+    # Contrôle de l'affichage en bannière/carrousel
+    banner_display_allowed = models.BooleanField(default=True, help_text="Autoriser l'affichage en bannière (par défaut: True si image valide)")
+    banner_blocked_by_admin = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='blocked_banner_products', help_text="Admin qui a bloqué")
+    banner_blocked_at = models.DateTimeField(null=True, blank=True, help_text="Date du blocage")
+    banner_block_reason = models.TextField(blank=True, default='', help_text="Raison du blocage")
+    
     def get_display_image(self):
         """Retourne l'image à afficher (custom si existe, sinon auto-générée)"""
         return self.custom_image.url if self.custom_image else self.image
+    
+    def has_valid_image(self):
+        """Vérifie si le produit a une image valide"""
+        return bool(self.custom_image or self.image)
+    
+    def is_eligible_for_banner(self):
+        """Vérifie si le produit est éligible pour la bannière
+        Règle: image valide + admin_allowed = True"""
+        return self.has_valid_image() and self.banner_display_allowed
     
     def get_images(self):
         """Retourne toutes les images du produit"""
@@ -832,6 +849,165 @@ class ProductImage(models.Model):
         if self.is_primary:
             ProductImage.objects.filter(product=self.product, is_primary=True).update(is_primary=False)
         super().save(*args, **kwargs)
+
+
+class SiteBanner(models.Model):
+    """Bannière premium placée au-dessus du header, avec un produit réel associé."""
+    DISPLAY_MODE_CHOICES = (
+        ('static', 'Image statique'),
+        ('carousel', 'Carrousel'),
+    )
+    SCOPE_CHOICES = (
+        ('all', 'Toutes les boutiques'),
+        ('selected', 'Boutiques sélectionnées'),
+    )
+    ACCESS_MODE_CHOICES = (
+        ('free', 'Gratuit pour tous'),
+        ('selected', 'Accès individuel'),
+        ('paid', 'Payant via MicroCash'),
+    )
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='site_banners', help_text='Produit réel affiché dans la bannière')
+    title = models.CharField(max_length=120, default='Offre du moment', verbose_name='Titre')
+    subtitle = models.CharField(max_length=220, blank=True, default='', verbose_name='Sous-titre')
+    button_text = models.CharField(max_length=40, default='Voir le produit', verbose_name='Texte du bouton')
+    image = models.ImageField(upload_to='site_banner/%Y/%m/', blank=True, null=True, verbose_name='Image de la bannière')
+    is_active = models.BooleanField(default=True, verbose_name='Activer la bannière')
+    display_order = models.PositiveIntegerField(default=0)
+    start_date = models.DateTimeField(blank=True, null=True)
+    end_date = models.DateTimeField(blank=True, null=True)
+    display_mode = models.CharField(max_length=20, choices=DISPLAY_MODE_CHOICES, default='static')
+    autoplay_seconds = models.PositiveSmallIntegerField(default=0, help_text='0 désactive la lecture automatique')
+    scope = models.CharField(max_length=20, choices=SCOPE_CHOICES, default='all')
+    shops = models.ManyToManyField(Shop, blank=True, related_name='site_banners')
+    access_mode = models.CharField(max_length=20, choices=ACCESS_MODE_CHOICES, default='free')
+    access_price = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['display_order', '-created_at']
+        verbose_name = 'Bannière du site'
+        verbose_name_plural = 'Bannières du site'
+
+    def __str__(self):
+        return f"{self.title} - {self.product.name}"
+
+    def get_product_image_url(self):
+        if self.image and not str(self.image.name).startswith(('http://', 'https://')):
+            return self.image.url
+        if self.product and self.product.get_primary_image():
+            return self.product.get_primary_image()
+        if self.product and self.product.custom_image:
+            return self.product.custom_image.url
+        if self.product and self.product.image:
+            return self.product.image
+        return ''
+
+    def get_media_items(self):
+        items = [item.image.url for item in self.images.order_by('display_order', 'id')]
+        if self.image and not str(self.image.name).startswith(('http://', 'https://')):
+            items.insert(0, self.image.url)
+        elif not items:
+            product_image = self.get_product_image_url()
+            if product_image:
+                items.append(product_image)
+        return items
+
+    def get_image_sources(self):
+        if not self.image or str(self.image.name).startswith(('http://', 'https://')):
+            return {'fallback': self.get_product_image_url(), 'webp': '', 'avif': '', 'sizes': '(max-width: 768px) 88px, 120px'}
+        base, _ = os.path.splitext(self.image.name)
+        variants = []
+        for width in (480, 768, 1024, 1280, 1600):
+            webp = f'{base}_{width}w.webp'
+            avif = f'{base}_{width}w.avif'
+            if default_storage.exists(webp):
+                variants.append((width, default_storage.url(webp), default_storage.url(avif) if default_storage.exists(avif) else ''))
+        return {
+            'fallback': self.image.url,
+            'webp': ', '.join(f'{url} {width}w' for width, url, _ in variants),
+            'avif': ', '.join(f'{url} {width}w' for width, _, url in variants if url),
+            'sizes': '(max-width: 768px) 88px, 120px',
+        }
+
+    @classmethod
+    def get_active_banners(cls):
+        now = timezone.now()
+        queryset = cls.objects.filter(is_active=True).select_related('product', 'product__shop')
+        queryset = queryset.filter(models.Q(start_date__isnull=True) | models.Q(start_date__lte=now))
+        queryset = queryset.filter(models.Q(end_date__isnull=True) | models.Q(end_date__gte=now))
+        return queryset.order_by('display_order', '-created_at')
+
+    def is_visible_for_shop(self, shop):
+        return self.scope == 'all' or (shop is not None and self.shops.filter(pk=shop.pk).exists())
+
+    def can_access(self, user):
+        if self.access_mode == 'free':
+            return True
+        if not user or not user.is_authenticated:
+            return False
+        if self.access_mode == 'selected':
+            return self.access_grants.filter(user=user).exists()
+        return self.payments.filter(user=user, status='confirmed').exists()
+
+
+class SiteBannerImage(models.Model):
+    banner = models.ForeignKey(SiteBanner, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='site_banner/%Y/%m/')
+    display_order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['display_order', 'id']
+
+
+class SiteBannerPermission(models.Model):
+    banner = models.ForeignKey(SiteBanner, on_delete=models.CASCADE, related_name='permissions')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='site_banner_permissions')
+    granted_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='granted_site_banner_permissions')
+    can_manage = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['banner', 'user'], name='unique_site_banner_permission')]
+
+
+class SiteBannerAccess(models.Model):
+    banner = models.ForeignKey(SiteBanner, on_delete=models.CASCADE, related_name='access_grants')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='site_banner_access_grants')
+    granted_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='granted_site_banner_access')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['banner', 'user'], name='unique_site_banner_access')]
+
+
+class SiteBannerPayment(models.Model):
+    STATUS_CHOICES = (('pending', 'En attente'), ('confirmed', 'Confirmé'), ('failed', 'Échoué'))
+    banner = models.ForeignKey(SiteBanner, on_delete=models.CASCADE, related_name='payments')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='site_banner_payments')
+    transaction = models.OneToOneField('Transaction', on_delete=models.SET_NULL, null=True, blank=True, related_name='site_banner_payment')
+    amount = models.DecimalField(max_digits=15, decimal_places=2)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+    confirmed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['banner', 'user'], name='unique_site_banner_payment')]
+
+
+class SiteBannerEvent(models.Model):
+    EVENT_CHOICES = (
+        ('impression', 'Impression'), ('click', 'Clic'), ('created', 'Création'),
+        ('updated', 'Modification'), ('activated', 'Activation'), ('deactivated', 'Désactivation'),
+        ('deleted', 'Suppression'), ('image_added', 'Ajout image'), ('image_replaced', 'Remplacement image'), ('image_deleted', 'Suppression image'), ('cropped', 'Recadrage'), ('scope_changed', 'Changement portée'), ('permission_granted', 'Attribution permission'), ('permission_revoked', 'Révocation permission'), ('access_mode_changed', 'Mode accès modifié'), ('access_granted', 'Accès accordé'), ('access_revoked', 'Accès révoqué'), ('payment_required', 'Paiement requis'), ('payment_confirmed', 'Paiement confirmé'), ('payment_failed', 'Paiement échoué'),
+    )
+    banner = models.ForeignKey(SiteBanner, on_delete=models.SET_NULL, null=True, related_name='events')
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    event_type = models.CharField(max_length=30, choices=EVENT_CHOICES)
+    session_key = models.CharField(max_length=40, blank=True, default='')
+    details = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
 # -------------------------------
 # Marketplace / Revendeurs

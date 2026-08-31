@@ -87,6 +87,62 @@
         {% endif %}
     </section>
 
+    {% if wallet_supervision %}
+    <section class="fintech-card wallet-supervision-card" aria-labelledby="wallet-supervision-title">
+        <div class="panel-header">
+            <div>
+                <h2 id="wallet-supervision-title">💰 Vue globale des wallets</h2>
+                <p class="panel-copy">Lecture des soldes réellement enregistrés pour les utilisateurs.</p>
+            </div>
+            <div class="wallet-supervision-count">{{ wallet_supervision.wallet_count }} wallet{{ wallet_supervision.wallet_count|pluralize }}</div>
+        </div>
+        <div class="wallet-supervision-totals">
+            {% for currency, total in wallet_supervision.totals.items %}
+            <div><span>Total {{ currency }}</span><strong>{{ total|floatformat:2 }} {{ currency }}</strong></div>
+            {% endfor %}
+        </div>
+        <div class="wallet-supervision-table-wrap">
+            <table class="wallet-supervision-table">
+                <thead><tr><th>Utilisateur</th><th>Compte</th><th>Devise</th><th>Solde</th><th>Retraits</th><th>Disponible</th><th>Statut</th></tr></thead>
+                <tbody>
+                    {% for row in wallet_supervision.rows %}
+                    <tr>
+                        <td data-label="Utilisateur">{{ row.username }}</td><td data-label="Compte">{{ row.account_type }}</td>
+                        <td data-label="Devise">{{ row.currency }}</td><td data-label="Solde">{{ row.balance|floatformat:2 }}</td>
+                        <td data-label="Retraits">{{ row.withdrawals|floatformat:2 }}</td><td data-label="Disponible"><strong>{{ row.available|floatformat:2 }}</strong></td>
+                        <td data-label="Statut">{{ row.status }}</td>
+                    </tr>
+                    {% empty %}<tr><td colspan="7">Aucun wallet utilisateur enregistré.</td></tr>{% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+    <style>
+        .wallet-supervision-card { margin-top: 24px; }
+        .wallet-supervision-count { color: #475569; font-weight: 700; }
+        .wallet-supervision-totals { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 16px 0; }
+        .wallet-supervision-totals div { padding: 12px; border: 1px solid rgba(148,163,184,.2); border-radius: 10px; background: rgba(239,246,255,.6); }
+        .wallet-supervision-totals span, .wallet-supervision-totals strong { display: block; }
+        .wallet-supervision-totals span { color: #475569; font-size: .85rem; }
+        .wallet-supervision-totals strong { margin-top: 4px; color: #1d4ed8; }
+        .wallet-supervision-table-wrap { overflow-x: auto; }
+        .wallet-supervision-table { width: 100%; min-width: 700px; border-collapse: collapse; }
+        .wallet-supervision-table th, .wallet-supervision-table td { padding: 10px 12px; border-bottom: 1px solid rgba(148,163,184,.18); text-align: left; white-space: nowrap; }
+        .wallet-supervision-table th { color: #334155; font-size: .8rem; text-transform: uppercase; }
+        .wallet-supervision-table td { color: #0f172a; }
+        @media (max-width: 700px) {
+            .wallet-supervision-card { padding: 16px; }
+            .wallet-supervision-table { min-width: 0; }
+            .wallet-supervision-table thead { display: none; }
+            .wallet-supervision-table, .wallet-supervision-table tbody, .wallet-supervision-table tr, .wallet-supervision-table td { display: block; width: 100%; }
+            .wallet-supervision-table tr { margin-bottom: 12px; padding: 10px; border: 1px solid rgba(148,163,184,.2); border-radius: 10px; background: #fff; }
+            .wallet-supervision-table td { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; white-space: normal; }
+            .wallet-supervision-table td::before { content: attr(data-label); color: #475569; font-weight: 700; }
+            .wallet-supervision-table td[colspan] { display: block; }
+        }
+    </style>
+    {% endif %}
+
     <div class="dashboard-main-grid">
         <div class="dashboard-left-panel">
             <div class="fintech-card chart-panel">
@@ -192,7 +248,7 @@
                                 <div class="activity-left">
                                     <span class="activity-icon">📥</span>
                                     <div>
-                                        <p class="activity-title">Dépôt de {{ deposit.sender.username if deposit.sender else 'Système' }}</p>
+                                        <p class="activity-title">Dépôt de {% if deposit.sender %}{{ deposit.sender.username }}{% else %}Système{% endif %}</p>
                                         <p class="activity-meta">{{ deposit.created_at|date:'d M Y H:i' }} • {{ deposit.currency }}</p>
                                     </div>
                                 </div>
@@ -386,11 +442,11 @@
         }
 
         document.getElementById('btn-withdraw')?.addEventListener('click', function() {
-            alert('Fonctionnalité de retrait à implémenter');
+            window.location.href = "{% url 'profile' %}?open_withdraw=1";
         });
 
         document.getElementById('btn-transfer')?.addEventListener('click', function() {
-            alert('Fonctionnalité de transfert à implémenter');
+            window.location.href = "{% url 'profile' %}#agent-transfer-section";
         });
     });
 </script>

@@ -21,6 +21,7 @@ from .views import (
     generate_product_image_api, get_image_suggestions_api,  # APIs génération d'images
     driver_dashboard, my_shop, manage_delivery_assignments, assign_order_to_driver, reassign_delivery_order,
     system_control_panel, refresh_exchange_rates, security_dashboard_api, view_user_password,  # Contrôle système - Gestion mots de passe et sécurité
+    site_banner_dashboard, site_banner_toggle, site_banner_delete, site_banner_image_add, site_banner_image_delete, site_banner_image_crop, site_banner_crop, site_banner_permission, site_banner_access, site_banner_impression, site_banner_click, site_banner_purchase,
     # Notifications persistantes
     get_persistent_notifications_api, mark_persistent_notification_read_api, check_notifications_sound_api,
     persistent_notifications_page, mark_all_persistent_notifications_read_api,
@@ -96,7 +97,7 @@ urlpatterns = [
     path('api/generate-image/', generate_product_image_api, name='generate_product_image'),
     path('api/image-suggestions/', get_image_suggestions_api, name='image_suggestions'),
 
-    path('', search, name='site_root'),
+    path('', home, name='site_root'),
     path('home/', home, name='home'),
     path('marche-mondial/', marche_mondial, name='marche_mondial'),
     path('demo/', demo_page, name='demo'),
@@ -156,6 +157,18 @@ urlpatterns = [
     path('admin/optimize-performance', optimize_performance),
     path('my-shop/', my_shop, name='my_shop'),
     path('dashboard/', dashboard, name='dashboard'),
+    path('admin/banniere/', site_banner_dashboard, name='site_banner_dashboard'),
+    path('admin/banniere/<int:banner_id>/toggle/', site_banner_toggle, name='site_banner_toggle'),
+    path('admin/banniere/<int:banner_id>/delete/', site_banner_delete, name='site_banner_delete'),
+    path('admin/banniere/<int:banner_id>/images/add/', site_banner_image_add, name='site_banner_image_add'),
+    path('admin/banniere/images/<int:image_id>/delete/', site_banner_image_delete, name='site_banner_image_delete'),
+    path('admin/banniere/images/<int:image_id>/crop/', site_banner_image_crop, name='site_banner_image_crop'),
+    path('admin/banniere/<int:banner_id>/crop/', site_banner_crop, name='site_banner_crop'),
+    path('admin/banniere/<int:banner_id>/permission/', site_banner_permission, name='site_banner_permission'),
+    path('admin/banniere/<int:banner_id>/access/', site_banner_access, name='site_banner_access'),
+    path('banniere/<int:banner_id>/impression/', site_banner_impression, name='site_banner_impression'),
+    path('banniere/<int:banner_id>/click/', site_banner_click, name='site_banner_click'),
+    path('banniere/<int:banner_id>/purchase/', site_banner_purchase, name='site_banner_purchase'),
     path('sdi-sol/', sdi_sol_page, name='sdi_sol'),
     path('sdi-sol/join/', sdi_sol_join, name='sdi_sol_join'),
     path('sdi-sol/payments/', sdi_sol_payments, name='sdi_sol_payments'),

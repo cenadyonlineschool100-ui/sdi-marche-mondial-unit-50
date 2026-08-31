@@ -79,6 +79,7 @@ TEMPLATES = [
                 'marketplace.context_processors.private_chat_context',
                 'marketplace.context_processors.system_settings_context',
                 'marketplace.context_processors.announcement_context',
+                'marketplace.context_processors.site_banner_context',
                 'marketplace.context_processors.navigation_context',
             ],
         },

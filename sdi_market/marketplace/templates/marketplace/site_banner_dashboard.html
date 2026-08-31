@@ -1,0 +1,294 @@
+{% extends 'marketplace/base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+  .site-banner-dashboard {
+    max-width: 1200px;
+    margin: 32px auto 48px;
+    padding: 0 16px;
+  }
+  .site-banner-dashboard-card {
+    background: rgba(255,255,255,0.92);
+    border: 1px solid rgba(148,163,184,0.2);
+    border-radius: 24px;
+    box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+    padding: 24px;
+  }
+  .site-banner-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  .site-banner-head h1 {
+    margin: 0;
+    font-size: clamp(1.6rem, 3vw, 2.3rem);
+    color: #0f172a;
+  }
+  .site-banner-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 18px;
+  }
+  .site-banner-item {
+    background: linear-gradient(180deg, #f8fbff 0%, #eef6ff 100%);
+    border: 1px solid rgba(59,130,246,0.15);
+    border-radius: 18px;
+    overflow: hidden;
+  }
+  .site-banner-item img {
+    width: 100%;
+    height: 170px;
+    object-fit: cover;
+    display: block;
+  }
+  .site-banner-body {
+    padding: 16px;
+  }
+  .site-banner-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+  .site-banner-tag {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    background: rgba(37, 99, 235, 0.1);
+    color: #1d4ed8;
+  }
+  .site-banner-tag.inactive {
+    background: rgba(148, 163, 184, 0.12);
+    color: #475569;
+  }
+  .site-banner-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+  }
+  .site-banner-btn {
+    border: none;
+    border-radius: 10px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-weight: 700;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #e2e8f0;
+    color: #0f172a;
+  }
+  .site-banner-btn.primary {
+    background: #1d4ed8;
+    color: #fff;
+  }
+  .site-banner-btn.danger {
+    background: #fee2e2;
+    color: #b91c1c;
+  }
+  .site-banner-empty {
+    padding: 20px;
+    color: #475569;
+    text-align: center;
+    background: rgba(255,255,255,0.7);
+    border-radius: 14px;
+  }
+  .site-banner-crop {
+    position: relative;
+    width: min(100%, 520px);
+    touch-action: none;
+    user-select: none;
+  }
+  .site-banner-crop img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  .site-banner-crop-selection {
+    position: absolute;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 9999px rgba(15, 23, 42, .48);
+    cursor: move;
+    min-width: 12px;
+    min-height: 12px;
+  }
+  .site-banner-crop-handle {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    right: -8px;
+    bottom: -8px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    background: #1d4ed8;
+    cursor: nwse-resize;
+  }
+  @media (max-width: 640px) {
+    .site-banner-dashboard-card { padding: 18px 14px; }
+    .site-banner-row { flex-direction: column; }
+  }
+</style>
+
+<div class="site-banner-dashboard">
+  <div class="site-banner-dashboard-card">
+    <div class="site-banner-head">
+      <h1>📢 Gestion des bannières</h1>
+      <a href="{% url 'dashboard' %}" class="site-banner-btn primary">Retour au dashboard</a>
+    </div>
+
+    <div class="site-banner-dashboard-card" style="margin-top:22px;">
+      <h2 style="margin-top:0;">{% if editing_banner %}Modifier la bannière{% else %}Créer une bannière{% endif %}</h2>
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% if editing_banner %}<input type="hidden" name="banner_id" value="{{ editing_banner.id }}">{% endif %}
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;">
+          {% for field in form %}
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+              {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
+              {% for error in field.errors %}<small style="color:#b91c1c;">{{ error }}</small>{% endfor %}
+            </div>
+          {% endfor %}
+        </div>
+        <div style="margin-top:16px;">
+          <button type="submit" class="site-banner-btn primary">Enregistrer</button>
+          {% if editing_banner %}<a href="{% url 'site_banner_dashboard' %}" class="site-banner-btn">Annuler</a>{% endif %}
+        </div>
+      </form>
+    </div>
+
+    {% if banners %}
+      <div class="site-banner-grid" style="margin-top:24px;">
+        {% for banner in banners %}
+          <article class="site-banner-item">
+            {% if banner.get_product_image_url %}
+              <img src="{{ banner.get_product_image_url }}" alt="{{ banner.product.name }}">
+            {% endif %}
+            <div class="site-banner-body">
+              <div class="site-banner-row">
+                <strong>{{ banner.title }}</strong>
+                <span class="site-banner-tag {% if not banner.is_active %}inactive{% endif %}">{% if banner.is_active %}Active{% else %}Inactive{% endif %}</span>
+              </div>
+              <p>{{ banner.subtitle|default:banner.product.name }}</p>
+              <div class="site-banner-row">
+                <span>Produit</span>
+                <strong>{{ banner.product.name }}</strong>
+              </div>
+              <div class="site-banner-row">
+                <span>Prix</span>
+                <strong>{{ banner.product.price_ht }} USD</strong>
+              </div>
+              <div class="site-banner-row">
+                <span>Statistiques</span>
+                <strong>{{ banner.audit_stats.impressions }} impressions · {{ banner.audit_stats.clicks }} clics · {{ banner.audit_stats.ctr }}% CTR</strong>
+              </div>
+              <div class="site-banner-actions">
+                {% if banner.image %}<div class="site-banner-crop" data-banner-crop><img src="{{ banner.image.url }}" alt="Prévisualisation {{ banner.title }}" data-crop-image><div class="site-banner-crop-selection" data-crop-selection><span class="site-banner-crop-handle" data-crop-handle></span></div></div><form method="post" action="{% url 'site_banner_crop' banner.id %}" class="site-banner-actions" data-crop-form>{% csrf_token %}<input type="number" name="left" min="0" value="0" aria-label="Gauche" data-crop-left><input type="number" name="top" min="0" value="0" aria-label="Haut" data-crop-top><input type="number" name="width" min="1" value="1" aria-label="Largeur" data-crop-width><input type="number" name="height" min="1" value="1" aria-label="Hauteur" data-crop-height><output data-crop-output>Zone sélectionnée</output><button type="submit" class="site-banner-btn">Recadrer et enregistrer</button></form>{% endif %}
+                <a href="{% url 'site_banner_dashboard' %}?edit={{ banner.id }}" class="site-banner-btn">Modifier</a>
+                <form method="post" action="{% url 'site_banner_toggle' banner.id %}">
+                  {% csrf_token %}
+                  <button type="submit" class="site-banner-btn primary">{% if banner.is_active %}Désactiver{% else %}Activer{% endif %}</button>
+                </form>
+                <form method="post" action="{% url 'site_banner_delete' banner.id %}" onsubmit="return confirm('Supprimer cette bannière ?');">
+                  {% csrf_token %}
+                  <button type="submit" class="site-banner-btn danger">Supprimer</button>
+                </form>
+              </div>
+              <div class="site-banner-actions">
+                {% for image in banner.images.all %}
+                  <span class="site-banner-tag">Image {{ forloop.counter }} <form method="post" action="{% url 'site_banner_image_crop' image.id %}" style="display:inline;">{% csrf_token %}<input type="hidden" name="left" value="0"><input type="hidden" name="top" value="0"><input type="hidden" name="width" value="400"><input type="hidden" name="height" value="200"><button type="submit" class="site-banner-btn">Recadrer</button></form> <form method="post" action="{% url 'site_banner_image_delete' image.id %}" style="display:inline;">{% csrf_token %}<button type="submit" class="site-banner-btn danger">Supprimer</button></form></span>
+                {% endfor %}
+              </div>
+              <form method="post" enctype="multipart/form-data" action="{% url 'site_banner_image_add' banner.id %}" class="site-banner-actions">
+                {% csrf_token %}
+                <input type="file" name="image" accept="image/*" required>
+                <input type="number" name="display_order" min="0" value="0" aria-label="Ordre de l’image">
+                <button type="submit" class="site-banner-btn primary">Ajouter une image</button>
+              </form>
+              {% if is_principal_admin %}
+                <div class="site-banner-row"><span>Accès</span><strong>{{ banner.get_access_mode_display }}{% if banner.access_mode == 'paid' %} · {{ banner.access_price }} USD{% endif %}</strong></div>
+                {% if banner.access_mode == 'selected' %}
+                  <form method="post" action="{% url 'site_banner_access' banner.id %}" class="site-banner-actions">{% csrf_token %}<select name="user_id" required><option value="">Sélectionner un utilisateur</option>{% for candidate in banner_users %}<option value="{{ candidate.id }}">{{ candidate.username }} ({{ candidate.role }})</option>{% endfor %}</select><button type="submit" class="site-banner-btn primary">Accorder l’accès</button></form>
+                  {% for access in banner.access_grants.all %}<form method="post" action="{% url 'site_banner_access' banner.id %}" class="site-banner-actions">{% csrf_token %}<input type="hidden" name="user_id" value="{{ access.user_id }}"><input type="hidden" name="action" value="remove"><span class="site-banner-tag">Autorisé : {{ access.user.username }}</span><button type="submit" class="site-banner-btn danger">Révoquer l’accès</button></form>{% endfor %}
+                {% endif %}
+                <form method="post" action="{% url 'site_banner_permission' banner.id %}" class="site-banner-actions">
+                  {% csrf_token %}<select name="user_id" required><option value="">Autoriser un utilisateur</option>{% for candidate in banner_users %}<option value="{{ candidate.id }}">{{ candidate.username }} ({{ candidate.role }})</option>{% endfor %}</select><button type="submit" class="site-banner-btn primary">Donner accès</button>
+                </form>
+                {% for permission in banner.permissions.all %}<form method="post" action="{% url 'site_banner_permission' banner.id %}" class="site-banner-actions"><input type="hidden" name="user_id" value="{{ permission.user_id }}"><input type="hidden" name="action" value="remove">{% csrf_token %}<span class="site-banner-tag">Accès : {{ permission.user.username }}</span><button type="submit" class="site-banner-btn danger">Retirer accès</button></form>{% endfor %}
+              {% endif %}
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="site-banner-empty">
+        Aucune bannière active n’est encore configurée.
+      </div>
+    {% endif %}
+    {% if is_principal_admin %}
+      <section class="site-banner-dashboard-card" style="margin-top:24px;">
+        <h2>Historique des actions</h2>
+        {% for event in banner_history %}<p><strong>{{ event.get_event_type_display }}</strong> · {{ event.banner.title|default:'Bannière supprimée' }} · {{ event.user.username|default:'Visiteur' }} · {{ event.created_at }}</p>{% empty %}<p>Aucune action enregistrée.</p>{% endfor %}
+      </section>
+    {% endif %}
+  </div>
+</div>
+<script>
+(() => {
+  document.querySelectorAll('[data-banner-crop]').forEach(crop => {
+    const image = crop.querySelector('[data-crop-image]');
+    const selection = crop.querySelector('[data-crop-selection]');
+    const handle = crop.querySelector('[data-crop-handle]');
+    const form = crop.parentElement.querySelector('[data-crop-form]');
+    const fields = {left: form.querySelector('[data-crop-left]'), top: form.querySelector('[data-crop-top]'), width: form.querySelector('[data-crop-width]'), height: form.querySelector('[data-crop-height]')};
+    let action = null;
+    const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+    const sync = () => {
+      if (!image.naturalWidth || !image.naturalHeight) return;
+      const scaleX = image.naturalWidth / image.clientWidth;
+      const scaleY = image.naturalHeight / image.clientHeight;
+      fields.left.value = Math.round(selection.offsetLeft * scaleX);
+      fields.top.value = Math.round(selection.offsetTop * scaleY);
+      fields.width.value = Math.round(selection.offsetWidth * scaleX);
+      fields.height.value = Math.round(selection.offsetHeight * scaleY);
+      form.querySelector('[data-crop-output]').textContent = `${fields.left.value}, ${fields.top.value} · ${fields.width.value} × ${fields.height.value}`;
+    };
+    const start = (event, type) => { event.preventDefault(); const rect = crop.getBoundingClientRect(); action = {type, x:event.clientX, y:event.clientY, left:selection.offsetLeft, top:selection.offsetTop, width:selection.offsetWidth, height:selection.offsetHeight, rect}; crop.setPointerCapture(event.pointerId); };
+    const move = event => {
+      if (!action) return;
+      const dx = event.clientX - action.x, dy = event.clientY - action.y;
+      if (action.type === 'move') {
+        selection.style.left = `${clamp(action.left + dx, 0, crop.clientWidth - action.width)}px`;
+        selection.style.top = `${clamp(action.top + dy, 0, crop.clientHeight - action.height)}px`;
+      } else {
+        selection.style.width = `${clamp(action.width + dx, 12, crop.clientWidth - action.left)}px`;
+        selection.style.height = `${clamp(action.height + dy, 12, crop.clientHeight - action.top)}px`;
+      }
+      sync();
+    };
+    const stop = () => { action = null; };
+    selection.addEventListener('pointerdown', event => start(event, event.target === handle ? 'resize' : 'move'));
+    crop.addEventListener('pointermove', move); crop.addEventListener('pointerup', stop); crop.addEventListener('pointercancel', stop);
+    image.addEventListener('load', () => {
+      const selectionWidth = crop.clientWidth * 0.8;
+      const selectionHeight = crop.clientHeight * 0.8;
+      selection.style.left=`${(crop.clientWidth - selectionWidth) / 2}px`;
+      selection.style.top=`${(crop.clientHeight - selectionHeight) / 2}px`;
+      selection.style.width=`${selectionWidth}px`; selection.style.height=`${selectionHeight}px`;
+      sync();
+    });
+    window.addEventListener('resize', sync);
+    if (image.complete) image.dispatchEvent(new Event('load'));
+  });
+})();
+</script>
+{% endblock %}

@@ -122,6 +122,213 @@
         padding: 18px;
         margin-top: 18px;
     }
+    .profile-page,
+    .profile-page * {
+        box-sizing: border-box;
+    }
+    .profile-page > .admin-action-panel,
+    .profile-page > #performance-management-section {
+        width: 100%;
+        max-width: 100%;
+    }
+    .admin-action-panel {
+        border-radius: 14px;
+        padding: 16px;
+        box-shadow: none;
+    }
+    .admin-action-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    .admin-action-heading {
+        min-width: 0;
+    }
+    .admin-action-heading h4 {
+        margin: 0 0 6px !important;
+        color: #0f2d5c !important;
+        font-size: 1.1rem;
+    }
+    .admin-action-heading p {
+        max-width: 720px;
+        margin-bottom: 10px;
+        line-height: 1.5;
+    }
+    .admin-action-group-title {
+        grid-column: 1 / -1;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        margin: 16px 0 8px;
+        color: #334155;
+        font-size: .86rem;
+        font-weight: 800;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+    .admin-action-grid {
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+        gap: 8px;
+    }
+    .admin-action-grid a,
+    .admin-action-grid button {
+        min-height: 44px;
+        border-radius: 10px;
+        box-shadow: none;
+    }
+    .admin-action-grid a:hover,
+    .admin-action-grid button:hover {
+        box-shadow: 0 6px 14px rgba(15, 23, 42, .1);
+    }
+    .profile-page > .fintech-panel {
+        border-left: 3px solid #94a3b8;
+        border-radius: 14px;
+        padding: 16px;
+        box-shadow: none;
+    }
+    .profile-page > .fintech-panel .fintech-title {
+        margin-bottom: 12px;
+        font-size: 1.05rem;
+    }
+    .profile-page > .fintech-panel .fintech-section {
+        padding: 16px;
+        box-shadow: none;
+    }
+    #d-ui-maison-toggle {
+        min-height: 44px;
+        margin: 0 !important;
+        border: 1px solid #bfdbfe;
+        background: #eff6ff !important;
+        color: #1d4ed8 !important;
+        box-shadow: none !important;
+    }
+    #d-ui-maison-toggle:hover,
+    #d-ui-maison-toggle:focus-visible {
+        background: #dbeafe !important;
+        box-shadow: 0 5px 12px rgba(29, 78, 216, .12) !important;
+    }
+    #performance-management-section {
+        background: #f8fafc !important;
+        border: 1px solid #cbd5e1 !important;
+        border-left: 3px solid #64748b !important;
+    }
+    #performance-management-section .wallet-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        background: #e2e8f0;
+        color: #475569;
+    }
+    #performance-management-section .fintech-section {
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+    }
+    #performance-management-section .fintech-btn {
+        min-height: 44px;
+        box-shadow: none !important;
+    }
+    #performance-management-section .btn-primary {
+        background: #475569;
+    }
+    .profile-page .wallet-stats {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+    }
+    .profile-page .wallet-stat {
+        min-width: 0;
+        padding: 14px 10px;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+    }
+    .profile-page .wallet-stat-value {
+        overflow-wrap: anywhere;
+        font-size: clamp(1.05rem, 3vw, 1.35rem);
+    }
+    .profile-page .wallet-stat-label {
+        overflow-wrap: anywhere;
+    }
+    .profile-page > .card,
+    .profile-page > .fintech-panel {
+        max-width: 100%;
+    }
+    .profile-page > .card[style*="margin-top:2rem"] {
+        border-radius: 14px;
+        box-shadow: none;
+    }
+    .profile-page > .card[style*="margin-top:2rem"] h3 {
+        color: #0f2d5c !important;
+    }
+    .profile-page > .card[style*="margin-top:2rem"] > div[style*="grid-template-columns"] {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 10px !important;
+    }
+    .profile-page > .card[style*="margin-top:2rem"] > div[style*="grid-template-columns"] > div {
+        min-width: 0;
+        border-radius: 12px !important;
+        padding: 14px !important;
+    }
+    .profile-page > .card[style*="margin-top:2rem"] .fintech-btn {
+        min-height: 44px;
+        box-shadow: none;
+    }
+    .profile-page > .card[style*="margin-top:2rem"] table {
+        display: block;
+        max-width: 100%;
+        overflow-x: auto;
+    }
+    .profile-page > .card[style*="margin-top:2rem"] > div[style*="background:white"] {
+        box-shadow: none;
+    }
+    .profile-action-cluster {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+        gap: 10px;
+        margin-top: 24px;
+        padding-top: 18px;
+        border-top: 1px solid #e2e8f0;
+    }
+    .profile-action-cluster > .profile-action-heading {
+        grid-column: 1 / -1;
+        margin: 0;
+        color: #0f2d5c;
+        font-size: 1.05rem;
+    }
+    .profile-action-cluster > .button,
+    .profile-action-cluster > form {
+        min-width: 0;
+        margin: 0 !important;
+    }
+    .profile-action-cluster > .button,
+    .profile-action-cluster > form button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        min-height: 44px;
+        border-radius: 10px;
+        box-shadow: none;
+        text-align: center;
+    }
+    @media (max-width: 640px) {
+        .profile-page {
+            padding-left: 16px !important;
+            padding-right: 16px !important;
+        }
+        .profile-page .admin-action-grid {
+            grid-template-columns: 1fr;
+        }
+        .profile-page .admin-action-grid a,
+        .profile-page .admin-action-grid button {
+            justify-content: center;
+            text-align: center;
+        }
+        .admin-action-group-title {
+            margin-top: 14px;
+        }
+    }
     .admin-action-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
@@ -152,8 +359,427 @@
     .wallet-icon { width:42px; height:42px; display:flex; align-items:center; justify-content:center; border-radius:14px; background:#2563eb; color:white; font-size:1.2rem; }
     .wallet-info { display:flex; gap:18px; flex-wrap:wrap; }
     .wallet-card-status { display:inline-flex; gap:12px; flex-wrap:wrap; }
+
+    .profile-overview,
+    .profile-overview * {
+        box-sizing: border-box;
+    }
+    .profile-overview {
+        display: grid;
+        grid-template-columns: minmax(0, 160px) minmax(0, 1fr);
+        gap: 22px;
+        align-items: start;
+        margin-top: 18px;
+    }
+    .profile-avatar-wrap {
+        min-width: 0;
+    }
+    .profile-avatar,
+    .profile-avatar-placeholder {
+        display: grid;
+        width: 132px;
+        height: 132px;
+        place-items: center;
+        border: 2px solid #dbeafe;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    .profile-avatar-placeholder {
+        background: #eff6ff;
+        color: #1d4ed8;
+        font-size: 2.5rem;
+    }
+    .profile-identity-content {
+        min-width: 0;
+    }
+    .profile-identity-name {
+        margin: 0 0 18px;
+        color: #0f2d5c;
+        font-size: clamp(1.35rem, 3vw, 1.8rem);
+        line-height: 1.2;
+        overflow-wrap: anywhere;
+    }
+    .profile-section-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 20px 0 12px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #dbeafe;
+        color: #0f2d5c;
+        font-size: 1.05rem;
+    }
+    .profile-details-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+    .profile-detail,
+    .profile-status-row {
+        min-width: 0;
+        padding: 11px 12px;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        background: #f8fafc;
+    }
+    .profile-detail-label {
+        display: block;
+        margin-bottom: 4px;
+        color: #64748b;
+        font-size: .78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+    }
+    .profile-detail-value {
+        display: block;
+        color: #0f172a;
+        line-height: 1.45;
+        overflow-wrap: anywhere;
+    }
+    .profile-status-list {
+        display: grid;
+        gap: 8px;
+    }
+    .profile-status-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        color: #1e293b;
+    }
+    .profile-status-badge {
+        display: inline-flex;
+        flex: 0 0 auto;
+        align-items: center;
+        justify-content: center;
+        min-height: 30px;
+        padding: 5px 9px;
+        border-radius: 8px;
+        font-size: .78rem;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+    .profile-status-badge.is-active { background: #dcfce7; color: #166534; }
+    .profile-status-badge.is-inactive { background: #e2e8f0; color: #475569; }
+    .profile-security {
+        margin-top: 18px !important;
+        padding: 16px !important;
+        background: #f8fbff !important;
+        border: 1px solid #bfdbfe !important;
+        border-radius: 14px !important;
+    }
+    .profile-security-display {
+        margin-top: 12px !important;
+        padding: 14px !important;
+        background: #eff6ff !important;
+        border: 1px solid #bfdbfe !important;
+        border-radius: 10px !important;
+    }
+    .profile-security-display p {
+        overflow-wrap: anywhere;
+    }
+    .profile-admin-heading {
+        margin-top: 20px;
+    }
+    @media (max-width: 640px) {
+        .profile-overview {
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+        .profile-avatar-wrap {
+            display: grid;
+            justify-items: center;
+        }
+        .profile-avatar,
+        .profile-avatar-placeholder {
+            width: 104px;
+            height: 104px;
+        }
+        .profile-identity-content {
+            width: 100%;
+        }
+        .profile-details-grid {
+            grid-template-columns: 1fr;
+        }
+        .profile-status-row {
+            align-items: flex-start;
+        }
+        .profile-page .wallet-stats {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .profile-page > .card[style*="margin-top:2rem"] > div[style*="grid-template-columns"] {
+            grid-template-columns: 1fr !important;
+        }
+        .profile-action-cluster {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Agent transfer surface: keep the financial workflow fluid on narrow screens. */
+    #agent-transfer-section,
+    #agent-transfer-section * {
+        box-sizing: border-box;
+    }
+    #agent-transfer-section {
+        width: 100%;
+        max-width: 100%;
+        margin-top: 24px;
+        padding: clamp(18px, 4vw, 28px);
+        border: 1px solid #dbeafe;
+        border-radius: 18px;
+        background: #f8fbff;
+        color: #0f172a;
+    }
+    .agent-transfer-header {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 18px;
+        align-items: end;
+    }
+    .agent-transfer-heading {
+        min-width: 0;
+    }
+    .agent-transfer-heading h4 {
+        margin: 0 0 8px;
+        color: #0f2d5c;
+        font-size: clamp(1.2rem, 3vw, 1.55rem);
+        line-height: 1.2;
+        overflow-wrap: anywhere;
+    }
+    .agent-transfer-heading p {
+        max-width: 680px;
+        margin: 0;
+        color: #334155;
+        font-size: .98rem;
+        line-height: 1.6;
+    }
+    .agent-transfer-actions,
+    .agent-transfer-submit-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+    }
+    .agent-transfer-actions .fintech-btn,
+    .agent-transfer-submit-row .fintech-btn {
+        min-height: 48px;
+        padding: 12px 18px !important;
+        border-radius: 12px;
+        white-space: normal;
+        text-align: center;
+    }
+    .agent-transfer-actions .btn-primary {
+        order: 1;
+        box-shadow: 0 8px 20px rgba(37, 99, 235, .18);
+    }
+    .agent-transfer-actions .btn-secondary {
+        order: 0;
+        background: #fff !important;
+        border: 1px solid #bfdbfe !important;
+        color: #1d4ed8 !important;
+    }
+    #agent-transfer-form {
+        display: grid;
+        gap: 16px;
+        margin-top: 22px;
+        min-width: 0;
+    }
+    .agent-transfer-fields {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        min-width: 0;
+    }
+    .agent-transfer-field {
+        min-width: 0;
+    }
+    .agent-transfer-field label {
+        display: block;
+        margin-bottom: 7px;
+        color: #1e293b;
+        font-size: .94rem;
+        font-weight: 700;
+        line-height: 1.35;
+    }
+    #agent-transfer-form input:not([type="hidden"]),
+    #agent-transfer-form select {
+        width: 100%;
+        min-width: 0;
+        min-height: 48px;
+        padding: 12px 14px;
+        border: 1px solid #cbd5e1;
+        border-radius: 12px;
+        background: #fff;
+        color: #0f172a;
+        font: inherit;
+    }
+    #agent-transfer-form input:not([type="hidden"]):focus,
+    #agent-transfer-form select:focus {
+        outline: 3px solid rgba(37, 99, 235, .2);
+        outline-offset: 1px;
+        border-color: #2563eb;
+    }
+    .agent-transfer-status {
+        color: #334155;
+        font-size: .95rem;
+        line-height: 1.5;
+    }
+    .agent-transfer-fees {
+        overflow: auto;
+        max-width: 100%;
+    }
+    .agent-fees-title {
+        margin: 0 0 12px;
+        color: #0f172a;
+        font-size: 1.05rem;
+        line-height: 1.3;
+    }
+    .agent-fees-table {
+        width: 100%;
+        min-width: 720px;
+        border-collapse: collapse;
+        table-layout: auto;
+        font-size: .95rem;
+    }
+    .agent-fees-table th,
+    .agent-fees-table td {
+        padding: 10px;
+        border-bottom: 1px solid #e2e8f0;
+        vertical-align: middle;
+        overflow-wrap: anywhere;
+    }
+    .agent-fees-table th {
+        color: #0f172a;
+        white-space: nowrap;
+        text-align: left;
+    }
+    .agent-fees-table input,
+    .agent-fees-table select {
+        width: 100%;
+        min-width: 72px;
+        min-height: 42px;
+        padding: 8px 10px;
+        border: 1px solid #cbd5e1;
+        border-radius: 9px;
+        background: #fff;
+        color: #0f172a;
+        font: inherit;
+    }
+    .agent-fees-mobile {
+        display: none;
+    }
+    .agent-fee-card {
+        padding: 16px;
+        border: 1px solid #dbe3ef;
+        border-radius: 14px;
+        background: #fff;
+        box-shadow: 0 5px 16px rgba(15, 23, 42, .05);
+    }
+    .agent-fee-card + .agent-fee-card {
+        margin-top: 12px;
+    }
+    .agent-fee-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 14px;
+    }
+    .agent-fee-currency {
+        display: inline-flex;
+        align-items: center;
+        min-height: 34px;
+        padding: 6px 10px;
+        border-radius: 9px;
+        background: #dbeafe;
+        color: #1d4ed8;
+        font-weight: 800;
+        letter-spacing: .04em;
+    }
+    .agent-fee-card dl {
+        display: grid;
+        grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
+        gap: 9px 14px;
+        margin: 0;
+    }
+    .agent-fee-card dt {
+        color: #64748b;
+        font-size: .88rem;
+        font-weight: 700;
+    }
+    .agent-fee-card dd {
+        min-width: 0;
+        margin: 0;
+        color: #0f172a;
+        font-weight: 600;
+        overflow-wrap: anywhere;
+    }
+    .agent-fee-card input,
+    .agent-fee-card select {
+        width: 100%;
+        min-width: 0;
+        min-height: 44px;
+        padding: 9px 10px;
+        border: 1px solid #cbd5e1;
+        border-radius: 9px;
+        background: #fff;
+        color: #0f172a;
+        font: inherit;
+    }
+    .agent-fee-card input:focus,
+    .agent-fee-card select:focus {
+        outline: 3px solid rgba(37, 99, 235, .2);
+        outline-offset: 1px;
+        border-color: #2563eb;
+    }
+    .agent-fee-card .agent-fee-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 14px;
+    }
+    @media (max-width: 600px) {
+        .agent-fees-table-wrap {
+            display: none;
+        }
+        .agent-fees-mobile {
+            display: block;
+        }
+    }
+    @media (min-width: 601px) {
+        .agent-fees-table-wrap {
+            display: block;
+            max-width: 100%;
+            overflow-x: auto;
+        }
+    }
+    @media (max-width: 699px) {
+        #agent-transfer-section {
+            width: calc(100vw - 32px);
+            max-width: calc(100vw - 32px);
+            margin-left: calc((100% - 100vw + 32px) / 2);
+            padding: 18px 16px;
+        }
+        .agent-transfer-header,
+        .agent-transfer-fields {
+            grid-template-columns: 1fr;
+        }
+        .agent-transfer-actions,
+        .agent-transfer-submit-row {
+            display: grid;
+            grid-template-columns: 1fr;
+            width: 100%;
+        }
+        .agent-transfer-actions .fintech-btn,
+        .agent-transfer-submit-row .fintech-btn {
+            width: 100%;
+        }
+        .agent-transfer-status {
+            text-align: center;
+        }
+    }
 </style>
-<div class="card">
+<div class="card profile-page">
     <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
         <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
             <h2 style="margin:0;">Mon profil</h2>
@@ -164,34 +790,43 @@
         </button>
         {% endif %}
     </div>
-    <div style="display:flex; align-items:flex-start; gap:20px; flex-wrap:wrap; margin-top:14px;">
-        <div style="min-width:160px; max-width:160px;">
+    <div class="profile-overview">
+        <div class="profile-avatar-wrap">
             {% if profile.photo %}
-                <img src="{{ profile.photo.url }}" alt="Photo de profil" style="width:160px; height:160px; object-fit:cover; border-radius:50%; border:2px solid #ddd;" />
+                <img src="{{ profile.photo.url }}" alt="Photo de profil" class="profile-avatar" />
             {% else %}
-                <div style="width:160px; height:160px; display:flex; align-items:center; justify-content:center; background:#f5f5f5; border-radius:50%; color:#64748b; font-weight:700;">
-                    PAS DE PHOTO
+                <div class="profile-avatar-placeholder" aria-label="Avatar par défaut">
+                    👤
                 </div>
             {% endif %}
         </div>
-        <div style="flex:1; min-width:220px;">
-            <p style="color:#0f172a; font-weight:500; margin:6px 0;"><strong>Utilisateur :</strong> {{ request.user.username }} ({{ request.user.first_name }} {{ request.user.last_name }})</p>
-            <p style="color:#0f172a; font-weight:500; margin:6px 0;"><strong>Email :</strong> {{ request.user.email }}</p>
-            <p style="color:#0f172a; font-weight:500; margin:6px 0;"><strong>Téléphone :</strong> {{ profile.phone }}</p>
-            <p style="color:#0f172a; font-weight:500; margin:6px 0;"><strong>Role vendeur :</strong> {{ request.user.is_seller }}</p>
-            <p style="color:#0f172a; font-weight:500; margin:6px 0;"><strong>Role acheteur :</strong> {{ request.user.is_buyer }}</p>
-            <p style="color:#0f172a; font-weight:500; margin:6px 0;"><strong>Role livreur :</strong> {{ request.user.is_delivery_agent }}</p>
-            <p style="color:#0f172a; font-weight:500; margin:6px 0;"><strong>Agent :</strong> {% if request.user.is_agent %}⭐ Oui{% else %}Non{% endif %}</p>
-            <p style="color:#0f172a; font-weight:500; margin:6px 0;"><strong>Accès livraisons activé :</strong> {{ profile.delivery_access_granted }}</p>
-            <p style="color:#0f172a; font-weight:500; margin:6px 0;"><strong>Demande accès livreur :</strong> {{ profile.delivery_access_requested }}</p>
-            <p style="color:#0f172a; font-weight:500; margin:6px 0;"><strong>Adresse :</strong> {{ profile.address }}</p>
-            <div style="margin-top:15px; padding:15px; background:#f8fafc; border-radius:12px; border:1px solid #7dd3fc;">
+        <div class="profile-identity-content">
+            <h3 class="profile-identity-name">{{ request.user.username }}{% if request.user.first_name or request.user.last_name %} <span style="font-weight:500;">({{ request.user.first_name }} {{ request.user.last_name }})</span>{% endif %}</h3>
+            <h4 class="profile-section-title">👤 Informations personnelles</h4>
+            <div class="profile-details-grid">
+                <div class="profile-detail"><span class="profile-detail-label">Email</span><span class="profile-detail-value">{{ request.user.email|default:'Non renseigné' }}</span></div>
+                <div class="profile-detail"><span class="profile-detail-label">Téléphone</span><span class="profile-detail-value">{{ profile.phone|default:'Non renseigné' }}</span></div>
+                <div class="profile-detail"><span class="profile-detail-label">Adresse</span><span class="profile-detail-value">{{ profile.address|default:'Non renseignée' }}</span></div>
+            </div>
+            <h4 class="profile-section-title">🛒 Mes rôles</h4>
+            <div class="profile-status-list">
+                <div class="profile-status-row"><span>Vendeur</span>{% if request.user.is_seller %}<span class="profile-status-badge is-active">✓ Activé</span>{% else %}<span class="profile-status-badge is-inactive">Désactivé</span>{% endif %}</div>
+                <div class="profile-status-row"><span>Acheteur</span>{% if request.user.is_buyer %}<span class="profile-status-badge is-active">✓ Activé</span>{% else %}<span class="profile-status-badge is-inactive">Désactivé</span>{% endif %}</div>
+                <div class="profile-status-row"><span>Livreur</span>{% if request.user.is_delivery_agent %}<span class="profile-status-badge is-active">✓ Activé</span>{% else %}<span class="profile-status-badge is-inactive">Désactivé</span>{% endif %}</div>
+            </div>
+            <h4 class="profile-section-title">🚚 Accès et autorisations</h4>
+            <div class="profile-status-list">
+                <div class="profile-status-row"><span>Agent</span>{% if request.user.is_agent %}<span class="profile-status-badge is-active">✓ Activé</span>{% else %}<span class="profile-status-badge is-inactive">Non activé</span>{% endif %}</div>
+                <div class="profile-status-row"><span>Accès livraisons</span>{% if profile.delivery_access_granted %}<span class="profile-status-badge is-active">✓ Activé</span>{% else %}<span class="profile-status-badge is-inactive">Désactivé</span>{% endif %}</div>
+                <div class="profile-status-row"><span>Demande accès livreur</span>{% if profile.delivery_access_requested %}<span class="profile-status-badge is-active">En attente</span>{% else %}<span class="profile-status-badge is-inactive">Aucune demande</span>{% endif %}</div>
+            </div>
+            <div class="profile-security">
                 <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
-                    <strong style="font-size:1rem; color:#0f172a;">Code de compte :</strong>
-                    <button id="toggle-account-code" class="fintech-btn btn-secondary" style="padding:6px 12px; font-size:0.9rem;">Masquer</button>
+                    <strong style="font-size:1rem; color:#0f172a;">🔐 Sécurité du compte</strong>
+                    <button id="toggle-account-code" class="fintech-btn btn-secondary" style="padding:6px 12px; font-size:0.9rem;">Afficher</button>
                 </div>
-                <div id="account-code-display" style="margin-top:12px; font-family:monospace; font-size:1.1rem; color:#0f172a; display:block; background:#eff6ff; padding:14px; border-radius:12px; border:1px solid #a5f3fc;">
-                    <p style="margin:0 0 .75rem 0; font-size:1.15rem; font-weight:700; color:#075985;">{{ request.user.account_code }}</p>
+                <div id="account-code-display" class="profile-security-display" style="display:none;">
+                    <p style="margin:0 0 .75rem 0; font-size:1.15rem; font-weight:700; color:#075985;">Code de compte : {{ request.user.account_code }}</p>
                     <p style="margin:0 0 .5rem 0; font-size:0.95rem; color:#0f172a;">PIN retrait : <strong>{{ withdrawal_pin|default:'Non défini' }}</strong></p>
                     <p style="margin:0; font-size:0.95rem; color:#0f172a;">Code final : <strong>{{ withdrawal_code|default:'Non défini' }}</strong></p>
                     {% if request.user.is_staff and request.user.role == 'super_admin' or request.user.is_staff and request.user.role == 'admin_secondary' %}
@@ -383,9 +1018,9 @@
             </div>
             {% if can_use_agent_financial_tools or can_use_full_admin_actions %}
             <div class="admin-action-panel">
-                <div style="display:flex; justify-content:space-between; align-items:start; gap:12px; flex-wrap:wrap;">
-                    <div>
-                        <h4 style="margin:0 0 10px 0; color:#0f172a;">Actions financières admin / agent</h4>
+                <div class="admin-action-header">
+                    <div class="admin-action-heading">
+                        <h4 style="margin:0 0 10px 0; color:#0f172a;">Actions financières</h4>
                         <p class="admin-action-note">Accédez aux principaux outils de dépôt, retrait et transfert depuis votre profil. Les administrateurs principaux et agents sont regroupés ici.</p>
                     </div>
                     {% if is_principal_admin %}
@@ -396,15 +1031,18 @@
                 </div>
                 <div class="admin-action-grid">
                     {% if can_use_agent_financial_tools %}
+                        <div class="admin-action-group-title">💰 Opérations financières</div>
                         <a href="{% url 'agent_deposit' %}" class="fintech-btn btn-primary action-btn">💰 Dépôt Agent</a>
                         <a href="{% url 'agent_withdrawal_dashboard' %}" class="fintech-btn btn-secondary action-btn">🏧 Retrait Agent</a>
                         <a href="#agent-transfer-section" class="fintech-btn btn-success action-btn">🔁 Transfert</a>
                     {% endif %}
                     {% if can_use_full_admin_actions %}
+                        <div class="admin-action-group-title">👥 Gestion des agents</div>
                         <a href="{% url 'admin_add_money' %}" class="fintech-btn btn-primary action-btn">➕ Ajouter Argent</a>
                         <a href="{% url 'admin_add_money' %}?action=withdraw" class="fintech-btn btn-warning action-btn">➖ Retirer Argent</a>
                         <a href="{% url 'agent_codes' %}" class="fintech-btn btn-secondary action-btn">🔐 Codes Agents</a>
                         <a href="{% url 'manage_withdrawal_commissions' %}" class="fintech-btn btn-success action-btn">💸 Gestion Retraits</a>
+                        <div class="admin-action-group-title">⚡ Performance</div>
                         <a href="#performance-management-section" class="fintech-btn btn-secondary action-btn">⚡ Performance</a>
                         {% if request.user.is_staff or request.user.is_superuser or request.user.role == 'super_admin' %}
                             <button id="optimize-performance-btn" type="button" class="fintech-btn btn-danger action-btn">⚡ Optimiser les performances</button>
@@ -448,47 +1086,47 @@
                 </div>
             </div>
             {% endif %}
-            <div style="margin-top:24px; padding:20px; border-radius:18px; background:#f1f5f9;" id="agent-transfer-section">
-                <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
-                    <div>
-                        <h4 style="margin:0 0 12px 0; color:#0f172a;">SYSTÈME DE TRANSFERT SUR LE COMPTE AGENT</h4>
-                        <p style="margin:0; color:#475569; font-size:0.95rem;">Envoyer de l'argent vers un autre compte agent ou utilisateur avec validation et reçu.</p>
+            <div id="agent-transfer-section">
+                <div class="agent-transfer-header">
+                    <div class="agent-transfer-heading">
+                        <h4>SYSTÈME DE TRANSFERT SUR LE COMPTE AGENT</h4>
+                        <p>Envoyer de l'argent vers un autre compte agent ou utilisateur avec validation et reçu.</p>
                     </div>
-                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                        <a href="{% url 'transfer_receipts' %}" class="fintech-btn btn-secondary" style="padding:10px 16px;">Mes reçus</a>
-                        <button type="button" class="fintech-btn btn-primary" onclick="document.getElementById('agent-transfer-section').scrollIntoView({behavior:'smooth'});" style="padding:10px 16px;">Accéder au transfert</button>
+                    <div class="agent-transfer-actions">
+                        <a href="{% url 'transfer_receipts' %}" class="fintech-btn btn-secondary">Mes reçus</a>
+                        <button type="button" class="fintech-btn btn-primary" onclick="document.getElementById('agent-transfer-section').scrollIntoView({behavior:'smooth'});">Accéder au transfert</button>
                     </div>
                 </div>
-                <form method="POST" action="" id="agent-transfer-form" style="display:grid; gap:14px; margin-top:16px;">
+                <form method="POST" action="" id="agent-transfer-form">
                     {% csrf_token %}
                     <input type="hidden" name="transfer_submit" value="1">
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-                        <div>
-                            <label style="font-weight:600; display:block; margin-bottom:6px;">Code destinataire</label>
+                    <div class="agent-transfer-fields">
+                        <div class="agent-transfer-field">
+                            <label for="{{ transfer_form.recipient_account_code.id_for_label }}">Code destinataire</label>
                             {{ transfer_form.recipient_account_code }}
                             <div id="recipient-verification" style="margin-top:8px; color:#475569; font-size:0.9rem;"></div>
                             {% if transfer_form.recipient_account_code.errors %}
                                 <div style="color:#b91c1c; font-size:0.85rem; margin-top:4px;">{{ transfer_form.recipient_account_code.errors|first }}</div>
                             {% endif %}
                         </div>
-                        <div>
-                            <label style="font-weight:600; display:block; margin-bottom:6px;">Compte source</label>
+                        <div class="agent-transfer-field">
+                            <label for="{{ transfer_form.source_account.id_for_label }}">Compte source</label>
                             {{ transfer_form.source_account }}
                             {% if transfer_form.source_account.errors %}
                                 <div style="color:#b91c1c; font-size:0.85rem; margin-top:4px;">{{ transfer_form.source_account.errors|first }}</div>
                             {% endif %}
                         </div>
                     </div>
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-                        <div>
-                            <label style="font-weight:600; display:block; margin-bottom:6px;">Devise</label>
+                    <div class="agent-transfer-fields">
+                        <div class="agent-transfer-field">
+                            <label for="{{ transfer_form.currency.id_for_label }}">Devise</label>
                             {{ transfer_form.currency }}
                             {% if transfer_form.currency.errors %}
                                 <div style="color:#b91c1c; font-size:0.85rem; margin-top:4px;">{{ transfer_form.currency.errors|first }}</div>
                             {% endif %}
                         </div>
-                        <div>
-                            <label style="font-weight:600; display:block; margin-bottom:6px;">Montant</label>
+                        <div class="agent-transfer-field">
+                            <label for="{{ transfer_form.amount.id_for_label }}">Montant</label>
                             {{ transfer_form.amount }}
                             {% if transfer_form.amount.errors %}
                                 <div style="color:#b91c1c; font-size:0.85rem; margin-top:4px;">{{ transfer_form.amount.errors|first }}</div>
@@ -497,21 +1135,21 @@
                         </div>
                     </div>
                     <div id="recipient-verification" style="margin-top:8px; color:#475569; font-size:0.9rem;"></div>
-                    <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:center;">
-                        <button type="submit" class="fintech-btn btn-primary" style="padding:12px 18px;">Envoyer le transfert</button>
-                        <button type="button" id="cancel-transfer-btn" class="fintech-btn btn-secondary" style="padding:12px 18px;">Annuler</button>
-                        <div style="color:#475569; font-size:0.95rem;">Solde principal : <strong>{{ wallet.balance|default:'0' }} USD</strong></div>
+                    <div class="agent-transfer-submit-row">
+                        <button type="submit" class="fintech-btn btn-primary">Envoyer le transfert</button>
+                        <button type="button" id="cancel-transfer-btn" class="fintech-btn btn-secondary">Annuler</button>
+                        <div class="agent-transfer-status">Solde principal : <strong>{{ wallet.balance|default:'0' }} USD</strong></div>
                     </div>
                 </form>
                 {% if transfer_commission_tiers %}
                     <div style="margin-top:24px; padding:18px; border-radius:14px; background:#ffffff; border:1px solid #e2e8f0;">
-                        <h5 style="margin:0 0 12px 0; color:#0f172a;">Frais de transfert par devise</h5>
+                        <h5 class="agent-fees-title">Frais de transfert par devise</h5>
                         {% if request.user.is_staff %}
                             <form method="POST" action="" style="margin-top:18px;">
                                 {% csrf_token %}
                                 <input type="hidden" name="update_transfer_tiers" value="1">
-                                <div style="overflow-x:auto;">
-                                    <table style="width:100%; border-collapse:collapse; font-size:0.95rem;">
+                                <div class="agent-fees-table-wrap">
+                                    <table class="agent-fees-table">
                                         <thead>
                                             <tr style="background:#f8fafc; text-align:left;">
                                                 <th style="padding:10px; border-bottom:1px solid #e2e8f0;">Devise</th>
@@ -546,11 +1184,36 @@
                                         </tbody>
                                     </table>
                                 </div>
+                                <div class="agent-fees-mobile">
+                                    {% for tier in transfer_commission_tiers %}
+                                    <article class="agent-fee-card">
+                                        <div class="agent-fee-card-header">
+                                            <span class="agent-fee-currency">{{ tier.currency }}</span>
+                                            <label><input type="checkbox" name="active_{{ tier.id }}" {% if tier.active %}checked{% endif %}> Active</label>
+                                        </div>
+                                        <dl>
+                                            <dt>Devise</dt><dd><select name="currency_{{ tier.id }}">
+                                                <option value="HTG" {% if tier.currency == 'HTG' %}selected{% endif %}>HTG</option>
+                                                <option value="USD" {% if tier.currency == 'USD' %}selected{% endif %}>USD</option>
+                                                <option value="EUR" {% if tier.currency == 'EUR' %}selected{% endif %}>EUR</option>
+                                                <option value="DOP" {% if tier.currency == 'DOP' %}selected{% endif %}>DOP</option>
+                                            </select></dd>
+                                            <dt>Description</dt><dd><input name="description_{{ tier.id }}" value="{{ tier.description }}"></dd>
+                                            <dt>Minimum</dt><dd><input type="number" step="0.01" name="min_amount_{{ tier.id }}" value="{{ tier.min_amount }}"></dd>
+                                            <dt>Maximum</dt><dd><input type="number" step="0.01" name="max_amount_{{ tier.id }}" value="{{ tier.max_amount }}"></dd>
+                                            <dt>Frais total</dt><dd><input type="number" step="0.01" name="total_fee_{{ tier.id }}" value="{{ tier.total_fee }}"></dd>
+                                            <dt>Commission système</dt><dd><input type="number" step="0.01" name="system_fee_{{ tier.id }}" value="{{ tier.system_fee }}"></dd>
+                                            <dt>Commission agent</dt><dd><input type="number" step="0.01" name="agent_fee_{{ tier.id }}" value="{{ tier.agent_fee }}"></dd>
+                                        </dl>
+                                        <input type="hidden" name="tier_id" value="{{ tier.id }}">
+                                    </article>
+                                    {% endfor %}
+                                </div>
                                 <button type="submit" class="fintech-btn btn-secondary" style="margin-top:16px; padding:10px 16px; width:auto;">Mettre à jour les tranches</button>
                             </form>
                         {% else %}
-                            <div style="overflow-x:auto;">
-                                <table style="width:100%; border-collapse:collapse; font-size:0.95rem;">
+                            <div class="agent-fees-table-wrap">
+                                <table class="agent-fees-table">
                                     <thead>
                                         <tr style="background:#f8fafc; text-align:left;">
                                             <th style="padding:10px; border-bottom:1px solid #e2e8f0;">Devise</th>
@@ -572,6 +1235,21 @@
                                         {% endfor %}
                                     </tbody>
                                 </table>
+                            </div>
+                            <div class="agent-fees-mobile">
+                                {% for tier in transfer_commission_tiers %}
+                                <article class="agent-fee-card">
+                                    <div class="agent-fee-card-header">
+                                        <span class="agent-fee-currency">{{ tier.currency }}</span>
+                                    </div>
+                                    <dl>
+                                        <dt>Description</dt><dd>{{ tier.description|default:'—' }}</dd>
+                                        <dt>Frais total</dt><dd>{{ tier.total_fee|default:'—' }} {{ tier.currency }}</dd>
+                                        <dt>Commission système</dt><dd>{{ tier.system_fee|default:'—' }} {{ tier.currency }}</dd>
+                                        <dt>Commission agent</dt><dd>{{ tier.agent_fee|default:'—' }} {{ tier.currency }}</dd>
+                                    </dl>
+                                </article>
+                                {% endfor %}
                             </div>
                         {% endif %}
                         {% if request.user.is_staff %}
@@ -1007,6 +1685,8 @@
     </div>
     {% endif %}
 
+    <div class="profile-action-cluster">
+    <h3 class="profile-action-heading">👤 Mon espace</h3>
     <button id="edit-profile-button" class="button" type="button" style="margin-top:1.5rem;">Modifier mon profil</button>
     {% if request.user.is_seller or request.user.is_staff %}
     <a href="{% url 'my_shop' %}" class="button" style="margin-top:1.5rem; margin-left:1rem; background-color: #28a745; color: white;">Ma Boutique</a>
@@ -1023,6 +1703,7 @@
         <button type="submit" class="button" style="background-color: #2563eb; color: white;">🔄 Actualiser le taux de change</button>
     </form>
     {% endif %}
+    </div>
     
     <!-- Section des commandes en attente de confirmation -->
     {% if pending_orders %}
@@ -1242,6 +1923,10 @@
                     accountTypeSelect.value = 'principal';
                     setModalState(withdrawModal, true);
                 });
+            }
+
+            if (new URLSearchParams(window.location.search).get('open_withdraw') === '1' && withdrawMainBtn) {
+                withdrawMainBtn.click();
             }
 
             if (withdrawMultiBtn) {
