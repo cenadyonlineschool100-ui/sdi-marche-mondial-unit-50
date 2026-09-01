@@ -1,14 +1,14 @@
+# Context processors with robust fallbacks for database unavailability
 from django.db import models
 
+# Try to import models but handle if they're not available
 try:
     from .business_logic import CURRENCY_SYMBOLS, SUPPORTED_CURRENCIES, normalize_currency
     from .models import ActivityMenuItem, SiteConfiguration, SystemSettings, PrivateMessage
-except Exception:
-    # Les modèles peuvent ne pas être disponibles pendant la migration
-    ActivityMenuItem = None
-    SiteConfiguration = None
-    SystemSettings = None
-    PrivateMessage = None
+    MODELS_AVAILABLE = True
+except Exception as e:
+    # Models not available (likely during migration)
+    MODELS_AVAILABLE = False
     CURRENCY_SYMBOLS = {}
     SUPPORTED_CURRENCIES = {}
     def normalize_currency(*args, **kwargs):
@@ -18,13 +18,16 @@ CURRENCY_DEFAULT = 'USD'
 
 
 def navigation_context(request):
-    from django.conf import settings
+    try:
+        from django.conf import settings
+        return {
+            'marketplace_inactivity_timeout_seconds': getattr(
+                settings, 'MARKETPLACE_INACTIVITY_TIMEOUT_SECONDS', 600
+            ),
+        }
+    except Exception:
+        return {'marketplace_inactivity_timeout_seconds': 600}
 
-    return {
-        'marketplace_inactivity_timeout_seconds': getattr(
-            settings, 'MARKETPLACE_INACTIVITY_TIMEOUT_SECONDS', 600
-        ),
-    }
 
 COUNTRY_CODE_TO_CURRENCY = {
     'HT': 'HTG',
@@ -42,41 +45,180 @@ LANGUAGE_TO_CURRENCY = {
 
 
 def detect_currency_from_request(request):
-    country_code = request.META.get('HTTP_CF_IPCOUNTRY') or request.META.get('GEOIP_COUNTRY_CODE')
-    if country_code:
-        country_code = country_code.strip().upper()
-        if country_code in COUNTRY_CODE_TO_CURRENCY:
-            return COUNTRY_CODE_TO_CURRENCY[country_code]
+    try:
+        country_code = request.META.get('HTTP_CF_IPCOUNTRY') or request.META.get('GEOIP_COUNTRY_CODE')
+        if country_code:
+            country_code = country_code.strip().upper()
+            if country_code in COUNTRY_CODE_TO_CURRENCY:
+                return COUNTRY_CODE_TO_CURRENCY[country_code]
 
-    accept_language = request.META.get('HTTP_ACCEPT_LANGUAGE', '')
-    if not accept_language:
-        return None
+        accept_language = request.META.get('HTTP_ACCEPT_LANGUAGE', '')
+        if not accept_language:
+            return None
 
-    accept_language = accept_language.lower()
-    for lang, currency in LANGUAGE_TO_CURRENCY.items():
-        if lang in accept_language:
-            return currency
+        accept_language = accept_language.lower()
+        for lang, currency in LANGUAGE_TO_CURRENCY.items():
+            if lang in accept_language:
+                return currency
 
-    if 'us' in accept_language:
-        return 'USD'
-    if 'fr' in accept_language:
-        return 'EUR'
+        if 'us' in accept_language:
+            return 'USD'
+        if 'fr' in accept_language:
+            return 'EUR'
+    except Exception:
+        pass
     return None
 
 
 def currency_context(request):
-    currency = request.session.get('currency')
-    if request.user.is_authenticated:
-        profile = getattr(request.user, 'profile', None)
-        if profile and not currency:
-            currency = profile.preferred_currency
+    try:
+        currency = request.session.get('currency')
+        if request.user.is_authenticated:
+            profile = getattr(request.user, 'profile', None)
+            if profile and not currency:
+                currency = profile.preferred_currency
 
-    if not currency:
-        currency = detect_currency_from_request(request) or CURRENCY_DEFAULT
+        if not currency:
+            currency = detect_currency_from_request(request) or CURRENCY_DEFAULT
 
-    currency = normalize_currency(currency)
-    if currency not in SUPPORTED_CURRENCIES:
+        currency = normalize_currency(currency) or CURRENCY_DEFAULT
+        if currency not in SUPPORTED_CURRENCIES and MODELS_AVAILABLE:
+            currency = CURRENCY_DEFAULT
+    except Exception:
         currency = CURRENCY_DEFAULT
+
+    return {
+        'current_currency': currency,
+        'current_currency_symbol': CURRENCY_SYMBOLS.get(currency, '$'),
+        'currency_choices': [(code, code) for code in (SUPPORTED_CURRENCIES or ['USD'])],
+        'price_conversion_note': 'Prix indicatif – paiement final selon la méthode choisie',
+    }
+
+
+from django.db import OperationalError
+
+
+def site_config_context(request):
+    configs = {}
+    if not MODELS_AVAILABLE:
+        return {'site_configs': configs}
+    
+    try:
+        if SiteConfiguration:
+            for config in SiteConfiguration.objects.all():
+                configs[config.config_type] = config
+    except (OperationalError, Exception):
+        pass
+    
+    return {'site_configs': configs}
+
+
+def activity_menu_context(request):
+    default_items = [
+        {
+            'title': 'Mes Cours',
+            'url': '#',
+            'icon_class': 'fa-solid fa-graduation-cap',
+            'description': 'Voir les formations achetées ou suivies.\nAccéder aux cours en ligne et aux vidéos.',
+        },
+        {
+            'title': 'Studio de Beauté',
+            'url': '/profile/studio-beaute/',
+            'icon_class': 'fa-solid fa-spa',
+            'description': 'Voir les services de beauté disponibles.\nRéserver ou consulter les offres.',
+        },
+        {
+            'title': '🏠 Immobilier / Maison à Louer',
+            'url': '/immobilier/',
+            'icon_class': 'fa-solid fa-house',
+            'description': 'Voir les maisons et appartements disponibles.\nConsulter les détails et contacter le propriétaire.',
+        },
+        {
+            'title': 'Boutique',
+            'url': '#',
+            'icon_class': 'fa-solid fa-store',
+            'description': 'Voir les produits et services publiés.',
+        },
+        {
+            'title': 'Mes Commandes',
+            'url': '#',
+            'icon_class': 'fa-solid fa-box-open',
+            'description': 'Consulter l\'historique des achats.',
+        },
+        {
+            'title': 'Mes Messages',
+            'url': '#',
+            'icon_class': 'fa-solid fa-envelope',
+            'description': 'Accéder aux messages privés.',
+        },
+        {
+            'title': 'Mes Transactions',
+            'url': '#',
+            'icon_class': 'fa-solid fa-money-bill-transfer',
+            'description': 'Consulter les dépôts, retraits et transferts.',
+        },
+        {
+            'title': 'SDI Transfer à l\'étranger',
+            'url': '/profile/transfer/',
+            'icon_class': 'fa-solid fa-globe',
+        },
+    ]
+    
+    if not MODELS_AVAILABLE:
+        return {'activity_menu_items': default_items}
+    
+    try:
+        if ActivityMenuItem:
+            items = ActivityMenuItem.objects.filter(active=True)
+            if items:
+                return {'activity_menu_items': items}
+    except (OperationalError, Exception):
+        pass
+    
+    return {'activity_menu_items': default_items}
+
+
+def private_chat_context(request):
+    if not MODELS_AVAILABLE or not PrivateMessage:
+        return {'unread_message_count': 0}
+    
+    try:
+        if request.user.is_authenticated:
+            count = PrivateMessage.objects.filter(receiver=request.user, is_read=False).count()
+            return {'unread_message_count': count}
+    except (OperationalError, Exception):
+        pass
+    
+    return {'unread_message_count': 0}
+
+
+def announcement_context(request):
+    if not MODELS_AVAILABLE:
+        return {'admin_announcements': []}
+    
+    try:
+        from .models import AdminAnnouncement
+        announcements = AdminAnnouncement.objects.filter(active=True)
+        return {'admin_announcements': announcements}
+    except (OperationalError, Exception):
+        pass
+    
+    return {'admin_announcements': []}
+
+
+def site_banner_context(request):
+    if not MODELS_AVAILABLE:
+        return {'site_banner': None}
+    
+    try:
+        from .models import SiteBanner
+        banner = SiteBanner.objects.filter(active=True).first()
+        return {'site_banner': banner}
+    except (OperationalError, Exception):
+        pass
+    
+    return {'site_banner': None}
+
 
     return {
         'current_currency': currency,
