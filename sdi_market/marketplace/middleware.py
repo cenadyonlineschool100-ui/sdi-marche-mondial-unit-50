@@ -1,6 +1,7 @@
 from django.shortcuts import render
 import time
 from django.utils import timezone
+from django.db import OperationalError
 
 from .models import SystemSettings, SecurityEvent, IPBlocklist
 
@@ -12,9 +13,11 @@ class SystemLockdownMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
+        system_settings = None
         try:
             system_settings = SystemSettings.objects.get(pk=1)
-        except SystemSettings.DoesNotExist:
+        except (SystemSettings.DoesNotExist, OperationalError):
+            # Table n'existe pas ou enregistrement n'existe pas
             system_settings = None
 
         # Vérifier si l'IP est bloquée
