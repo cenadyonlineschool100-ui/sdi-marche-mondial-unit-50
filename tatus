@@ -1,0 +1,12 @@
+warning: in the working copy of 'sdi_market/marketplace/templates/marketplace/base.html', LF will be replaced by CRLF the next time Git touches it
+ sdi_market/marketplace/context_processors.py       |  10 [32m+[m
+ .../marketplace/templates/marketplace/base.html    | 663 [32m++++++++++++++++++++[m[31m-[m
+ .../marketplace/templates/marketplace/home.html    |  37 [32m+[m[31m-[m
+ .../templates/marketplace/private_chat.html        |   2 [32m+[m[31m-[m
+ .../marketplace/templates/marketplace/search.html  |  66 [32m+[m[31m-[m
+ sdi_market/marketplace/templatetags/image_tags.py  |  10 [32m+[m
+ sdi_market/marketplace/urls.py                     |   3 [32m+[m[31m-[m
+ sdi_market/marketplace/views.py                    |   4 [32m+[m[31m-[m
+ sdi_market/sdi_market/settings.py                  |   3 [32m+[m
+ sdi_market/sdi_market/urls.py                      |  10 [32m+[m[31m-[m
+ 10 files changed, 748 insertions(+), 60 deletions(-)

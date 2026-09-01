@@ -1,0 +1,27 @@
+warning: in the working copy of 'sdi_market/marketplace/templates/marketplace/base.html', LF will be replaced by CRLF the next time Git touches it
+ sdi_market/marketplace/admin.py                    |  86 [32m++[m[31m-[m
+ sdi_market/marketplace/context_processors.py       |  51 [32m+[m[31m-[m
+ sdi_market/marketplace/forms.py                    |  88 [32m++[m[31m-[m
+ sdi_market/marketplace/image_utils.py              |  31 [32m+[m
+ sdi_market/marketplace/models.py                   | 176 [32m+++++[m
+ .../templates/marketplace/admin_add_money.html     | 121 [32m+++[m[31m-[m
+ .../marketplace/templates/marketplace/base.html    | 511 [32m+++++++++++[m[31m--[m
+ .../marketplace/templates/marketplace/cart.html    | 446 [32m++++++++++[m[31m--[m
+ .../templates/marketplace/dashboard.html           |  62 [32m+[m[31m-[m
+ .../marketplace/templates/marketplace/home.html    |  92 [32m+++[m
+ .../templates/marketplace/manage_projet.html       | 140 [32m+++[m[31m-[m
+ .../marketplace/manage_withdrawal_commissions.html | 178 [32m++++[m[31m-[m
+ .../templates/marketplace/microordinateur.html     | 106 [32m++[m[31m-[m
+ .../marketplace/templates/marketplace/profile.html | 791 [32m+++++++++++++++++++[m[31m--[m
+ .../templates/marketplace/sdi_transport.html       | 165 [32m+++[m[31m--[m
+ .../marketplace/templates/marketplace/search.html  | 163 [32m++++[m[31m-[m
+ .../templates/marketplace/technician_profiles.html | 293 [32m+++++++[m[31m-[m
+ .../templates/marketplace/tikane_access.html       | 452 [32m+++++++++++[m[31m-[m
+ .../marketplace/templates/real_estate/home.html    | 117 [32m++[m[31m-[m
+ sdi_market/marketplace/tests.py                    | 180 [32m++++[m[31m-[m
+ sdi_market/marketplace/urls.py                     |  15 [32m+[m[31m-[m
+ sdi_market/marketplace/views.py                    | 334 [32m++++++++[m[31m-[m
+ sdi_market/sdi_market/settings.py                  |   1 [32m+[m
+ .../marketplace/manage_withdrawal_commissions.html | 198 [32m+++++[m[31m-[m
+ .../marketplace/view_peuple_commission.html        | 165 [32m++++[m[31m-[m
+ 25 files changed, 4570 insertions(+), 392 deletions(-)
