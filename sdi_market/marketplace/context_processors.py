@@ -1,7 +1,18 @@
 from django.db import models
 
-from .business_logic import CURRENCY_SYMBOLS, SUPPORTED_CURRENCIES, normalize_currency
-from .models import ActivityMenuItem, SiteConfiguration, SystemSettings, PrivateMessage
+try:
+    from .business_logic import CURRENCY_SYMBOLS, SUPPORTED_CURRENCIES, normalize_currency
+    from .models import ActivityMenuItem, SiteConfiguration, SystemSettings, PrivateMessage
+except Exception:
+    # Les modèles peuvent ne pas être disponibles pendant la migration
+    ActivityMenuItem = None
+    SiteConfiguration = None
+    SystemSettings = None
+    PrivateMessage = None
+    CURRENCY_SYMBOLS = {}
+    SUPPORTED_CURRENCIES = {}
+    def normalize_currency(*args, **kwargs):
+        return None
 
 CURRENCY_DEFAULT = 'USD'
 
