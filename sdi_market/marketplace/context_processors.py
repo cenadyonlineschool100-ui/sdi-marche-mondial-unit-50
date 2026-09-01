@@ -48,3 +48,12 @@ def announcement_context(request):
 def site_banner_context(request):
     """Add site banner information to context"""
     return {'site_banner': None}
+
+
+def system_settings_context(request):
+    """Provide a safe fallback for the system settings singleton.
+
+    This avoids crashes when the database has not been migrated yet or the
+    singleton record is not present.
+    """
+    return {'system_settings': None}
