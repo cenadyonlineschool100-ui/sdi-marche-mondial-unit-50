@@ -12,7 +12,15 @@ import json
 import logging
 import json as json_lib
 import zipfile
-from user_agents import parse
+
+try:
+    from user_agents import parse
+    USER_AGENTS_AVAILABLE = True
+except ImportError:
+    USER_AGENTS_AVAILABLE = False
+    def parse(ua_string):
+        """Fallback user agent parser"""
+        return type('UA', (), {'is_mobile': False, 'browser': type('B', (), {'family': 'Unknown'})(), 'os': type('OS', (), {'family': 'Unknown'})()})()
 
 from .models import APKVersion, PWAConfig, InstallationLog
 
