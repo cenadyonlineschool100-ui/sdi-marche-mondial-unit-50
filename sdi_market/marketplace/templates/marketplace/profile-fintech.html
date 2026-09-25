@@ -301,11 +301,6 @@
 <div class="profile-header">
     <div class="profile-container">
         <div class="profile-header-content">
-            {% if profile.photo %}
-                <img src="{{ profile.photo.url }}" alt="Photo de profil" class="profile-avatar">
-            {% else %}
-                <div class="profile-avatar">👤</div>
-            {% endif %}
             <div class="profile-info">
                 <h1>{{ request.user.first_name }} {{ request.user.last_name }}</h1>
                 <p>{{ request.user.username }} • {{ request.user.email }}</p>
@@ -333,11 +328,6 @@
     <div class="profile-sidebar">
         <div class="profile-header">
             <div class="profile-header-content">
-                {% if profile.photo %}
-                    <img src="{{ profile.photo.url }}" alt="Photo de profil" class="profile-avatar">
-                {% else %}
-                    <div class="profile-avatar">👤</div>
-                {% endif %}
                 <div class="profile-info">
                     <h1>{{ request.user.first_name }} {{ request.user.last_name }}</h1>
                     <p>{{ request.user.username }}</p>

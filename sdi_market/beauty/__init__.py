@@ -1,0 +1,1 @@
+"""Beauty app package."""

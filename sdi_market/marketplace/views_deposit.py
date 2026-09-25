@@ -13,6 +13,7 @@ import secrets
 import json
 from django.db.models import Sum, Q, Case, When, Value, IntegerField
 
+from .business_logic import NotificationManager
 from .models import (
     User, Wallet, Deposit, DepositCommissionConfig,
     Transaction, Agent, Profile, DepositLimit,
@@ -309,6 +310,21 @@ def agent_deposit_view(request):
                         source_account='admin_wallet',
                         credited=True
                     )
+                    NotificationManager.create_persistent_notification(
+                        request.user,
+                        'Commission reçue',
+                        f"Vous avez reçu une commission de {commission} {currency} pour le dépôt de {amount} {currency} vers {client.username}.",
+                        'commission_received',
+                        sound_interval_minutes=1,
+                    )
+
+                NotificationManager.create_persistent_notification(
+                    client,
+                    'Dépôt confirmé',
+                    f"Votre compte a été crédité de {amount} {currency}. Référence: {deposit.reference}",
+                    'deposit_received',
+                    sound_interval_minutes=1,
+                )
 
                 if tikane_deposit and tikane_account:
                     tikane_account.mark_next_unpaid_day_paid(deposit=deposit)

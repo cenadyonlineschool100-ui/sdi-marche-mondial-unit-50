@@ -2,11 +2,13 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_http_methods, require_POST
 from django.contrib.auth.models import Permission, Group
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError
+from django.core.validators import URLValidator
 
-from .models import User, CommissionConfig
+from .models import User, CommissionConfig, SiteConfiguration
 
 
 def is_super_admin(user):
@@ -14,9 +16,72 @@ def is_super_admin(user):
     return user.is_superuser or user.role == 'super_admin'
 
 
+def get_support_card_config():
+    """Récupère ou crée la config support_card sans migration."""
+    support_card = SiteConfiguration.objects.filter(config_type='support_card').first()
+    if support_card is None:
+        support_card = SiteConfiguration(
+            config_type='support_card',
+            alt_text='Carte Support SDI',
+            is_active=True,
+        )
+    return support_card
+
+
+@login_required
+def manage_support_whatsapp_link(request):
+    """Page dédiée pour gérer le lien WhatsApp de la carte Support SDI."""
+    if not is_super_admin(request.user):
+        messages.error(request, "Vous n'avez pas la permission.")
+        return redirect('dashboard')
+
+    support_card = get_support_card_config()
+
+    if request.method == 'POST':
+        whatsapp_link = (request.POST.get('whatsapp_link') or '').strip()
+
+        if not whatsapp_link:
+            messages.error(request, "Le lien WhatsApp ne peut pas être vide.")
+            return render(request, 'marketplace/manage_support_whatsapp_link.html', {'support_card': support_card})
+
+        validator = URLValidator(schemes=['http', 'https'])
+        try:
+            validator(whatsapp_link)
+        except ValidationError:
+            messages.error(request, "Veuillez saisir un lien WhatsApp valide (http ou https).")
+            return render(request, 'marketplace/manage_support_whatsapp_link.html', {'support_card': support_card, 'whatsapp_link': whatsapp_link})
+
+        support_card.whatsapp_link = whatsapp_link
+        support_card.is_active = True
+        support_card.updated_by = request.user
+        support_card.save()
+
+        messages.success(request, "Le lien WhatsApp a été enregistré.")
+        return redirect('manage_support_whatsapp_link')
+
+    return render(request, 'marketplace/manage_support_whatsapp_link.html', {'support_card': support_card})
+
+
 @login_required
 def manage_admin_permissions(request):
     """Page de gestion des permissions des administrateurs"""
+    if request.method == 'POST' and request.POST.get('support_card_submit'):
+        if not is_super_admin(request.user):
+            messages.error(request, "Vous n'avez pas la permission.")
+            return redirect('dashboard')
+
+        support_card = SiteConfiguration.objects.filter(config_type='support_card').first()
+        if support_card is None:
+            support_card = SiteConfiguration(config_type='support_card', alt_text='Carte Support SDI')
+
+        support_card.is_active = 'support_card_active' in request.POST
+        support_card.whatsapp_link = request.POST.get('support_card_whatsapp_link', '').strip()
+        support_card.screen_size_control_enabled = 'screen_size_control_enabled' in request.POST
+        support_card.updated_by = request.user
+        support_card.save()
+
+        messages.success(request, "La carte Support SDI a été enregistrée.")
+        return redirect('manage_admin_permissions')
     
     # Seul le super admin ou un admin avec la permission peut accéder à cette page
     if not (is_super_admin(request.user) or request.user.has_perm('marketplace.manage_admin_permissions')):
@@ -106,12 +171,18 @@ def manage_admin_permissions(request):
             'is_super': is_super_admin(admin),
         })
     
+    support_card = SiteConfiguration.objects.filter(config_type='support_card').first()
+    if support_card is None:
+        support_card = SiteConfiguration(config_type='support_card', alt_text='Carte Support SDI', is_active=True)
+        support_card.save()
+
     context = {
         'admins': admin_list,
         'withdrawal_perm': withdrawal_perm,
         'deposit_perm': deposit_perm,
         'admin_perm': admin_perm,
         'beauty_studio_perm': beauty_studio_perm,
+        'support_card_config': support_card,
     }
     
     return render(request, 'marketplace/manage_admin_permissions.html', context)

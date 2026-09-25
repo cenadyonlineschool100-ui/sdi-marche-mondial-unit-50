@@ -3,13 +3,17 @@ import json
 import socket
 import subprocess
 import re
-import psutil
 import datetime
 import uuid
 from typing import Dict, List, Any, Tuple
 import threading
 import platform
 import hashlib
+
+try:
+    import psutil
+except ModuleNotFoundError:  # pragma: no cover - optional runtime dependency
+    psutil = None
 
 class AICybersecurityEngine:
     """
@@ -62,6 +66,8 @@ class AICybersecurityEngine:
     
     def get_system_health(self) -> Dict[str, Any]:
         """Récupère l'état de santé du système"""
+        if psutil is None:
+            return {"error": "psutil non installé", "status": "INCONNU"}
         try:
             cpu_percent = psutil.cpu_percent(interval=1)
             memory = psutil.virtual_memory()
@@ -95,6 +101,8 @@ class AICybersecurityEngine:
     
     def get_network_status(self) -> Dict[str, Any]:
         """Analyse l'état du réseau"""
+        if psutil is None:
+            return {"error": "psutil non installé", "network_status": "INCONNU"}
         try:
             net_io = psutil.net_io_counters()
             connections = psutil.net_connections()
@@ -124,6 +132,9 @@ class AICybersecurityEngine:
             "ports_list": [],
             "risk_level": "BAS"
         }
+        if psutil is None:
+            ports_info["error"] = "psutil non installé"
+            return ports_info
         
         try:
             connections = psutil.net_connections()
@@ -174,6 +185,8 @@ class AICybersecurityEngine:
     def get_active_connections(self) -> List[Dict[str, Any]]:
         """Récupère les connexions réseau actives"""
         connections = []
+        if psutil is None:
+            return connections
         try:
             conns = psutil.net_connections()
             established = [c for c in conns if c.status == 'ESTABLISHED']

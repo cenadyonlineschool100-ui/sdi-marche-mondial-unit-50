@@ -791,15 +791,6 @@
         {% endif %}
     </div>
     <div class="profile-overview">
-        <div class="profile-avatar-wrap">
-            {% if profile.photo %}
-                <img src="{{ profile.photo.url }}" alt="Photo de profil" class="profile-avatar" />
-            {% else %}
-                <div class="profile-avatar-placeholder" aria-label="Avatar par défaut">
-                    👤
-                </div>
-            {% endif %}
-        </div>
         <div class="profile-identity-content">
             <h3 class="profile-identity-name">{{ request.user.username }}{% if request.user.first_name or request.user.last_name %} <span style="font-weight:500;">({{ request.user.first_name }} {{ request.user.last_name }})</span>{% endif %}</h3>
             <h4 class="profile-section-title">👤 Informations personnelles</h4>
@@ -1698,6 +1689,7 @@
     <button type="button" class="button" style="margin-top:1.5rem; margin-left:1rem; background-color: #0f172a; color: white;" onclick="window.history.back();">← Retour</button>
     <a href="{% url 'system_control_panel' %}" class="button" style="margin-top:1.5rem; margin-left:1rem; background-color: #dc3545; color: white;">🔒 Contrôle Système</a>
     <a href="{% url 'manage_admin_permissions' %}" class="button" style="margin-top:1.5rem; margin-left:1rem; background-color: #6b7280; color: white;">Pouvoir admin principale</a>
+    <a href="{% url 'manage_admin_permissions' %}" class="button" style="margin-top:1.5rem; margin-left:1rem; background-color: #2563eb; color: white;">Carte Support SDI</a>
     <form action="{% url 'refresh_exchange_rates' %}" method="post" style="display:inline-block; margin-top:1.5rem; margin-left:1rem;">
         {% csrf_token %}
         <button type="submit" class="button" style="background-color: #2563eb; color: white;">🔄 Actualiser le taux de change</button>
@@ -1735,8 +1727,6 @@
                 {{ form.address }}
                 <label for="id_phone"><strong>Téléphone</strong></label>
                 {{ form.phone }}
-                <label for="id_photo"><strong>Photo de profil</strong></label>
-                {{ form.photo }}
                 <button class="button" type="submit">Enregistrer les modifications</button>
             </div>
         </form>

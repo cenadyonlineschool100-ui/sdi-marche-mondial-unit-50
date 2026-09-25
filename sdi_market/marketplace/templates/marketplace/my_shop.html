@@ -63,6 +63,10 @@
                         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                             <a href="{% url 'product_detail' product.id %}" class="button" style="flex: 1; text-align: center; font-size: 0.9rem; padding: 0.5rem;">Voir</a>
                             <a href="{% url 'add_product' %}?edit={{ product.id }}" class="button" style="flex: 1; text-align: center; font-size: 0.9rem; padding: 0.5rem; background-color: #ffc107; color: #212529;">Modifier</a>
+                            <form method="post" action="{% url 'delete_product' product.id %}" style="display: inline; margin: 0; flex: 1;" onsubmit="return confirm('Voulez-vous vraiment supprimer ce produit ?');">
+                                {% csrf_token %}
+                                <button type="submit" class="button" style="width: 100%; text-align: center; font-size: 0.9rem; padding: 0.5rem; background-color: #dc2626; color: white; border: none;">Supprimer</button>
+                            </form>
                         </div>
                     </div>
                 </div>

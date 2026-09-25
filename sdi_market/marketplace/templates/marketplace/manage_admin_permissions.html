@@ -150,6 +150,32 @@
         </div>
     </div>
 
+    {% if request.user.is_superuser or request.user.role == 'super_admin' %}
+    <div style="margin-top: 40px; padding: 20px; background: linear-gradient(135deg, #eff6ff, #dbeafe); border-radius: 12px; border-left: 4px solid #2563eb; box-shadow: 0 8px 20px rgba(37, 99, 235, 0.08);">
+        <h3>📞 Carte Support SDI</h3>
+        <p style="margin-bottom: 16px; color: #1f2937;">Gérez l'état actif et le lien WhatsApp de la carte support mobile.</p>
+        <form method="post" action="{% url 'manage_admin_permissions' %}">
+            {% csrf_token %}
+            <input type="hidden" name="support_card_submit" value="1">
+            <div style="display: grid; gap: 16px; max-width: 520px;">
+                <label style="display: flex; align-items: center; gap: 10px; font-weight: 600; color: #0f172a;">
+                    <input type="checkbox" name="support_card_active" {% if support_card_config.is_active %}checked{% endif %}>
+                    Activer la carte Support SDI
+                </label>
+                <label style="display: flex; align-items: center; gap: 10px; font-weight: 600; color: #0f172a;">
+                    <input type="checkbox" name="screen_size_control_enabled" {% if support_card_config.screen_size_control_enabled %}checked{% endif %}>
+                    Taille écran + / -
+                </label>
+                <div>
+                    <label for="support_card_whatsapp_link" style="display: block; font-weight: 600; margin-bottom: 8px; color: #0f172a;">Lien WhatsApp</label>
+                    <input id="support_card_whatsapp_link" type="url" name="support_card_whatsapp_link" value="{{ support_card_config.whatsapp_link|default:'' }}" placeholder="https://wa.me/" style="width: 100%; padding: 12px 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 1rem; box-sizing: border-box;">
+                </div>
+                <button type="submit" class="btn btn-primary" style="background: #2563eb; color: white; width: fit-content;">Enregistrer la carte</button>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+
     <div style="margin-top: 40px; padding: 20px; background: #f0f8ff; border-radius: 8px; border-left: 4px solid #0066cc;">
         <h3>📌 Informations</h3>
         <ul style="margin: 10px 0; padding-left: 20px;">
@@ -157,6 +183,7 @@
             <li><strong>Commission Dépôt :</strong> Accès à la page "Commission Dépôt Agent" pour gérer les commissions de dépôt.</li>
             <li><strong>Studio Beauté :</strong> Accès à la page de validation des demandes de studios de beauté.</li>
             <li><strong>Gestion Permissions :</strong> Accès à cette page pour modifier les permissions des autres administrateurs.</li>
+            <li><strong>Carte Support SDI :</strong> Visible uniquement pour l’administrateur principal et configure le lien WhatsApp public.</li>
             <li><strong>Super Admin :</strong> A accès à tous les droits automatiquement.</li>
         </ul>
     </div>

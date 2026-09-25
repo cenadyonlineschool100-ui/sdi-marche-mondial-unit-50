@@ -931,9 +931,9 @@ class ChatMessageAdmin(admin.ModelAdmin):
 
 @admin.register(SiteConfiguration)
 class SiteConfigurationAdmin(admin.ModelAdmin):
-    list_display = ('config_type', 'alt_text', 'image', 'updated_by', 'updated_at')
+    list_display = ('config_type', 'alt_text', 'image', 'is_active', 'whatsapp_link', 'updated_by', 'updated_at')
     readonly_fields = ('config_type', 'updated_at', 'updated_by')
-    fields = ('config_type', 'image', 'alt_text', 'width', 'height', 'updated_at', 'updated_by')
+    fields = ('config_type', 'image', 'alt_text', 'width', 'height', 'is_active', 'whatsapp_link', 'updated_at', 'updated_by')
 
     def save_model(self, request, obj, form, change):
         if change:

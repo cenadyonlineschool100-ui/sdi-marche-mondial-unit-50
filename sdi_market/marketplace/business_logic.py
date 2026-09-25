@@ -1042,6 +1042,34 @@ class DeliveryStatusManager:
 
 class NotificationManager:
     """Gère toutes les notifications du système"""
+
+    @staticmethod
+    def create_persistent_notification(recipient, title, message, notification_type, related_assignment=None, sound_interval_minutes=1):
+        """Crée une notification persistante unique pour le système de cloche."""
+        if not recipient:
+            return None
+
+        queryset = PersistentNotification.objects.filter(
+            recipient=recipient,
+            title=title,
+            message=message,
+            notification_type=notification_type,
+        )
+        if related_assignment is not None:
+            queryset = queryset.filter(related_assignment=related_assignment)
+
+        existing = queryset.order_by('-created_at').first()
+        if existing:
+            return existing
+
+        return PersistentNotification.objects.create(
+            recipient=recipient,
+            title=title,
+            message=message,
+            notification_type=notification_type,
+            related_assignment=related_assignment,
+            sound_interval_minutes=sound_interval_minutes,
+        )
     
     NOTIFICATION_TEMPLATES = {
         'delivery_assigned': {
@@ -1102,13 +1130,13 @@ class NotificationManager:
         Veuillez récupérer la marchandise et livrer au plus vite.
         """
         
-        PersistentNotification.objects.create(
-            recipient=agent,
-            title="🚨 Nouvelle livraison assignée",
-            message=driver_message,
-            notification_type='delivery_assigned',
+        NotificationManager.create_persistent_notification(
+            agent,
+            "🚨 Nouvelle livraison assignée",
+            driver_message,
+            'delivery_assigned',
             related_assignment=assignment,
-            sound_interval_minutes=1  # Sonne toutes les minutes
+            sound_interval_minutes=1,
         )
         
         # Notifications persistantes pour les ADMINISTRATEURS
@@ -1130,13 +1158,13 @@ class NotificationManager:
         )
         
         for admin in admin_users:
-            PersistentNotification.objects.create(
-                recipient=admin,
-                title="🔔 Commande en cours",
-                message=admin_message,
-                notification_type='admin_delivery_assigned',
+            NotificationManager.create_persistent_notification(
+                admin,
+                "🔔 Commande en cours",
+                admin_message,
+                'admin_delivery_assigned',
                 related_assignment=assignment,
-                sound_interval_minutes=1  # Sonne toutes les minutes
+                sound_interval_minutes=1,
             )
     
     @staticmethod
@@ -1196,7 +1224,10 @@ class NotificationManager:
         TODO: Intégrer Firebase Push
         """
         
-        # Créer notification in-app
+        if user is None:
+            return None
+
+        # Créer notification in-app classique pour les écrans de suivi livraison
         if assignment:
             DeliveryNotification.objects.create(
                 assignment=assignment,
@@ -1206,6 +1237,27 @@ class NotificationManager:
                 message=message,
                 is_read=False
             )
+
+        # Créer la notification persistante visible dans la cloche/badge
+        title = 'Mise à jour de livraison'
+        if notification_type in ['picked_up', 'in_transit', 'arrived', 'delivered', 'failed', 'reassigned']:
+            title = {
+                'picked_up': 'Commande récupérée',
+                'in_transit': 'Commande en route',
+                'arrived': 'Livreur arrivé',
+                'delivered': 'Commande livrée',
+                'failed': 'Problème de livraison',
+                'reassigned': 'Livraison réassignée',
+            }.get(notification_type, 'Mise à jour de livraison')
+
+        NotificationManager.create_persistent_notification(
+            user,
+            title,
+            message,
+            notification_type,
+            related_assignment=assignment,
+            sound_interval_minutes=1,
+        )
         
         # TODO: SMS
         # send_sms(user.phone, message)

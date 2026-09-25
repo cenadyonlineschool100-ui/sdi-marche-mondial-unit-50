@@ -57,7 +57,7 @@ class PythonAnywhereDeployer:
             print(f"❌ Erreur: {str(e)}")
             return []
     
-    def create_web_app(self, python_version="3.11"):
+    def create_web_app(self, python_version="3.13"):
         """Crée une nouvelle application web Django"""
         print(f"\n🚀 Création de l'application web Django sur {self.domain}...")
         

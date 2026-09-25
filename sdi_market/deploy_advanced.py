@@ -11,7 +11,7 @@ import os
 from pathlib import Path
 
 class AdvancedPythonAnywhereDeployer:
-    def __init__(self, username, token, repo_url, branch="feature/ma-modif", python_version="3.11"):
+    def __init__(self, username, token, repo_url, branch="feature/ma-modif", python_version="3.13"):
         self.username = username
         self.token = token
         self.repo_url = repo_url

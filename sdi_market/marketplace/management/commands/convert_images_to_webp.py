@@ -5,7 +5,7 @@ from marketplace.image_utils import convert_to_webp
 import os
 
 class Command(BaseCommand):
-    help = 'Batch convertit les images JPEG/PNG du dossier MEDIA_ROOT en WebP (s'il n\'existe pas encore)'
+    help = "Batch convertit les images JPEG/PNG du dossier MEDIA_ROOT en WebP (s'il n'existe pas encore)"
 
     def add_arguments(self, parser):
         parser.add_argument('--path', type=str, help='Chemin relatif sous MEDIA_ROOT à convertir (ex: products/)', default='')

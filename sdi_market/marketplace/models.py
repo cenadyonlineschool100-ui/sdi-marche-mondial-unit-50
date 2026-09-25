@@ -730,6 +730,41 @@ class ShopCoverPhoto(models.Model):
 # -------------------------------
 # Produit
 # -------------------------------
+class PriorityGroup(models.Model):
+    name = models.CharField(max_length=100, unique=True, verbose_name='Nom du groupe')
+    priority = models.PositiveIntegerField(default=100, verbose_name='Priorité')
+    weight = models.PositiveIntegerField(default=1, verbose_name='Poids de diffusion')
+    is_active = models.BooleanField(default=True, verbose_name='Groupe actif')
+    start_date = models.DateTimeField(blank=True, null=True, verbose_name='Date de début')
+    end_date = models.DateTimeField(blank=True, null=True, verbose_name='Date de fin')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['priority', 'name']
+        verbose_name = 'Groupe de priorité'
+        verbose_name_plural = 'Groupes de priorité'
+
+    def __str__(self):
+        return self.name
+
+    def is_scheduled_active(self, now=None):
+        now = now or timezone.now()
+        return (
+            self.is_active
+            and (self.start_date is None or self.start_date <= now)
+            and (self.end_date is None or self.end_date >= now)
+        )
+
+    def is_expired(self, now=None):
+        now = now or timezone.now()
+        return bool(self.end_date and self.end_date < now)
+
+    def is_scheduled(self, now=None):
+        now = now or timezone.now()
+        return self.is_active and self.start_date and self.start_date > now
+
+
 class Product(models.Model):
     CURRENCY_CHOICES = (
         ('USD', 'USD ($)'),
@@ -761,6 +796,9 @@ class Product(models.Model):
     banner_blocked_by_admin = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='blocked_banner_products', help_text="Admin qui a bloqué")
     banner_blocked_at = models.DateTimeField(null=True, blank=True, help_text="Date du blocage")
     banner_block_reason = models.TextField(blank=True, default='', help_text="Raison du blocage")
+    priority_group = models.ForeignKey(PriorityGroup, on_delete=models.SET_NULL, null=True, blank=True, related_name='products', verbose_name='Groupe de priorité')
+    banner_priority = models.PositiveIntegerField(default=100, verbose_name='Priorité individuelle')
+    banner_weight = models.PositiveIntegerField(default=1, verbose_name='Poids individuel')
     
     def get_display_image(self):
         """Retourne l'image à afficher (custom si existe, sinon auto-générée)"""
@@ -877,6 +915,7 @@ class SiteBanner(models.Model):
     end_date = models.DateTimeField(blank=True, null=True)
     display_mode = models.CharField(max_length=20, choices=DISPLAY_MODE_CHOICES, default='static')
     autoplay_seconds = models.PositiveSmallIntegerField(default=0, help_text='0 désactive la lecture automatique')
+    autoplay_enabled = models.BooleanField(default=True, verbose_name='Défilement automatique actif')
     scope = models.CharField(max_length=20, choices=SCOPE_CHOICES, default='all')
     shops = models.ManyToManyField(Shop, blank=True, related_name='site_banners')
     access_mode = models.CharField(max_length=20, choices=ACCESS_MODE_CHOICES, default='free')
@@ -2538,6 +2577,16 @@ class ReturnRequest(models.Model):
 # Paramètres système
 # -------------------------------
 class SystemSettings(models.Model):
+    banner_enabled = models.BooleanField(default=True, verbose_name='Activer le système de bannière')
+    banner_expand_enabled = models.BooleanField(default=False, verbose_name='Autoriser l’agrandissement du Banner')
+    banner_normal_height = models.PositiveIntegerField(default=150, verbose_name='Hauteur normale du Banner')
+    banner_expanded_height = models.PositiveIntegerField(default=220, verbose_name='Hauteur agrandie du Banner')
+    banner_visible_to_admins = models.BooleanField(default=True, verbose_name='Afficher la bannière aux administrateurs')
+    principal_banner_visible = models.BooleanField(default=True, verbose_name='Afficher la bannière à l’administrateur principal')
+    mobile_footer_support_enabled = models.BooleanField(
+        default=True,
+        verbose_name='⭐ FC - Afficher le footer mobile/tablette et la carte Support SDI'
+    )
     enable_role_management = models.BooleanField(default=False, verbose_name="Activer la gestion des rôles et permissions")
     enable_financial_audit = models.BooleanField(default=False, verbose_name="Activer la traçabilité financière")
     enable_alerts = models.BooleanField(default=False, verbose_name="Activer le système d'alertes intelligentes")
@@ -2937,6 +2986,7 @@ class SiteConfiguration(models.Model):
         ('main', 'Logo Principal'),
         ('favicon', 'Favicon'),
         ('footer', 'Logo Footer'),
+        ('support_card', 'Carte Support SDI'),
     ]
     
     config_type = models.CharField(
@@ -2947,7 +2997,9 @@ class SiteConfiguration(models.Model):
     )
     image = models.ImageField(
         upload_to='site_config/%Y/%m/',
-        verbose_name='Image/Logo'
+        verbose_name='Image/Logo',
+        blank=True,
+        null=True
     )
     alt_text = models.CharField(
         max_length=255,
@@ -2963,6 +3015,20 @@ class SiteConfiguration(models.Model):
         default=60,
         help_text='Hauteur en pixels',
         blank=True
+    )
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name='Carte active'
+    )
+    whatsapp_link = models.URLField(
+        blank=True,
+        default='',
+        verbose_name='Lien WhatsApp',
+        max_length=500
+    )
+    screen_size_control_enabled = models.BooleanField(
+        default=False,
+        verbose_name='Taille écran + / - activée'
     )
     updated_at = models.DateTimeField(auto_now=True)
     updated_by = models.ForeignKey(

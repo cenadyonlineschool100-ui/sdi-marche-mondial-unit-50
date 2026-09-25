@@ -33,7 +33,7 @@ from rest_framework import filters, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from .forms import ProductForm, ProductReviewForm, SignUpForm, SystemSettingsForm, ChatMessageForm, PrivateMessageForm, BeautyBookingForm, BeautyStudioServiceForm, BeautyStudioRequestForm, ShopCoverPhotoForm, ProfileForm, OrderForm, DeliveryLocationForm, TransferForm, TiKaneAccessRequestForm, TiKanePlanForm, AssignmentSubmissionForm, TechnicianProfileForm, SiteBannerForm, SiteBannerImageForm
+from .forms import ProductForm, ProductReviewForm, SignUpForm, SystemSettingsForm, BannerExpandSettingsForm, ChatMessageForm, PrivateMessageForm, BeautyBookingForm, BeautyStudioServiceForm, BeautyStudioRequestForm, ShopCoverPhotoForm, ProfileForm, OrderForm, DeliveryLocationForm, TransferForm, TiKaneAccessRequestForm, TiKanePlanForm, AssignmentSubmissionForm, TechnicianProfileForm, SiteBannerForm, SiteBannerImageForm, PriorityGroupForm, BannerProductPriorityForm
 from .security_enhanced import AnomalyDetector
 from .models import (
     DeliveryAssignment, DeliveryEmployee, Order, OrderItem, Product, Shop,
@@ -44,7 +44,7 @@ from .models import (
     PersistentNotification, AuditLog, ExchangeRate, Receipt, WithdrawalRequest, AdminWithdrawalPermission,
     Transfer, TransferReceipt, TransferLog, TransferNotification, TransferCommissionTier,
     SiteConfigurationPermission, Course, CourseAssignment, AssignmentSubmission, CourseCertificate,
-    ProductAccessRequest, ResellerProduct, MarketplaceSettings, SDISolSettings, SDISolMember, SDISolPayment, SiteBanner, SiteBannerImage, SiteBannerPermission, SiteBannerAccess, SiteBannerPayment, SiteBannerEvent,
+    ProductAccessRequest, ResellerProduct, MarketplaceSettings, SDISolSettings, SDISolMember, SDISolPayment, SiteBanner, SiteBannerImage, SiteBannerPermission, SiteBannerAccess, SiteBannerPayment, SiteBannerEvent, PriorityGroup,
     # Security-related models used by the security dashboard API
     PortMonitoring, AIThreatAnalysis, HoneypotEvent, SecurityAlert, SecurityLog, SecurityMetrics
 )
@@ -99,7 +99,7 @@ def get_client_ip(request):
     return request.META.get('REMOTE_ADDR')
 
 
-def get_banner_eligible_products(limit=8):
+def get_banner_eligible_products(limit=None):
     """
     Retourne les produits éligibles pour affichage dans la bannière/carrousel.
     
@@ -110,7 +110,7 @@ def get_banner_eligible_products(limit=8):
     - Stock > 0
     
     Args:
-        limit (int): Nombre maximum de produits à retourner (default: 8)
+        limit (int|None): Limite facultative pour les appels historiques.
     
     Returns:
         QuerySet: Les produits éligibles avec les relations préchargées
@@ -128,7 +128,9 @@ def get_banner_eligible_products(limit=8):
     ).order_by(
         '-average_rating',  # Trier par note d'abord
         '-reviews_count'    # Puis par nombre d'avis
-    )[:limit]
+    )
+    if limit is not None:
+        products = products[:limit]
     
     # Filtrer les produits qui ont une image valide
     # (custom_image ou image générée)
@@ -931,7 +933,7 @@ def auto_assign_delivery_employee(order):
     return None
 
 def create_delivery_notification(assignment, recipient, notification_type, title, message):
-    """Crée une notification de livraison"""
+    """Crée une notification de livraison et la notification persistante affichée dans la cloche."""
     from .models import DeliveryNotification
 
     notification = DeliveryNotification.objects.create(
@@ -941,6 +943,17 @@ def create_delivery_notification(assignment, recipient, notification_type, title
         title=title,
         message=message
     )
+
+    if recipient is not None:
+        NotificationManager.create_persistent_notification(
+            recipient,
+            title,
+            message,
+            notification_type,
+            related_assignment=assignment,
+            sound_interval_minutes=1,
+        )
+
     return notification
 
 def update_delivery_tracking(assignment, latitude=None, longitude=None, location_name=None, status_update=None):
@@ -1016,9 +1029,6 @@ def home(request):
     else:
         recommendations = get_trending_products(limit=6)
     
-    # Récupérer les produits éligibles pour le carrousel de bannière
-    banner_carousel_products = get_banner_eligible_products(limit=8)
-    
     # Récupérer les catégories principales pour le menu
     main_categories = CategoryManager.get_main_categories()
     # Filtrer les catégories avec slugs invalides et ajouter le nombre de produits
@@ -1029,8 +1039,6 @@ def home(request):
     # Attacher les stats d'avis
     attach_reviews_stats(products)
     attach_reviews_stats(recommendations)
-    attach_reviews_stats(banner_carousel_products)
-    
     return render(request, 'marketplace/home.html', {
         'products': products,
         'shops': shops,
@@ -1038,7 +1046,6 @@ def home(request):
         'current_category': category_slug,
         'main_categories': main_categories,
         'recommendations': recommendations,
-        'banner_carousel_products': banner_carousel_products,
     })
 
 
@@ -1564,6 +1571,14 @@ def private_chat(request, user_id):
             private_message.save()
             conversation.updated_at = timezone.now()
             conversation.save(update_fields=['updated_at'])
+
+            NotificationManager.create_persistent_notification(
+                other_user,
+                f'Nouveau message de {request.user.get_full_name() or request.user.username}',
+                private_message.content[:200] if private_message.content else 'Vous avez reçu un nouveau message.',
+                'private_message',
+                sound_interval_minutes=1,
+            )
             return redirect('private_chat', user_id=user_id)
     else:
         form = PrivateMessageForm()
@@ -1649,6 +1664,17 @@ def signup(request):
             profile.save()
             login(request, user)
             add_user_to_global_group(user)
+
+            admin_users = User.objects.filter(is_superuser=True).distinct()
+            for admin_user in admin_users:
+                NotificationManager.create_persistent_notification(
+                    admin_user,
+                    'Nouvel utilisateur inscrit',
+                    f"{user.get_full_name() or user.username} s'est inscrit sur la plateforme.",
+                    'new_user_signup',
+                    sound_interval_minutes=1,
+                )
+
             messages.success(request, 'Inscription réussie. Bienvenue !')
             return redirect('home')
     else:
@@ -1669,6 +1695,20 @@ def request_delivery_access(request):
     else:
         profile.delivery_access_requested = True
         profile.save()
+
+        admin_users = User.objects.filter(is_staff=True).exclude(pk=request.user.pk).distinct()
+        if not admin_users.exists():
+            admin_users = User.objects.filter(is_superuser=True).exclude(pk=request.user.pk).distinct()
+
+        for admin_user in admin_users:
+            NotificationManager.create_persistent_notification(
+                admin_user,
+                'Demande pour devenir livreur',
+                f"{request.user.get_full_name() or request.user.username} a demandé l’accès livreur.",
+                'delivery_access_request',
+                sound_interval_minutes=1,
+            )
+
         messages.success(request, 'Demande d’accès livreur envoyée. Un administrateur doit l’activer.')
 
     return redirect('profile')
@@ -4300,7 +4340,7 @@ def return_request(request, order_id):
 
 def system_view(request):
     """Vue des paramètres système pour contrôler le site."""
-    if not request.user.is_superuser:
+    if not (request.user.is_superuser or request.user.role == 'super_admin'):
         messages.error(request, "Accès refusé. Seuls les superutilisateurs peuvent accéder à cette page.")
         return redirect('home')
     
@@ -4321,8 +4361,53 @@ def system_view(request):
 
 
 @login_required
-def site_banner_dashboard(request):
+@require_POST
+def site_banner_activation_toggle(request):
+    if not (request.user.is_superuser or request.user.role == 'super_admin'):
+        return HttpResponseForbidden('Accès réservé à l’administrateur principal')
+
+    settings_obj, _ = SystemSettings.objects.get_or_create(pk=1)
+    settings_obj.banner_enabled = not settings_obj.banner_enabled
+    settings_obj.save(update_fields=['banner_enabled'])
+    messages.success(
+        request,
+        'Bannière activée.' if settings_obj.banner_enabled else 'Bannière désactivée pour tout le site.',
+    )
+    return redirect('site_banner_activation')
+
+
+@login_required
+def site_banner_activation(request):
+    if not (request.user.is_superuser or request.user.role == 'super_admin'):
+        return HttpResponseForbidden('Accès réservé à l’administrateur principal')
+
+    settings_obj, _ = SystemSettings.objects.get_or_create(pk=1)
+    return render(request, 'marketplace/site_banner_activation.html', {
+        'banner_enabled': settings_obj.banner_enabled,
+    })
+
+
+@login_required
+def site_banner_expand_settings(request):
+    if not (request.user.is_superuser or request.user.role == 'super_admin'):
+        return HttpResponseForbidden('Accès réservé à l’administrateur principal')
+
+    settings_obj, _ = SystemSettings.objects.get_or_create(pk=1)
+    if request.method == 'POST':
+        form = BannerExpandSettingsForm(request.POST, instance=settings_obj)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Configuration ⭐ AGR enregistrée.')
+            return redirect('site_banner_expand_settings')
+    else:
+        form = BannerExpandSettingsForm(instance=settings_obj)
+    return render(request, 'marketplace/site_banner_expand_settings.html', {'form': form})
+
+
+@login_required
+def _site_dashboard_common(request, redirect_name):
     is_principal = request.user.is_superuser or request.user.role == 'super_admin'
+    is_gp_dashboard = redirect_name == 'site_gp_dashboard'
     if not (is_principal or SiteBannerPermission.objects.filter(user=request.user, can_manage=True).exists()):
         messages.error(request, 'Accès refusé. Vous devez être administrateur.')
         return redirect('dashboard')
@@ -4330,6 +4415,35 @@ def site_banner_dashboard(request):
     edit_id = request.GET.get('edit')
     instance = SiteBanner.objects.filter(id=edit_id).first() if edit_id else None
     if request.method == 'POST':
+        if request.POST.get('group_action'):
+            if not is_principal:
+                return HttpResponseForbidden('Accès réservé à l’administrateur principal')
+            group_id = request.POST.get('group_id')
+            group = PriorityGroup.objects.filter(pk=group_id).first() if group_id else None
+            if request.POST.get('group_action') == 'delete' and group:
+                group.delete()
+                messages.success(request, 'Groupe de priorité supprimé.')
+            else:
+                group_form = PriorityGroupForm(request.POST, instance=group)
+                if group_form.is_valid():
+                    group_form.save()
+                    messages.success(request, 'Groupe de priorité enregistré.')
+                else:
+                    messages.error(request, 'Les paramètres du groupe sont invalides.')
+            return redirect(redirect_name)
+        if request.POST.get('product_priority_action'):
+            if not is_principal:
+                return HttpResponseForbidden('Accès réservé à l’administrateur principal')
+            product = get_object_or_404(Product, pk=request.POST.get('product_id'))
+            product_form = BannerProductPriorityForm(request.POST, instance=product)
+            if product_form.is_valid():
+                product_form.save()
+                messages.success(request, 'Priorité de la carte enregistrée.')
+            else:
+                messages.error(request, 'Les paramètres de la carte sont invalides.')
+            return redirect(redirect_name)
+        if is_gp_dashboard:
+            return redirect(redirect_name)
         instance = SiteBanner.objects.filter(id=request.POST.get('banner_id')).first() if request.POST.get('banner_id') else None
         previous_scope = instance.scope if instance else None
         form = SiteBannerForm(request.POST, request.FILES, instance=instance, is_principal=is_principal)
@@ -4344,7 +4458,7 @@ def site_banner_dashboard(request):
             if instance and previous_access_mode != banner.access_mode:
                 SiteBannerEvent.objects.create(banner=banner, user=request.user, event_type='access_mode_changed', details={'from': previous_access_mode, 'to': banner.access_mode})
             messages.success(request, 'Bannière enregistrée avec succès.')
-            return redirect('site_banner_dashboard')
+            return redirect(redirect_name)
     else:
         form = SiteBannerForm(instance=instance, is_principal=is_principal)
 
@@ -4359,7 +4473,70 @@ def site_banner_dashboard(request):
     for banner in banners:
         banner.audit_stats = stats[banner.id]
     history = SiteBannerEvent.objects.select_related('user', 'banner').order_by('-created_at')[:50] if is_principal else []
-    return render(request, 'marketplace/site_banner_dashboard.html', {'banners': banners, 'form': form, 'editing_banner': instance, 'banner_users': users, 'is_principal_admin': is_principal, 'banner_stats': stats, 'banner_history': history})
+    products = Product.objects.select_related('shop').order_by('-created_at')
+    priority_groups = PriorityGroup.objects.all()
+    autoplay_banner = SiteBanner.get_active_banners().first()
+    template_name = 'marketplace/site_gp_dashboard.html' if is_gp_dashboard else 'marketplace/site_banner_dashboard.html'
+    return render(request, template_name, {
+        'banners': banners,
+        'form': form,
+        'editing_banner': instance,
+        'banner_users': users,
+        'is_principal_admin': is_principal,
+        'banner_stats': stats,
+        'banner_history': history,
+        'banner_products': products,
+        'autoplay_banner': autoplay_banner,
+        'autoplay_enabled': bool(autoplay_banner and autoplay_banner.autoplay_enabled),
+        'priority_groups': priority_groups,
+        'priority_group_form': PriorityGroupForm(),
+        'banner_only': not is_gp_dashboard,
+    })
+
+
+@login_required
+def site_banner_dashboard(request):
+    return _site_dashboard_common(request, redirect_name='site_banner_dashboard')
+
+
+@login_required
+def site_gp_dashboard(request):
+    return _site_dashboard_common(request, redirect_name='site_gp_dashboard')
+
+
+@login_required
+def site_banner_autoplay_toggle(request, banner_id):
+    if request.method != 'POST':
+        return redirect('site_banner_dashboard')
+    banner = get_object_or_404(SiteBanner, pk=banner_id)
+    if not _can_manage_site_banner(request.user, banner):
+        return HttpResponseForbidden('Accès refusé.')
+    banner.autoplay_enabled = not banner.autoplay_enabled
+    banner.save(update_fields=['autoplay_enabled', 'updated_at'])
+    messages.success(request, 'Défilement automatique mis à jour.')
+    return redirect('site_banner_dashboard')
+
+
+@login_required
+def site_banner_product_toggle(request, product_id):
+    banner = SiteBanner.get_active_banners().first()
+    if request.method != 'POST' or not banner or not _can_manage_site_banner(request.user, banner):
+        return redirect('site_banner_dashboard')
+    product = get_object_or_404(Product, pk=product_id)
+    product.banner_display_allowed = not product.banner_display_allowed
+    if product.banner_display_allowed:
+        product.banner_blocked_by_admin = None
+        product.banner_blocked_at = None
+        product.banner_block_reason = ''
+    else:
+        product.banner_blocked_by_admin = request.user
+        product.banner_blocked_at = timezone.now()
+    product.save(update_fields=[
+        'banner_display_allowed', 'banner_blocked_by_admin',
+        'banner_blocked_at', 'banner_block_reason',
+    ])
+    messages.success(request, 'Produit mis à jour pour la bannière.')
+    return redirect('site_gp_dashboard' if request.POST.get('return_to') == 'gp' else 'site_banner_dashboard')
 
 
 def _can_manage_site_banner(user, banner=None):
@@ -5212,6 +5389,13 @@ def admin_add_money(request):
                         type='admin_add_agent',
                         status='approved'
                     )
+                    NotificationManager.create_persistent_notification(
+                        user,
+                        'Crédit agent reçu',
+                        f"Un administrateur a ajouté {amount_decimal} {currency} à votre compte agent.",
+                        'admin_add_money',
+                        sound_interval_minutes=1,
+                    )
                     messages.success(request, f'Ajout de {amount} {currency} au compte agent de {user.username}.')
                 else:
                     wallet.balance += amount_decimal
@@ -5223,6 +5407,13 @@ def admin_add_money(request):
                         currency='USD',
                         type='admin_add',
                         status='approved'
+                    )
+                    NotificationManager.create_persistent_notification(
+                        user,
+                        'Crédit de compte reçu',
+                        f"Un administrateur a ajouté {amount_decimal} USD à votre compte.",
+                        'admin_add_money',
+                        sound_interval_minutes=1,
                     )
                     messages.success(request, f'Ajout de {amount} {currency} au portefeuille principal de {user.username}.')
             else:
@@ -5299,6 +5490,13 @@ def admin_add_agent(request):
                     agent.save()
                     user.is_agent = True
                     user.save(update_fields=['is_agent'])
+                    NotificationManager.create_persistent_notification(
+                        user,
+                        'Accès agent activé',
+                        'Votre accès agent a été activé. Vous pouvez désormais utiliser les fonctionnalités d’agent.',
+                        'agent_activated',
+                        sound_interval_minutes=1,
+                    )
                     messages.success(request, f'{user.username} a été activé comme agent.')
             elif action == 'suspend':
                 if not agent.is_active:
@@ -5317,6 +5515,13 @@ def admin_add_agent(request):
                     agent.save()
                     user.is_agent = True
                     user.save(update_fields=['is_agent'])
+                    NotificationManager.create_persistent_notification(
+                        user,
+                        'Accès agent activé',
+                        'Votre accès agent a été activé. Vous pouvez désormais utiliser les fonctionnalités d’agent.',
+                        'agent_activated',
+                        sound_interval_minutes=1,
+                    )
                     messages.success(request, f'{user.username} a été réactivé comme agent.')
             elif action == 'remove':
                 if agent.is_active or user.is_agent:
@@ -5324,6 +5529,13 @@ def admin_add_agent(request):
                     agent.save()
                     user.is_agent = False
                     user.save(update_fields=['is_agent'])
+                    NotificationManager.create_persistent_notification(
+                        user,
+                        'Accès agent suspendu',
+                        'Votre accès agent a été suspendu par l’administrateur.',
+                        'agent_suspended',
+                        sound_interval_minutes=1,
+                    )
                     messages.success(request, f'L’accès agent de {user.username} a été retiré.')
                 else:
                     messages.error(request, f'{user.username} n’a pas d’accès agent actif.')
@@ -5341,6 +5553,26 @@ def admin_add_agent(request):
         'active_agents': active_agents,
         'suspended_agents': suspended_agents,
     })
+
+
+@login_required
+@require_POST
+def delete_product(request, product_id):
+    """Supprimer un produit si l'utilisateur en est le propriétaire ou un admin principal."""
+    product = get_object_or_404(Product, pk=product_id)
+    is_principal_admin = request.user.is_superuser or request.user.has_perm('marketplace.principal_admin_power')
+
+    if product.shop.owner != request.user and not is_principal_admin:
+        messages.error(request, 'Vous ne pouvez pas supprimer ce produit.')
+        return redirect('my_shop')
+
+    product_name = product.name
+    product.delete()
+    messages.success(request, f'Produit "{product_name}" supprimé avec succès.')
+
+    if request.user == product.shop.owner:
+        return redirect('my_shop')
+    return redirect('profile' if request.user.is_authenticated else 'home')
 
 
 @login_required

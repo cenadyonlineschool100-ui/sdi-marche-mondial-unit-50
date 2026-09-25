@@ -9,7 +9,7 @@ import json
 import os
 import sys
 
-def deploy_to_pythonanywhere(username, token, repo_url, branch="feature/ma-modif", python_version="3.11"):
+def deploy_to_pythonanywhere(username, token, repo_url, branch="feature/ma-modif", python_version="3.13"):
     """Déploie le site sur PythonAnywhere"""
     
     base_url = f"https://www.pythonanywhere.com/api/v0/user/{username}"
@@ -116,7 +116,7 @@ if __name__ == '__main__':
     token = os.getenv('PYTHONANYWHERE_TOKEN', '')
     repo_url = os.getenv('GITHUB_REPO_URL', 'https://github.com/cenadyonlineschool100-ui/sdi-marche-mondial-unit-50.git')
     branch = os.getenv('GITHUB_BRANCH', 'feature/ma-modif')
-    python_version = os.getenv('PYTHON_VERSION', '3.11')
+    python_version = os.getenv('PYTHON_VERSION', '3.13')
     
     if not token:
         print("⚠️  Token PythonAnywhere non trouvé. Génération du guide uniquement...")

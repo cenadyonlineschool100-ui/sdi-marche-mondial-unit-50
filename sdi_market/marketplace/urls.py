@@ -12,6 +12,7 @@ from .views import (
     sdi_transport,
     studio_beaute, studio_beaute_request, studio_beaute_requests_admin,
     order_history, order_product, product_detail, profile, get_recipient_account_info, transfer_funds, set_currency, manage_delivery_access, request_delivery_access, search, shop_detail, signup, stats, system_view,
+    delete_product,
     technician_profiles, technician_profile_create, technician_profile_detail,
     request_product_access,
     autocomplete_products, cart_view, add_to_cart, remove_from_cart, update_cart_item, clear_cart, checkout, category_products,
@@ -21,7 +22,7 @@ from .views import (
     generate_product_image_api, get_image_suggestions_api,  # APIs génération d'images
     driver_dashboard, my_shop, manage_delivery_assignments, assign_order_to_driver, reassign_delivery_order,
     system_control_panel, refresh_exchange_rates, security_dashboard_api, view_user_password,  # Contrôle système - Gestion mots de passe et sécurité
-    site_banner_dashboard, site_banner_toggle, site_banner_delete, site_banner_image_add, site_banner_image_delete, site_banner_image_crop, site_banner_crop, site_banner_permission, site_banner_access, site_banner_impression, site_banner_click, site_banner_purchase,
+    site_banner_activation, site_banner_activation_toggle, site_banner_expand_settings, site_banner_dashboard, site_gp_dashboard, site_banner_autoplay_toggle, site_banner_product_toggle, site_banner_toggle, site_banner_delete, site_banner_image_add, site_banner_image_delete, site_banner_image_crop, site_banner_crop, site_banner_permission, site_banner_access, site_banner_impression, site_banner_click, site_banner_purchase,
     # Notifications persistantes
     get_persistent_notifications_api, mark_persistent_notification_read_api, check_notifications_sound_api,
     persistent_notifications_page, mark_all_persistent_notifications_read_api,
@@ -58,7 +59,7 @@ from .views_commission import (
     commission_peuple_configuration_adm
 )
 from .views_admin_permissions import (
-    manage_admin_permissions, toggle_admin_permission, grant_withdrawal_access, revoke_withdrawal_access,
+    manage_admin_permissions, manage_support_whatsapp_link, toggle_admin_permission, grant_withdrawal_access, revoke_withdrawal_access,
     toggle_principal_power,
 )
 from .views_agent_withdrawal import (
@@ -156,9 +157,16 @@ urlpatterns = [
     path('admin/optimize-performance/', optimize_performance, name='optimize_performance'),
     path('admin/optimize-performance', optimize_performance),
     path('my-shop/', my_shop, name='my_shop'),
+    path('product/<int:product_id>/delete/', delete_product, name='delete_product'),
     path('dashboard/', dashboard, name='dashboard'),
+    path('admin/banniere/activation/', site_banner_activation, name='site_banner_activation'),
+    path('admin/banniere/activation/toggle/', site_banner_activation_toggle, name='site_banner_activation_toggle'),
+    path('admin/banniere/agrandissement/', site_banner_expand_settings, name='site_banner_expand_settings'),
     path('admin/banniere/', site_banner_dashboard, name='site_banner_dashboard'),
+    path('admin/gp/', site_gp_dashboard, name='site_gp_dashboard'),
     path('admin/banniere/<int:banner_id>/toggle/', site_banner_toggle, name='site_banner_toggle'),
+    path('admin/banniere/<int:banner_id>/autoplay/toggle/', site_banner_autoplay_toggle, name='site_banner_autoplay_toggle'),
+    path('admin/banniere/product/<int:product_id>/toggle/', site_banner_product_toggle, name='site_banner_product_toggle'),
     path('admin/banniere/<int:banner_id>/delete/', site_banner_delete, name='site_banner_delete'),
     path('admin/banniere/<int:banner_id>/images/add/', site_banner_image_add, name='site_banner_image_add'),
     path('admin/banniere/images/<int:image_id>/delete/', site_banner_image_delete, name='site_banner_image_delete'),
@@ -274,6 +282,7 @@ urlpatterns = [
     path('commission-peuple/', view_peuple_commission, name='view_peuple_commission'),
     # Gestion des permissions administrateur
     path('admin/permissions/', manage_admin_permissions, name='manage_admin_permissions'),
+    path('admin/support-whatsapp/', manage_support_whatsapp_link, name='manage_support_whatsapp_link'),
     path('admin/permissions/toggle/<int:user_id>/<str:permission_codename>/', toggle_admin_permission, name='toggle_admin_permission'),
     path('admin/permissions/grant-withdrawal/<int:user_id>/', grant_withdrawal_access, name='grant_withdrawal_access'),
     path('admin/permissions/revoke-withdrawal/<int:user_id>/', revoke_withdrawal_access, name='revoke_withdrawal_access'),

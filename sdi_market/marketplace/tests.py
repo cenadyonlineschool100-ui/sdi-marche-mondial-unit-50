@@ -1,18 +1,103 @@
+import builtins
+import importlib
+import sys
 from decimal import Decimal
+from unittest.mock import patch
 
 from django.contrib import admin
-from django.contrib.auth.models import Permission
+from django.contrib.auth.models import AnonymousUser, Permission
 from django.test import Client, RequestFactory, TestCase
 from django.urls import reverse
 
 from .admin import MarketplaceSettingsAdmin
+from .context_processors import _build_banner_rotation_schedule, site_banner_context, system_settings_context
+from .forms import normalize_phone_number
 from .models import (
     User, Profile, Wallet, Agent, DepositCommissionConfig, Deposit, Transaction, CommissionRule,
     DepositReceipt, Shop, Product, ProductAccessRequest, ResellerProduct, MarketplaceSettings, Order, OrderItem,
-    Transfer, SDISolSettings, SDISolMember, SDISolPayment, RealEstateMembershipRequest, SiteBanner, SiteBannerAccess, SiteBannerPayment, SiteBannerEvent
+    Transfer, SDISolSettings, SDISolMember, SDISolPayment, RealEstateMembershipRequest, SystemSettings, PriorityGroup, SiteBanner, SiteBannerAccess, SiteBannerPayment, SiteBannerEvent, SiteBannerPermission, SiteConfiguration, PersistentNotification
 )
 from .business_logic import PaymentManager
+from .views import manage_delivery_assignments
 from .views_commission import get_commission_eligible_users
+
+
+class ContextProcessorRegressionTest(TestCase):
+    def test_system_settings_context_exists_and_returns_safe_defaults(self):
+        context = system_settings_context(None)
+        self.assertIn('system_settings', context)
+        self.assertIn('mobile_footer_support_enabled', context)
+        self.assertTrue(context['mobile_footer_support_enabled'])
+        self.assertIsNone(context['system_settings'])
+
+    def test_normalize_phone_number_standardizes_phone_values(self):
+        self.assertEqual(normalize_phone_number('509 1234 5678'), '+50912345678')
+        self.assertEqual(normalize_phone_number('(509) 1234-5678'), '+50912345678')
+        self.assertEqual(normalize_phone_number('12345678'), '+50912345678')
+
+    def test_mobile_footer_support_flag_hides_compact_footer_and_support_card_when_disabled(self):
+        SystemSettings.objects.filter(pk=1).delete()
+        SystemSettings.objects.create(pk=1, mobile_footer_support_enabled=False)
+
+        response = self.client.get('/')
+        html = response.content.decode('utf-8')
+
+        self.assertNotIn('compact-footer', html)
+        self.assertNotIn('sdi-support-card', html)
+
+    def test_mobile_footer_support_flag_keeps_compact_footer_and_support_card_when_enabled(self):
+        SystemSettings.objects.filter(pk=1).delete()
+        SystemSettings.objects.create(pk=1, mobile_footer_support_enabled=True)
+
+        response = self.client.get('/')
+        html = response.content.decode('utf-8')
+
+        self.assertIn('compact-footer', html)
+        self.assertIn('sdi-support-card', html)
+
+    def test_support_card_active_flag_synchronizes_responsive_footer(self):
+        SiteConfiguration.objects.filter(config_type='support_card').delete()
+        SiteConfiguration.objects.create(config_type='support_card', is_active=False, whatsapp_link='https://wa.me/123')
+
+        response = self.client.get('/')
+        html = response.content.decode('utf-8')
+
+        self.assertNotIn('compact-footer', html)
+        self.assertNotIn('sdi-support-card', html)
+        self.assertNotIn('mobile-bottom-tabs', html)
+
+        SiteConfiguration.objects.filter(config_type='support_card').update(is_active=True)
+        response = self.client.get('/')
+        html = response.content.decode('utf-8')
+
+        self.assertIn('compact-footer', html)
+        self.assertIn('sdi-support-card', html)
+        self.assertIn('mobile-bottom-tabs', html)
+
+    def test_site_banner_context_handles_anonymous_user(self):
+        request = RequestFactory().get('/')
+        request.user = AnonymousUser()
+
+        context = site_banner_context(request)
+
+        self.assertIn('site_banner', context)
+        self.assertIn('banner_carousel_products', context)
+        self.assertFalse(context['site_banner_access_granted'])
+
+    def test_ai_cybersecurity_module_imports_when_psutil_is_missing(self):
+        real_import = builtins.__import__
+
+        def fake_import(name, *args, **kwargs):
+            if name == 'psutil':
+                raise ModuleNotFoundError("No module named 'psutil'")
+            return real_import(name, *args, **kwargs)
+
+        sys.modules.pop('marketplace.ai_cybersecurity', None)
+        with patch('builtins.__import__', side_effect=fake_import):
+            module = importlib.import_module('marketplace.ai_cybersecurity')
+
+        self.assertIsNotNone(module)
+        self.assertIsNone(module.psutil)
 
 
 class MicrosDiCashAgentDepositTest(TestCase):
@@ -91,6 +176,20 @@ class MicrosDiCashAgentDepositTest(TestCase):
 
         self.assertTrue(Transaction.objects.filter(type='deposit', receiver=self.client_user, amount=Decimal('2000.00'), currency='HTG').exists())
         self.assertTrue(Transaction.objects.filter(type='commission', sender=self.admin_user, receiver=self.agent_user, amount=Decimal('5.00'), currency='HTG').exists())
+        self.assertTrue(PersistentNotification.objects.filter(recipient=self.client_user, notification_type='deposit_received').exists())
+
+    def test_agent_activation_notifies_user(self):
+        admin_client = Client()
+        admin_client.login(username='admin', password='admin123')
+
+        PersistentNotification.objects.filter(recipient=self.client_user, notification_type='agent_activated').delete()
+        response = admin_client.post(reverse('admin_add_agent'), {
+            'action': 'activate',
+            'user_id': self.client_user.id,
+        })
+
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(PersistentNotification.objects.filter(recipient=self.client_user, notification_type='agent_activated').exists())
 
     def test_deposit_repay_real_estate_loan_before_credit(self):
         self.client_wallet.balance_htg = Decimal('0.00')
@@ -217,7 +316,45 @@ class SiteBannerAdminAccessTest(TestCase):
         self.client.login(username='banneradmin', password='admin123')
         response = self.client.get(reverse('site_banner_dashboard'))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Gestion des bannières')
+        self.assertContains(response, 'Gestion de la bannière')
+
+    def test_gp_dashboard_is_separate_route_and_title(self):
+        response = self.client.get(reverse('site_gp_dashboard'))
+        self.assertEqual(response.status_code, 302)
+
+        self.client.login(username='banneradmin', password='admin123')
+        response = self.client.get(reverse('site_gp_dashboard'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '⭐ GP — Gestion des Priorités')
+        self.assertContains(response, 'Groupes de Priorité')
+        self.assertContains(response, 'Gestion des cartes')
+        self.assertContains(response, 'Rotation intelligente')
+        self.assertNotContains(response, '🎬 Bannière')
+        self.assertNotContains(response, '📊 Stats')
+
+        banner_response = self.client.get(reverse('site_banner_dashboard'))
+        self.assertContains(banner_response, '🎯 Gestion de la bannière')
+        self.assertNotContains(banner_response, '⭐ GP — Gestion des Priorités')
+        self.assertNotContains(banner_response, 'Groupes de Priorité')
+
+    def test_gp_entry_is_visible_only_to_authorized_admins(self):
+        normal_user = User.objects.create_user(username='regularuser', email='regular@example.com', password='pass123')
+        self.client.force_login(normal_user)
+        response = self.client.get(reverse('home'))
+        self.assertNotContains(response, '⭐ GP')
+        self.assertNotContains(response, '🎯 Gestion de la bannière')
+
+        self.client.force_login(self.admin_user)
+        response = self.client.get(reverse('home'))
+        self.assertContains(response, '🎯 Gestion de la bannière')
+        self.assertContains(response, '⭐ GP')
+
+    def test_search_page_includes_mobile_responsive_rules(self):
+        response = self.client.get(reverse('search'))
+        self.assertEqual(response.status_code, 200)
+        html = response.content.decode()
+        self.assertIn('@media (max-width: 767px)', html)
+        self.assertIn('grid-template-columns: 1fr;', html)
 
 
 class HomePageRouteTest(TestCase):
@@ -259,8 +396,11 @@ class HomePageRouteTest(TestCase):
     def test_banner_management_link_is_visible_only_to_principal_admin(self):
         self.client.login(username='banneradmin', password='admin123')
         response = self.client.get(reverse('home'))
-        self.assertContains(response, 'Bannière Gestion')
+        self.assertContains(response, '🎯 Gestion de la bannière')
+        self.assertContains(response, '⭐ GP')
+        self.assertContains(response, 'ACTIVATION BANNIÈRE')
         self.assertContains(response, reverse('site_banner_dashboard'))
+        self.assertContains(response, reverse('site_banner_activation'))
 
         secondary = User.objects.create_user(
             username='banner_secondary',
@@ -270,14 +410,34 @@ class HomePageRouteTest(TestCase):
         )
         self.client.force_login(secondary)
         response = self.client.get(reverse('home'))
-        self.assertNotContains(response, 'Bannière Gestion')
+        self.assertNotContains(response, '🎯 Gestion de la bannière')
+        self.assertNotContains(response, '⭐ GP')
+        self.assertNotContains(response, 'ACTIVATION BANNIÈRE')
         self.assertNotEqual(self.client.get(reverse('site_banner_dashboard')).status_code, 200)
+        self.assertEqual(self.client.get(reverse('site_banner_activation')).status_code, 403)
 
         normal = User.objects.create_user(username='banner_normal', password='admin123')
         self.client.force_login(normal)
         response = self.client.get(reverse('home'))
-        self.assertNotContains(response, 'Bannière Gestion')
+        self.assertNotContains(response, '🎯 Gestion de la bannière')
+        self.assertNotContains(response, '⭐ GP')
+        self.assertNotContains(response, 'ACTIVATION BANNIÈRE')
         self.assertNotEqual(self.client.get(reverse('site_banner_dashboard')).status_code, 200)
+        self.assertEqual(self.client.get(reverse('site_banner_activation')).status_code, 403)
+
+    def test_principal_can_disable_banner_globally_without_reserved_space(self):
+        self.client.login(username='banneradmin', password='admin123')
+        response = self.client.post(reverse('site_banner_activation_toggle'))
+        self.assertRedirects(response, reverse('site_banner_activation'))
+        self.assertFalse(SystemSettings.objects.get(pk=1).banner_enabled)
+
+        response = self.client.get(reverse('home'))
+        self.assertNotContains(response, 'site-top-banner')
+        self.assertNotContains(response, 'Produit banner test')
+
+        self.client.post(reverse('site_banner_activation_toggle'))
+        self.assertTrue(SystemSettings.objects.get(pk=1).banner_enabled)
+        self.assertContains(self.client.get(reverse('home')), 'site-top-banner')
 
     def test_active_banner_is_exposed_in_template_context(self):
         SiteBanner.objects.create(
@@ -290,6 +450,111 @@ class HomePageRouteTest(TestCase):
         )
         response = self.client.get(reverse('home'))
         self.assertContains(response, 'Promo flash')
+
+
+class SiteBannerPriorityTest(TestCase):
+    def setUp(self):
+        self.admin = User.objects.create_superuser(username='priority_admin', password='pass12345')
+        self.shop = Shop.objects.create(owner=self.admin, name='Priority Shop')
+        self.banner = SiteBanner.objects.create(product=self._product('Banner product'))
+
+    def _product(self, name, group=None, weight=1):
+        return Product.objects.create(
+            shop=self.shop,
+            name=name,
+            description='test',
+            price_ht=10,
+            quantity=1,
+            image=f'https://example.com/{name.replace(" ", "-")}.jpg',
+            priority_group=group,
+            banner_weight=weight,
+        )
+
+    def _request(self, user):
+        request = RequestFactory().get('/')
+        request.user = user
+        request.resolver_match = None
+        return request
+
+    def test_active_group_and_product_order_has_no_duplicates(self):
+        premium = PriorityGroup.objects.create(name='Premium', priority=1, weight=3)
+        normal = PriorityGroup.objects.create(name='Normal', priority=2, weight=1)
+        self._product('Premium A', premium, 10)
+        self._product('Premium B', premium, 3)
+        self._product('Normal A', normal, 1)
+        context = site_banner_context(self._request(self.admin))
+        products = context['banner_carousel_products']
+        self.assertEqual(len(products), len({product.id for product in products}))
+        self.assertNotEqual(products[0].priority_group_id, products[1].priority_group_id)
+
+        normal.is_active = False
+        normal.save(update_fields=['is_active'])
+        products = site_banner_context(self._request(self.admin))['banner_carousel_products']
+        self.assertNotIn(normal.id, [product.priority_group_id for product in products])
+
+    def test_admin_visibility_setting_does_not_hide_normal_users(self):
+        settings = SystemSettings.objects.create(pk=1, banner_visible_to_admins=False, principal_banner_visible=False)
+        secondary = User.objects.create_user(username='priority_secondary', role='admin_secondary', is_staff=True)
+        normal = User.objects.create_user(username='priority_user')
+        self.assertIsNone(site_banner_context(self._request(secondary))['site_banner'])
+        self.assertIsNotNone(site_banner_context(self._request(normal))['site_banner'])
+        self.assertIsNone(site_banner_context(self._request(self.admin))['site_banner'])
+        settings.banner_enabled = False
+        settings.save(update_fields=['banner_enabled'])
+        self.assertEqual(site_banner_context(self._request(normal))['banner_carousel_products'], [])
+
+    def test_individual_weight_controls_long_run_frequency(self):
+        products = [
+            self._product('A', weight=1),
+            self._product('B', weight=3),
+            self._product('C', weight=6),
+        ]
+        schedule = _build_banner_rotation_schedule(products, length=100)
+        counts = {product.name: schedule.count(index) for index, product in enumerate(products)}
+        self.assertGreater(counts['C'], counts['B'])
+        self.assertGreater(counts['B'], counts['A'])
+        self.assertLessEqual(abs(counts['B'] / counts['A'] - 3), 1)
+        self.assertLessEqual(abs(counts['C'] / counts['A'] - 6), 1)
+
+    def test_group_schedule_excludes_expired_groups(self):
+        from datetime import timedelta
+        from django.utils import timezone
+
+        expired = PriorityGroup.objects.create(
+            name='Expired', end_date=timezone.now() - timedelta(minutes=1)
+        )
+        active = PriorityGroup.objects.create(name='Active', priority=1)
+        expired_product = self._product('Expired card', expired)
+        self._product('Active card', active)
+        products = site_banner_context(self._request(self.admin))['banner_carousel_products']
+        self.assertNotIn(expired_product, products)
+
+    def test_priority_mutations_are_principal_only(self):
+        secondary = User.objects.create_user(username='priority_delegate', role='admin_secondary', is_staff=True)
+        SiteBannerPermission.objects.create(banner=self.banner, user=secondary, granted_by=self.admin)
+        self.client.force_login(secondary)
+        response = self.client.post(reverse('site_banner_dashboard'), {
+            'group_action': '1', 'name': 'Forbidden', 'priority': 1, 'weight': 1,
+        })
+        self.assertEqual(response.status_code, 403)
+        response = self.client.post(reverse('site_banner_dashboard'), {
+            'product_priority_action': '1', 'product_id': self.banner.product_id,
+            'banner_priority': 1, 'banner_weight': 10,
+        })
+        self.assertEqual(response.status_code, 403)
+
+        self.client.force_login(self.admin)
+        response = self.client.post(reverse('site_banner_dashboard'), {
+            'group_action': '1', 'name': 'Allowed', 'priority': 1, 'weight': 2,
+        })
+        self.assertEqual(response.status_code, 302)
+        response = self.client.post(reverse('site_banner_dashboard'), {
+            'product_priority_action': '1', 'product_id': self.banner.product_id,
+            'banner_priority': 2, 'banner_weight': 10,
+        })
+        self.assertEqual(response.status_code, 302)
+        self.banner.product.refresh_from_db()
+        self.assertEqual(self.banner.product.banner_weight, 10)
 
 
 class SiteBannerAccessModeTest(TestCase):
@@ -507,6 +772,152 @@ class MarketplaceSettingsAdminPermissionTest(TestCase):
         request.user = self.principal_admin
         self.assertTrue(self.settings_admin.has_view_permission(request))
         self.assertTrue(self.settings_admin.has_change_permission(request))
+
+
+class ProductDeletionAccessTest(TestCase):
+    def setUp(self):
+        self.seller = User.objects.create_user(username='seller1', email='seller1@example.com', password='pass123', is_seller=True)
+        self.shop = Shop.objects.create(owner=self.seller, name='Boutique seller1')
+        self.product = Product.objects.create(
+            shop=self.shop,
+            name='Produit à supprimer',
+            description='Produit test',
+            price_ht=Decimal('25.00'),
+            quantity=5,
+        )
+
+        self.principal_admin = User.objects.create_user(
+            username='admin_principal',
+            email='admin_principal@example.com',
+            password='pass123',
+            is_staff=True,
+        )
+        content_type = __import__('django.contrib.contenttypes.models', fromlist=['ContentType']).ContentType.objects.get_for_model(User)
+        permission, _ = Permission.objects.get_or_create(
+            codename='principal_admin_power',
+            content_type=content_type,
+            defaults={'name': 'Pouvoir admin principal'}
+        )
+        self.principal_admin.user_permissions.add(permission)
+
+        self.other_shop = Shop.objects.create(owner=self.principal_admin, name='Boutique admin principal')
+        self.other_product = Product.objects.create(
+            shop=self.other_shop,
+            name='Produit admin',
+            description='Produit admin',
+            price_ht=Decimal('40.00'),
+            quantity=2,
+        )
+
+    def test_seller_can_delete_own_product_from_shop(self):
+        self.client.force_login(self.seller)
+        response = self.client.post(reverse('delete_product', args=[self.product.id]), follow=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(Product.objects.filter(pk=self.product.pk).exists())
+
+    def test_principal_admin_can_delete_any_product(self):
+        self.client.force_login(self.principal_admin)
+        response = self.client.post(reverse('delete_product', args=[self.product.id]), follow=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(Product.objects.filter(pk=self.product.pk).exists())
+
+
+class SupportCardAdminAccessTest(TestCase):
+    def setUp(self):
+        self.primary_admin = User.objects.create_user(
+            username='primary_admin',
+            email='primary_admin@example.com',
+            password='adminpass123',
+            is_staff=True,
+            role='super_admin',
+        )
+        self.secondary_admin = User.objects.create_user(
+            username='secondary_admin',
+            email='secondary_admin@example.com',
+            password='adminpass123',
+            is_staff=True,
+            role='admin',
+        )
+        self.normal_user = User.objects.create_user(
+            username='normal_user',
+            email='normal_user@example.com',
+            password='userpass123',
+            is_staff=False,
+            role='user',
+        )
+        self.client = Client()
+        if not SiteConfiguration.objects.filter(config_type='support_card').exists():
+            SiteConfiguration.objects.create(
+                config_type='support_card',
+                alt_text='Carte Support SDI',
+                is_active=True,
+                whatsapp_link='https://wa.me/123456789',
+            )
+
+    def test_primary_admin_can_manage_support_card(self):
+        self.client.force_login(self.primary_admin)
+        config = SiteConfiguration.objects.filter(config_type='support_card').first()
+        self.assertIsNotNone(config)
+
+        response = self.client.post(reverse('manage_admin_permissions'), {
+            'support_card_submit': '1',
+            'support_card_active': 'on',
+            'support_card_whatsapp_link': 'https://wa.me/123456789',
+        }, follow=True)
+
+        self.assertEqual(response.status_code, 200)
+        config.refresh_from_db()
+        self.assertTrue(config.is_active)
+        self.assertEqual(config.whatsapp_link, 'https://wa.me/123456789')
+
+    def test_secondary_admin_cannot_manage_support_card(self):
+        self.client.force_login(self.secondary_admin)
+        response = self.client.post(reverse('manage_admin_permissions'), {
+            'support_card_submit': '1',
+            'support_card_active': 'on',
+            'support_card_whatsapp_link': 'https://wa.me/987654321',
+        }, follow=False)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('dashboard'))
+
+    def test_primary_admin_can_toggle_screen_size_control(self):
+        self.client.force_login(self.primary_admin)
+        config = SiteConfiguration.objects.filter(config_type='support_card').first()
+        config.screen_size_control_enabled = False
+        config.save(update_fields=['screen_size_control_enabled'])
+
+        response = self.client.post(reverse('manage_admin_permissions'), {
+            'support_card_submit': '1',
+            'support_card_active': 'on',
+            'support_card_whatsapp_link': 'https://wa.me/123456789',
+            'screen_size_control_enabled': 'on',
+        }, follow=True)
+
+        self.assertEqual(response.status_code, 200)
+        config.refresh_from_db()
+        self.assertTrue(config.screen_size_control_enabled)
+
+    def test_primary_admin_can_manage_whatsapp_link_in_dedicated_page(self):
+        self.client.force_login(self.primary_admin)
+        response = self.client.post(reverse('manage_support_whatsapp_link'), {
+            'whatsapp_link': 'https://wa.me/123456789',
+        }, follow=True)
+
+        self.assertEqual(response.status_code, 200)
+        config = SiteConfiguration.objects.filter(config_type='support_card').first()
+        self.assertIsNotNone(config)
+        self.assertTrue(config.is_active)
+        self.assertEqual(config.whatsapp_link, 'https://wa.me/123456789')
+
+    def test_secondary_and_normal_users_are_blocked_on_support_whatsapp_page(self):
+        for user in [self.secondary_admin, self.normal_user]:
+            self.client.force_login(user)
+            response = self.client.get(reverse('manage_support_whatsapp_link'), follow=False)
+            self.assertEqual(response.status_code, 302)
+            self.assertEqual(response.url, reverse('dashboard'))
 
 
 class TransferFundsTest(TestCase):
