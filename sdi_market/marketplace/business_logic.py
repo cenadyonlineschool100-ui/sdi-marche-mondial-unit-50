@@ -19,7 +19,9 @@ Structure:
 """
 
 import json
+import hashlib
 import os
+import uuid
 import urllib.request
 import urllib.error
 from django.utils import timezone
@@ -32,8 +34,63 @@ from .models import (
     DeliveryTracking, DeliveryNotification, ReturnRequest,
     Transaction, Wallet, User, ExchangeRate, CommissionConfig,
     WithdrawalCommissionTier, TransferCommissionTier, PersistentNotification, ResellerProduct, Shop, Product,
-    MarketplaceSettings
+    MarketplaceSettings, FinancialOperation
 )
+
+
+class IdempotencyConflict(ValueError):
+    """Raised when an idempotency key is reused for a different request."""
+
+
+def get_session_idempotency_key(request, operation):
+    session_keys = request.session.get('financial_idempotency_keys', {})
+    key = session_keys.get(operation)
+    if not key:
+        key = uuid.uuid4().hex
+        session_keys[operation] = key
+        request.session['financial_idempotency_keys'] = session_keys
+    return key
+
+
+def rotate_session_idempotency_key(request, operation, completed_key):
+    session_keys = request.session.get('financial_idempotency_keys', {})
+    if session_keys.get(operation) == completed_key:
+        session_keys[operation] = uuid.uuid4().hex
+        request.session['financial_idempotency_keys'] = session_keys
+
+
+def begin_financial_operation(actor, operation, key, payload):
+    if not key or len(key) > 128:
+        raise ValueError('Une clé d’idempotence valide est requise.')
+
+    request_hash = hashlib.sha256(
+        json.dumps(payload, sort_keys=True, separators=(',', ':'), default=str).encode('utf-8')
+    ).hexdigest()
+    operation_record, created = FinancialOperation.objects.get_or_create(
+        actor=actor,
+        operation=operation,
+        idempotency_key=key,
+        defaults={'request_hash': request_hash},
+    )
+    if not created and operation_record.request_hash != request_hash:
+        raise IdempotencyConflict('Cette clé d’idempotence a déjà été utilisée pour une autre demande.')
+    return operation_record, created
+
+
+def complete_financial_operation(operation_record, result):
+    operation_record.result_model = result._meta.label_lower
+    operation_record.result_pk = str(result.pk)
+    operation_record.save(update_fields=['result_model', 'result_pk'])
+
+
+def get_financial_operation_result(operation_record, expected_model):
+    if operation_record.result_model != expected_model._meta.label_lower or not operation_record.result_pk:
+        raise RuntimeError('Une opération financière idempotente ne possède pas de résultat valide.')
+    result = expected_model._default_manager.filter(pk=operation_record.result_pk).first()
+    if result is None:
+        raise RuntimeError('Le résultat d’une opération financière idempotente est introuvable.')
+    return result
+
 
 # ===== DEVISE INTERNE =====
 USD_INTERNAL_CURRENCY = 'USD'  # Tous les calculs et stockage internes sont en USD

@@ -14,6 +14,7 @@ from .context_processors import _build_banner_rotation_schedule, site_banner_con
 from .forms import normalize_phone_number
 from .models import (
     User, Profile, Wallet, Agent, DepositCommissionConfig, Deposit, Transaction, CommissionRule,
+    FinancialOperation,
     DepositReceipt, Shop, Product, ProductAccessRequest, ResellerProduct, MarketplaceSettings, Order, OrderItem,
     Transfer, SDISolSettings, SDISolMember, SDISolPayment, RealEstateMembershipRequest, SystemSettings, PriorityGroup, SiteBanner, SiteBannerAccess, SiteBannerPayment, SiteBannerEvent, SiteBannerPermission, SiteConfiguration, PersistentNotification
 )
@@ -155,6 +156,7 @@ class MicrosDiCashAgentDepositTest(TestCase):
             'currency': 'HTG',
             'agent_pin': '1234',
             'final_code': '0000',
+            'idempotency_key': 'deposit-basic-001',
         })
         self.assertEqual(response.status_code, 302)
         deposit = Deposit.objects.latest('created_at')
@@ -177,6 +179,126 @@ class MicrosDiCashAgentDepositTest(TestCase):
         self.assertTrue(Transaction.objects.filter(type='deposit', receiver=self.client_user, amount=Decimal('2000.00'), currency='HTG').exists())
         self.assertTrue(Transaction.objects.filter(type='commission', sender=self.admin_user, receiver=self.agent_user, amount=Decimal('5.00'), currency='HTG').exists())
         self.assertTrue(PersistentNotification.objects.filter(recipient=self.client_user, notification_type='deposit_received').exists())
+
+    def test_deposit_form_submits_agent_pin_and_idempotency_key(self):
+        response = self.client.get(reverse('agent_deposit'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'id="agent-deposit-form"')
+        self.assertContains(response, 'name="idempotency_key"')
+        self.assertContains(
+            response,
+            'id="agent_pin" name="agent_pin" form="agent-deposit-form"',
+        )
+
+    def test_agent_deposit_rejects_missing_or_invalid_pin_without_moving_balances(self):
+        payload = {
+            'account_number': self.client_user.account_code,
+            'amount': '2000',
+            'currency': 'HTG',
+            'final_code': '0000',
+        }
+        cases = (
+            ({}, 'PIN agent requis'),
+            ({'agent_pin': '9999'}, 'PIN incorrect.'),
+        )
+
+        for index, (pin_values, expected_error) in enumerate(cases):
+            with self.subTest(expected_error=expected_error):
+                response = self.client.post(
+                    reverse('agent_deposit'),
+                    {
+                        **payload,
+                        **pin_values,
+                        'idempotency_key': f'deposit-pin-rejected-{index}',
+                    },
+                    follow=True,
+                )
+                self.assertTrue(any(
+                    message.tags == 'error' and expected_error in str(message)
+                    for message in response.context['messages']
+                ))
+                self.assertFalse(any(
+                    message.tags == 'success' and 'Dépôt de ' in str(message)
+                    for message in response.context['messages']
+                ))
+
+        self.assertFalse(Deposit.objects.exists())
+        self.assertFalse(Transaction.objects.filter(type='deposit').exists())
+        self.agent_wallet.refresh_from_db()
+        self.client_wallet.refresh_from_db()
+        self.assertEqual(self.agent_wallet.balance_htg, Decimal('50000.00'))
+        self.assertEqual(self.client_wallet.balance_htg, Decimal('500.00'))
+
+    def test_invalid_final_confirmation_code_does_not_create_or_credit_a_deposit(self):
+        response = self.client.post(
+            reverse('agent_deposit'),
+            {
+                'account_number': self.client_user.account_code,
+                'amount': '2000',
+                'currency': 'HTG',
+                'agent_pin': '1234',
+                'final_code': '0001',
+                'idempotency_key': 'deposit-invalid-final-code-001',
+            },
+            follow=True,
+        )
+
+        self.assertTrue(any(
+            message.tags == 'error' and 'Code final de confirmation invalide.' in str(message)
+            for message in response.context['messages']
+        ))
+        self.assertFalse(any(
+            message.tags == 'success' and 'Dépôt de ' in str(message)
+            for message in response.context['messages']
+        ))
+        self.assertFalse(Deposit.objects.exists())
+        self.assertFalse(Transaction.objects.filter(type='deposit').exists())
+        self.agent_wallet.refresh_from_db()
+        self.client_wallet.refresh_from_db()
+        self.assertEqual(self.agent_wallet.balance_htg, Decimal('50000.00'))
+        self.assertEqual(self.client_wallet.balance_htg, Decimal('500.00'))
+
+    def test_repeated_deposit_post_creates_only_one_deposit_and_credit(self):
+        payload = {
+            'account_number': self.client_user.account_code,
+            'amount': '2000',
+            'currency': 'HTG',
+            'agent_pin': '1234',
+            'final_code': '0000',
+            'idempotency_key': 'deposit-retry-001',
+        }
+
+        first = self.client.post(reverse('agent_deposit'), payload)
+        repeated = self.client.post(reverse('agent_deposit'), payload)
+
+        self.assertEqual(first.status_code, 302)
+        self.assertEqual(repeated.status_code, 302)
+        self.assertEqual(Deposit.objects.filter(agent=self.agent_user, client=self.client_user).count(), 1)
+        deposit = Deposit.objects.get(agent=self.agent_user, client=self.client_user)
+        self.assertEqual(
+            Transaction.objects.filter(
+                type='deposit',
+                sender=self.agent_user,
+                receiver=self.client_user,
+                amount=Decimal('2000.00'),
+                currency='HTG',
+            ).count(),
+            1,
+        )
+        self.assertEqual(DepositReceipt.objects.filter(deposit=deposit).count(), 1)
+        self.assertEqual(
+            FinancialOperation.objects.filter(
+                actor=self.agent_user,
+                operation='agent_deposit',
+                idempotency_key='deposit-retry-001',
+            ).count(),
+            1,
+        )
+        self.agent_wallet.refresh_from_db()
+        self.client_wallet.refresh_from_db()
+        self.assertEqual(self.agent_wallet.balance_htg, Decimal('48000.00'))
+        self.assertEqual(self.client_wallet.balance_htg, Decimal('2500.00'))
 
     def test_agent_activation_notifies_user(self):
         admin_client = Client()
@@ -203,6 +325,7 @@ class MicrosDiCashAgentDepositTest(TestCase):
             'currency': 'HTG',
             'agent_pin': '1234',
             'final_code': '0000',
+            'idempotency_key': 'deposit-loan-001',
         })
         self.assertEqual(response.status_code, 302)
 
@@ -220,6 +343,7 @@ class MicrosDiCashAgentDepositTest(TestCase):
             'currency': 'HTG',
             'agent_pin': '1234',
             'final_code': '0000',
+            'idempotency_key': 'deposit-insufficient-balance-001',
         }, follow=True)
         self.assertContains(response, 'Solde insuffisant')
         self.assertEqual(Deposit.objects.count(), 0)
@@ -232,6 +356,7 @@ class MicrosDiCashAgentDepositTest(TestCase):
             'currency': 'HTG',
             'agent_pin': '1234',
             'final_code': '0000',
+            'idempotency_key': 'deposit-unknown-client-001',
         }, follow=True)
         self.assertContains(response, 'Aucun client trouvé')
         self.assertEqual(Deposit.objects.count(), 0)
@@ -245,6 +370,7 @@ class MicrosDiCashAgentDepositTest(TestCase):
             'currency': 'HTG',
             'agent_pin': '1234',
             'final_code': '0000',
+            'idempotency_key': 'deposit-history-001',
         }, follow=True)
         self.assertEqual(response.status_code, 200)
 
@@ -271,6 +397,7 @@ class MicrosDiCashAgentDepositTest(TestCase):
             'currency': 'HTG',
             'agent_pin': '1234',
             'final_code': '0000',
+            'idempotency_key': 'deposit-receipts-001',
         }, follow=True)
         self.assertEqual(response.status_code, 200)
 

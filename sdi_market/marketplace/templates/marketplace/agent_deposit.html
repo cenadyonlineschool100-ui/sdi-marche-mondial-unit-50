@@ -1,4 +1,5 @@
 {% extends 'marketplace/base.html' %}
+{% load l10n %}
 
 {% block content %}
 <section class="fintech-card" style="max-width: 900px; margin: 32px auto; padding: 28px 32px;">
@@ -41,8 +42,14 @@
         </div>
     </div>
 
-    <form method="post" style="display: grid; gap: 18px;">
+    <form method="post" id="agent-deposit-form" style="display: grid; gap: 18px;">
         {% csrf_token %}
+        <input type="hidden" name="idempotency_key" value="{{ deposit_idempotency_key }}">
+        {% if deposit_configuration_message %}
+            <p role="alert" style="padding:12px 16px; border-radius:12px; background:#fee2e2; color:#991b1b;">
+                {{ deposit_configuration_message }}
+            </p>
+        {% endif %}
         <div>
             <label for="account_number" style="display:block; margin-bottom: 8px; font-weight: 600;">Numéro de compte client</label>
             <input id="account_number" name="account_number" type="text" placeholder="ACC178E50D7" required style="width:100%; padding: 14px 16px; border-radius: 14px; border: 1px solid #cbd5e1; background: #fff;" />
@@ -55,10 +62,15 @@
         <div>
             <label for="currency" style="display:block; margin-bottom: 8px; font-weight: 600;">Devise</label>
             <select id="currency" name="currency" required style="width:100%; padding: 14px 16px; border-radius: 14px; border: 1px solid #cbd5e1; background: #fff;">
-                <option value="HTG">HTG</option>
-                <option value="USD">USD</option>
-                <option value="DOP">DOP</option>
-                <option value="EUR">EUR</option>
+                {% for currency in currencies %}
+                    <option
+                        value="{{ currency.code }}"
+                        data-min-amount="{{ currency.min_amount|unlocalize }}"
+                        data-max-amount="{{ currency.max_amount|unlocalize }}"
+                    >{{ currency.label }}</option>
+                {% empty %}
+                    <option value="" selected disabled>Aucune devise disponible</option>
+                {% endfor %}
             </select>
         </div>
         <div style="display: flex; align-items: center; gap: 10px;">
@@ -68,7 +80,7 @@
         <div style="color: #475569; font-size: 0.95rem;">Si le client dispose d’un compte Ti Kanè actif, le montant sera ajouté à son carnet d’épargne digital.</div>
         <div>
             <label for="agent_pin" style="display:block; margin-bottom: 8px; font-weight: 600;">PIN de sécurité agent</label>
-            <input id="agent_pin" name="agent_pin" type="password" placeholder="PIN agent" required style="width:100%; padding: 14px 16px; border-radius: 14px; border: 1px solid #cbd5e1; background: #fff;" />
+            <input id="agent_pin" name="agent_pin" form="agent-deposit-form" type="password" placeholder="PIN agent" required style="width:100%; padding: 14px 16px; border-radius: 14px; border: 1px solid #cbd5e1; background: #fff;" />
         </div>
         <div>
             <label for="final_code" style="display:block; margin-bottom: 8px; font-weight: 600;">Code final de confirmation</label>
@@ -84,7 +96,7 @@
             <span>2. Vérifier le PIN agent</span>
             <span>3. Valider le code final</span>
         </div>
-        <button type="submit" class="btn-fintech btn-primary" style="width: fit-content; padding: 14px 24px;">Valider le Dépôt</button>
+        <button type="submit" class="btn-fintech btn-primary" {% if not currencies %}disabled{% endif %} style="width: fit-content; padding: 14px 24px;">Valider le Dépôt</button>
     </form>
 </section>
 <script>

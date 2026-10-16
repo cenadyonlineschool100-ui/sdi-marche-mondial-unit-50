@@ -1938,6 +1938,29 @@ class Transaction(models.Model):
     def type_display(self):
         return self.type.replace('_', ' ').title()
 
+
+class FinancialOperation(models.Model):
+    actor = models.ForeignKey(User, on_delete=models.PROTECT, related_name='financial_operations')
+    operation = models.CharField(max_length=40)
+    idempotency_key = models.CharField(max_length=128)
+    request_hash = models.CharField(max_length=64)
+    result_model = models.CharField(max_length=100, blank=True)
+    result_pk = models.CharField(max_length=64, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['actor', 'operation', 'idempotency_key'],
+                name='uniq_financial_operation_key',
+            ),
+        ]
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.operation}:{self.idempotency_key}"
+
+
 class TransferCommissionTier(models.Model):
     currency = models.CharField(max_length=10, default='HTG')
     min_amount = models.DecimalField(max_digits=15, decimal_places=2)
@@ -2290,6 +2313,14 @@ class Deposit(models.Model):
         super().save(*args, **kwargs)
 
 
+DEPOSIT_WALLET_BALANCE_FIELDS = {
+    'USD': 'balance_usd',
+    'HTG': 'balance_htg',
+    'DOP': 'balance_peso',
+    'EUR': 'balance_eur',
+}
+
+
 class AgentCommission(models.Model):
     agent = models.ForeignKey(User, on_delete=models.CASCADE, related_name='agent_commissions')
     deposit = models.ForeignKey(Deposit, on_delete=models.CASCADE, related_name='agent_commissions')
@@ -2322,8 +2353,19 @@ class DepositReceipt(models.Model):
         current_balance = None
         current_balance_display = 'N/A'
         if self.deposit and self.deposit.client and hasattr(self.deposit.client, 'wallet'):
-            wallet_field = 'balance' if self.deposit.currency == 'USD' else f"balance_{self.deposit.currency.lower()}"
-            current_balance = getattr(self.deposit.client.wallet, wallet_field, None)
+            if self.deposit.tikane_deposit:
+                wallet_field = (
+                    'balance'
+                    if self.deposit.currency == 'USD'
+                    else f"balance_{self.deposit.currency.lower()}"
+                )
+                current_balance = getattr(self.deposit.client.wallet, wallet_field, None)
+            else:
+                wallet_field = DEPOSIT_WALLET_BALANCE_FIELDS.get(self.deposit.currency)
+                if wallet_field:
+                    current_balance = Wallet.objects.filter(
+                        user_id=self.deposit.client_id
+                    ).values_list(wallet_field, flat=True).first()
             if current_balance is not None:
                 previous_balance = f"{(current_balance - self.deposit.amount):.2f} {self.deposit.currency}"
                 current_balance_display = f"{current_balance:.2f}"

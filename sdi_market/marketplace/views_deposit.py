@@ -1,4 +1,6 @@
 # Views pour les dépôts MicrosDiCash
+import logging
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
@@ -11,15 +13,25 @@ from decimal import Decimal
 import uuid
 import secrets
 import json
-from django.db.models import Sum, Q, Case, When, Value, IntegerField
+from django.db.models import Sum, Q, Case, When, Value, IntegerField, F
 
-from .business_logic import NotificationManager
+from .business_logic import (
+    NotificationManager,
+    begin_financial_operation,
+    complete_financial_operation,
+    get_financial_operation_result,
+    get_session_idempotency_key,
+    rotate_session_idempotency_key,
+)
 from .models import (
     User, Wallet, Deposit, DepositCommissionConfig,
     Transaction, Agent, Profile, DepositLimit,
     DepositReceipt, TransactionLog, SecurityLog,
-    AgentCommission, CommissionRule, TiKaneDailyPayment
+    AgentCommission, CommissionRule, TiKaneDailyPayment,
+    DEPOSIT_WALLET_BALANCE_FIELDS,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def is_principal_admin(user):
@@ -54,9 +66,41 @@ def agent_deposit_view(request):
             request.user.set_otp_code(otp)
 
         # Afficher le formulaire
-        currencies = [('USD', 'USD'), ('HTG', 'HTG'), ('DOP', 'DOP'), ('EUR', 'EUR')]
+        deposit_configs = list(
+            DepositCommissionConfig.objects.filter(is_active=True).order_by('currency')
+        )
+        deposit_limit = DepositLimit.objects.order_by('-updated_at').first()
+        currencies = []
+        for config in deposit_configs:
+            min_amount = config.min_deposit
+            max_amount = config.max_deposit
+            if deposit_limit:
+                min_amount = max(min_amount, deposit_limit.min_amount)
+                max_amount = min(max_amount, deposit_limit.max_amount)
+            if min_amount <= max_amount:
+                currencies.append({
+                    'code': config.currency,
+                    'label': config.currency,
+                    'min_amount': min_amount,
+                    'max_amount': max_amount,
+                })
+
+        if not currencies:
+            if deposit_configs:
+                deposit_configuration_message = (
+                    "Aucune devise de dépôt n'a de plage de montant valide. "
+                    "Vérifiez les limites dans la configuration des dépôts."
+                )
+            else:
+                deposit_configuration_message = (
+                    "Aucune devise de dépôt n'est activée. "
+                    "Un administrateur doit activer une configuration de dépôt avant toute opération."
+                )
+        else:
+            deposit_configuration_message = ''
+
         agent_wallet = request.user.wallet
-        commissions = DepositCommissionConfig.objects.filter(is_active=True)
+        commissions = deposit_configs
         commission_rules = CommissionRule.objects.filter(
             Q(agent=request.user) | Q(agent__isnull=True)
         ).annotate(
@@ -69,6 +113,8 @@ def agent_deposit_view(request):
         
         context = {
             'currencies': currencies,
+            'deposit_configuration_message': deposit_configuration_message,
+            'deposit_idempotency_key': get_session_idempotency_key(request, 'agent_deposit'),
             'agent_wallet': agent_wallet,
             'commissions': {c.currency: {'type': c.commission_type, 'value': c.commission_value} for c in commissions},
             'commissions_json': json.dumps({c.currency: {'type': c.commission_type, 'value': str(c.commission_value)} for c in commissions}),
@@ -115,6 +161,10 @@ def agent_deposit_view(request):
 
         if not final_code:
             errors.append("Code final de confirmation requis")
+
+        idempotency_key = request.POST.get('idempotency_key', '').strip()
+        if not idempotency_key or len(idempotency_key) > 128:
+            errors.append("Clé de sécurité de dépôt invalide. Rechargez le formulaire.")
 
         if errors:
             for error in errors:
@@ -205,63 +255,100 @@ def agent_deposit_view(request):
             return admin_user
 
         commission = calculate_commission_for_deposit(request.user, amount, commission_config)
-        required_amount = amount
-
-        agent_wallet, _ = Wallet.objects.get_or_create(user=request.user)
-        wallet_field = f"balance_{currency.lower()}"
-        agent_balance = getattr(agent_wallet, wallet_field, Decimal('0'))
-
-        if agent_balance < required_amount:
-            messages.error(request, f"Solde insuffisant. Vous avez {agent_balance} {currency}, besoin de {required_amount} {currency} pour le dépôt.")
-            return redirect('agent_deposit')
-
-        client_wallet, _ = Wallet.objects.get_or_create(user=client)
-        commission_field = f"commission_balance_{currency.lower()}"
+        wallet_field = DEPOSIT_WALLET_BALANCE_FIELDS[currency]
+        commission_field = {
+            'USD': 'commission_balance_usd',
+            'HTG': 'commission_balance_htg',
+            'DOP': 'commission_balance_peso',
+            'EUR': 'commission_balance_eur',
+        }[currency]
 
         admin_user = get_system_admin_user()
         if not admin_user:
             messages.error(request, "Compte administrateur introuvable pour payer la commission.")
             return redirect('agent_deposit')
 
+        agent_wallet, _ = Wallet.objects.get_or_create(user=request.user)
+        client_wallet, _ = Wallet.objects.get_or_create(user=client)
         admin_wallet, _ = Wallet.objects.get_or_create(user=admin_user)
-        admin_balance = getattr(admin_wallet, wallet_field, Decimal('0'))
-
-        if commission > 0 and admin_balance < commission:
-            messages.error(request, f"Solde administrateur insuffisant pour payer la commission de {commission} {currency}.")
-            return redirect('agent_deposit')
 
         try:
             with db_transaction.atomic():
-                setattr(agent_wallet, wallet_field, agent_balance - required_amount)
-                agent_wallet.save()
+                operation, operation_created = begin_financial_operation(
+                    request.user,
+                    'agent_deposit',
+                    idempotency_key,
+                    {
+                        'client_id': client.pk,
+                        'amount': str(amount),
+                        'currency': currency,
+                        'tikane_deposit': tikane_deposit,
+                    },
+                )
+                if not operation_created:
+                    existing_deposit = get_financial_operation_result(operation, Deposit)
+                    return redirect('deposit_confirmation', deposit_id=existing_deposit.pk)
+
+                locked_wallets = {
+                    item.pk: item
+                    for item in Wallet.objects.select_for_update().filter(
+                        pk__in=[agent_wallet.pk, client_wallet.pk, admin_wallet.pk]
+                    ).order_by('pk')
+                }
+                agent_wallet = locked_wallets[agent_wallet.pk]
+                client_wallet = locked_wallets[client_wallet.pk]
+                admin_wallet = locked_wallets[admin_wallet.pk]
+
+                agent_debit = Wallet.objects.filter(
+                    pk=agent_wallet.pk,
+                    **{f'{wallet_field}__gte': amount},
+                ).update(**{wallet_field: F(wallet_field) - amount})
+                if not agent_debit:
+                    db_transaction.set_rollback(True)
+                    messages.error(request, "Solde agent insuffisant pour effectuer le dépôt.")
+                    return redirect('agent_deposit')
 
                 if tikane_deposit:
-                    tikane_account = client.tikane_account
-                    tikane_account.balance += amount
-                    tikane_account.total_deposits += amount
+                    tikane_account = client.tikane_account.__class__.objects.select_for_update().get(
+                        pk=client.tikane_account.pk
+                    )
+                    tikane_account.balance = F('balance') + amount
+                    tikane_account.total_deposits = F('total_deposits') + amount
                     tikane_account.save(update_fields=['balance', 'total_deposits'])
                 else:
                     loan_repayment = Decimal('0')
                     if currency == 'HTG' and client_wallet.real_estate_loan_balance_htg > 0:
-                        loan_balance = client_wallet.real_estate_loan_balance_htg
-                        loan_repayment = min(amount, loan_balance)
-                        client_wallet.real_estate_loan_balance_htg = loan_balance - loan_repayment
+                        loan_repayment = min(amount, client_wallet.real_estate_loan_balance_htg)
+                        loan_updated = Wallet.objects.filter(
+                            pk=client_wallet.pk,
+                            real_estate_loan_balance_htg__gte=loan_repayment,
+                        ).update(
+                            real_estate_loan_balance_htg=F('real_estate_loan_balance_htg') - loan_repayment
+                        )
+                        if not loan_updated:
+                            db_transaction.set_rollback(True)
+                            messages.error(request, "Le solde du prêt a changé pendant l'opération. Veuillez réessayer.")
+                            return redirect('agent_deposit')
 
                     amount_to_credit = amount - loan_repayment
                     if amount_to_credit > 0:
-                        client_balance = getattr(client_wallet, wallet_field, Decimal('0'))
-                        setattr(client_wallet, wallet_field, client_balance + amount_to_credit)
-
-                    client_wallet.save()
+                        Wallet.objects.filter(pk=client_wallet.pk).update(
+                            **{wallet_field: F(wallet_field) + amount_to_credit}
+                        )
                     tikane_account = None
 
                 if commission > 0:
-                    setattr(admin_wallet, wallet_field, admin_balance - commission)
-                    admin_wallet.save()
-
-                    agent_commission_balance = getattr(agent_wallet, commission_field, Decimal('0'))
-                    setattr(agent_wallet, commission_field, agent_commission_balance + commission)
-                    agent_wallet.save()
+                    admin_debit = Wallet.objects.filter(
+                        pk=admin_wallet.pk,
+                        **{f'{wallet_field}__gte': commission},
+                    ).update(**{wallet_field: F(wallet_field) - commission})
+                    if not admin_debit:
+                        db_transaction.set_rollback(True)
+                        messages.error(request, f"Solde administrateur insuffisant pour payer la commission de {commission} {currency}.")
+                        return redirect('agent_deposit')
+                    Wallet.objects.filter(pk=agent_wallet.pk).update(
+                        **{commission_field: F(commission_field) + commission}
+                    )
 
                 deposit = Deposit.objects.create(
                     agent=request.user,
@@ -294,15 +381,6 @@ def agent_deposit_view(request):
                         type='commission',
                         status='approved'
                     )
-
-                TransactionLog.objects.create(
-                    transaction_type='deposit',
-                    transaction_ref=deposit.reference,
-                    actor=request.user,
-                    details=f"Dépôt agent {request.user.username} vers client {client.username} : {amount} {currency}, commission {commission} {currency} payée par {admin_user.username}"
-                )
-
-                if commission > 0:
                     AgentCommission.objects.create(
                         agent=request.user,
                         deposit=deposit,
@@ -318,6 +396,12 @@ def agent_deposit_view(request):
                         sound_interval_minutes=1,
                     )
 
+                TransactionLog.objects.create(
+                    transaction_type='deposit',
+                    transaction_ref=deposit.reference,
+                    actor=request.user,
+                    details=f"Dépôt agent {request.user.username} vers client {client.username} : {amount} {currency}, commission {commission} {currency} payée par {admin_user.username}"
+                )
                 NotificationManager.create_persistent_notification(
                     client,
                     'Dépôt confirmé',
@@ -352,14 +436,29 @@ def agent_deposit_view(request):
                 )
                 receipt.generate_content()
                 receipt.save(update_fields=['content'])
-
-                messages.success(request, f"Dépôt de {amount} {currency} confirmé pour {client.username}. Référence: {deposit.reference}")
-
-                if tikane_deposit:
-                    messages.info(request, "Montant réservé pour Ti Kanè Digital. Retrait indisponible avant la date prévue.")
-        except Exception as e:
-            messages.error(request, f"Erreur lors du dépôt: {str(e)}")
+                complete_financial_operation(operation, deposit)
+                db_transaction.on_commit(
+                    lambda: rotate_session_idempotency_key(
+                        request,
+                        'agent_deposit',
+                        idempotency_key,
+                    )
+                )
+        except Exception:
+            logger.exception(
+                'Agent deposit transaction failed (actor_id=%s, client_id=%s)',
+                request.user.pk,
+                client.pk,
+            )
+            messages.error(
+                request,
+                "Le dépôt n'a pas pu être effectué. Aucun solde n'a été modifié. Contactez un administrateur.",
+            )
             return redirect('agent_deposit')
+
+        messages.success(request, f"Dépôt de {amount} {currency} confirmé pour {client.username}. Référence: {deposit.reference}")
+        if tikane_deposit:
+            messages.info(request, "Montant réservé pour Ti Kanè Digital. Retrait indisponible avant la date prévue.")
 
         return redirect('deposit_confirmation', deposit_id=deposit.id)
 
@@ -377,12 +476,13 @@ def deposit_confirmation(request, deposit_id):
         messages.error(request, "Dépôt non trouvé")
         return redirect('dashboard')
     
-    wallet_field = 'balance'
-    if deposit.currency != 'USD':
-        wallet_field = f"balance_{deposit.currency.lower()}"
+    if deposit.tikane_deposit:
+        wallet_field = 'balance' if deposit.currency == 'USD' else f"balance_{deposit.currency.lower()}"
+    else:
+        wallet_field = DEPOSIT_WALLET_BALANCE_FIELDS.get(deposit.currency)
 
     client_wallet = getattr(deposit.client, 'wallet', None)
-    current_balance = getattr(client_wallet, wallet_field, None) if client_wallet else None
+    current_balance = getattr(client_wallet, wallet_field, None) if client_wallet and wallet_field else None
     previous_balance = None
     if current_balance is not None:
         previous_balance = (current_balance - deposit.amount).quantize(Decimal('0.01')) if hasattr(current_balance, 'quantize') else current_balance - deposit.amount
@@ -420,9 +520,12 @@ def view_deposit_receipt(request, receipt_id):
     current_balance = None
     previous_balance = None
     if deposit and deposit.client and hasattr(deposit.client, 'wallet'):
-        wallet_field = 'balance' if deposit.currency == 'USD' else f'balance_{deposit.currency.lower()}'
+        if deposit.tikane_deposit:
+            wallet_field = 'balance' if deposit.currency == 'USD' else f"balance_{deposit.currency.lower()}"
+        else:
+            wallet_field = DEPOSIT_WALLET_BALANCE_FIELDS.get(deposit.currency)
         client_wallet = getattr(deposit.client, 'wallet', None)
-        current_balance = getattr(client_wallet, wallet_field, None) if client_wallet else None
+        current_balance = getattr(client_wallet, wallet_field, None) if client_wallet and wallet_field else None
         if current_balance is not None:
             previous_balance = (current_balance - deposit.amount).quantize(Decimal('0.01')) if hasattr(current_balance, 'quantize') else current_balance - deposit.amount
 
