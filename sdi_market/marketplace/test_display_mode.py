@@ -120,7 +120,7 @@ class GlobalDisplayModeTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
 
-    def test_mode_change_selects_desktop_viewport_without_extra_zoom(self):
+    def test_desktop_mode_fits_phone_without_changing_desktop_viewport(self):
         self.login_as(self.owner)
         response = self.client.post(self.set_mode_url, {'mode': 'desktop'})
         self.assertRedirects(response, self.control_url)
@@ -130,14 +130,15 @@ class GlobalDisplayModeTests(TestCase):
                 response = self.client.get(reverse(route_name))
                 self.assertEqual(response.status_code, 200)
                 self.assertContains(response, 'width=1280')
-                self.assertNotContains(response, 'applyDesktopDisplayScale')
                 self.assertContains(response, '<body class="desktop-display-mode">')
                 self.assertContains(
                     response,
-                    "if (window.screen.width <= 767 && window.matchMedia('(pointer: coarse)').matches)",
+                    "Math.min(window.screen.width, window.screen.height) <= 767",
                 )
                 self.assertContains(response, "document.documentElement.classList.add('desktop-phone-display')")
-                self.assertContains(response, 'zoom: 1.1')
+                self.assertContains(response, 'phoneWidth / 1280')
+                self.assertContains(response, 'zoom: var(--desktop-phone-scale, 1)')
+                self.assertContains(response, "window.addEventListener('orientationchange', fitDesktopToPhone)")
                 self.assertContains(
                     response,
                     'const isMobileDevice = !isDesktopDisplayMode && (isMobileUserAgent || isTouchSmallScreen || isSmallViewport);',
@@ -176,10 +177,10 @@ class GlobalDisplayModeTests(TestCase):
                 login_response = self.client.get(reverse('admin:login'))
                 self.assertEqual(login_response.status_code, 200)
                 self.assertContains(login_response, expected_viewport)
-                self.assertNotContains(login_response, 'applyDesktopDisplayScale')
                 if expected_phone_display:
                     self.assertContains(login_response, "document.documentElement.classList.add('desktop-phone-display')")
-                    self.assertContains(login_response, 'zoom: 1.1')
+                    self.assertContains(login_response, 'phoneWidth / 1280')
+                    self.assertContains(login_response, 'zoom: var(--desktop-phone-scale, 1)')
                 else:
                     self.assertNotContains(login_response, "desktop-phone-display")
 
@@ -189,10 +190,10 @@ class GlobalDisplayModeTests(TestCase):
                         response = self.client.get(route)
                         self.assertEqual(response.status_code, 200)
                         self.assertContains(response, expected_viewport)
-                        self.assertNotContains(response, 'applyDesktopDisplayScale')
                         if expected_phone_display:
                             self.assertContains(response, "document.documentElement.classList.add('desktop-phone-display')")
-                            self.assertContains(response, 'zoom: 1.1')
+                            self.assertContains(response, 'phoneWidth / 1280')
+                            self.assertContains(response, 'zoom: var(--desktop-phone-scale, 1)')
                         else:
                             self.assertNotContains(response, "desktop-phone-display")
 

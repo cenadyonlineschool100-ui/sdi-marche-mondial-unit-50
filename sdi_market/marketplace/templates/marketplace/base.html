@@ -9,15 +9,27 @@
     <meta name="viewport" content="{% if desktop_display_mode_enabled %}width=1280{% else %}width=device-width, initial-scale=1.0{% endif %}" />
     {% if desktop_display_mode_enabled %}
     <script>
-        if (window.screen.width <= 767 && window.matchMedia('(pointer: coarse)').matches) {
+        const desktopPhoneOrientation = window.matchMedia('(orientation: landscape)');
+        const isDesktopPhone = Math.min(window.screen.width, window.screen.height) <= 767
+            && window.matchMedia('(pointer: coarse)').matches;
+        function fitDesktopToPhone() {
+            if (!isDesktopPhone) return;
+            const phoneWidth = desktopPhoneOrientation.matches
+                ? Math.max(window.screen.width, window.screen.height)
+                : Math.min(window.screen.width, window.screen.height);
+            document.documentElement.style.setProperty(
+                '--desktop-phone-scale',
+                String(Math.min(1, phoneWidth / 1280))
+            );
             document.documentElement.classList.add('desktop-phone-display');
         }
+        fitDesktopToPhone();
+        window.addEventListener('resize', fitDesktopToPhone);
+        window.addEventListener('orientationchange', fitDesktopToPhone);
     </script>
     <style>
         html.desktop-phone-display body.desktop-display-mode {
-            width: 90.9091%;
-            max-width: 90.9091vw;
-            zoom: 1.1;
+            zoom: var(--desktop-phone-scale, 1);
         }
     </style>
     {% endif %}
