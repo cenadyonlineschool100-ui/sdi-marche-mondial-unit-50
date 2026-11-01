@@ -3399,6 +3399,13 @@ class TestSDISolFlow(TestCase):
             username='principal', email='principal@example.com', password='principalpass'
         )
 
+        payments_url = reverse('sdi_sol_payments')
+        resp = self.client.get(payments_url, {'member_id': member.pk})
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'id="amount"')
+        self.assertNotRegex(resp.content.decode(), r'<input[^>]*id="amount"[^>]*readonly')
+
+        amount = '75.50'
         resp = self.client.post(pay_url, {'amount': amount, 'currency': 'USD'}, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         self.assertEqual(resp.status_code, 200)
         data = resp.json()
@@ -3408,6 +3415,7 @@ class TestSDISolFlow(TestCase):
 
         payment = SDISolPayment.objects.filter(receipt_number=receipt).first()
         self.assertIsNotNone(payment)
+        self.assertEqual(payment.amount, Decimal(amount))
         self.assertEqual(payment.status, 'pending')
         member.refresh_from_db()
         self.assertEqual(member.total_paid_usd, Decimal('0.00'))
@@ -3424,11 +3432,11 @@ class TestSDISolFlow(TestCase):
         payment.refresh_from_db()
         member.refresh_from_db()
         self.assertIn(payment.status, ('completed', 'late'))
-        self.assertEqual(member.total_paid_usd, Decimal('100.00'))
+        self.assertEqual(member.total_paid_usd, Decimal(amount))
 
         self.client.post(approve_payment_url, follow=True)
         member.refresh_from_db()
-        self.assertEqual(member.total_paid_usd, Decimal('100.00'))
+        self.assertEqual(member.total_paid_usd, Decimal(amount))
 
         self.client.logout()
         self.client.login(username='testuser', password='testpass')

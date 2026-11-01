@@ -857,12 +857,18 @@ def sdi_sol_make_payment(request):
     if currency not in ('USD', 'HTG'):
         return JsonResponse({'error': 'Devise invalide.'}, status=400)
 
+    if (
+        not amount.is_finite()
+        or amount <= 0
+        or amount.as_tuple().exponent < -2
+        or amount >= Decimal('10000000000000')
+    ):
+        return JsonResponse({'error': 'Saisissez un montant positif valide avec au maximum deux décimales.'}, status=400)
+
     if member.plan_duration_days:
         expected_amount = member.plan_amount_usd if currency == 'USD' else member.plan_amount_htg
         if expected_amount is None:
             return JsonResponse({'error': 'Cette devise n’est pas disponible pour votre plan.'}, status=400)
-        if amount != expected_amount:
-            return JsonResponse({'error': f'Le montant du plan est {expected_amount} {currency}.'}, status=400)
     elif currency == 'USD' and amount < settings_obj.contribution_amount_usd:
         return JsonResponse({'error': f'Le montant minimum est ${settings_obj.contribution_amount_usd}'}, status=400)
     elif currency == 'HTG' and amount < settings_obj.contribution_amount_htg:

@@ -328,11 +328,11 @@
             <div class="form-group">
                 <label for="amount">Montant</label>
                 <input type="number" id="amount" name="amount" step="0.01" 
-                    min="{% if member.plan_duration_days %}{{ member.plan_amount_usd|default:member.plan_amount_htg }}{% else %}{{ settings.contribution_amount_usd }}{% endif %}" required
-                    {% if member.plan_duration_days %}value="{% if member.plan_amount_usd %}{{ member.plan_amount_usd }}{% else %}{{ member.plan_amount_htg }}{% endif %}" readonly{% endif %}
+                    min="{% if member.plan_duration_days %}0.01{% else %}{{ settings.contribution_amount_usd }}{% endif %}" required
+                    {% if member.plan_duration_days %}value="{% if member.plan_amount_usd %}{{ member.plan_amount_usd }}{% else %}{{ member.plan_amount_htg }}{% endif %}"{% endif %}
                     placeholder="Entrez le montant">
                 <small style="color: #5c7a9d; display: block; margin-top: 5px;">
-                    {% if member.plan_duration_days %}Montant fixe selon votre plan.{% else %}Montant minimum: ${{ settings.contribution_amount_usd }} USD ou {{ settings.contribution_amount_htg|floatformat:0 }} HTG{% endif %}
+                    {% if member.plan_duration_days %}Saisissez le montant que vous souhaitez payer dans la devise choisie.{% else %}Montant minimum: ${{ settings.contribution_amount_usd }} USD ou {{ settings.contribution_amount_htg|floatformat:0 }} HTG{% endif %}
                 </small>
             </div>
 
@@ -399,9 +399,10 @@
         const amountField = document.getElementById('amount');
         const planAmount = this.options[this.selectedIndex].dataset.amount;
         if (planAmount) {
-            amountField.min = planAmount;
+            amountField.min = '0.01';
             amountField.value = planAmount;
-            amountField.readOnly = true;
+            amountField.readOnly = false;
+            amountField.placeholder = 'Entrez le montant à payer';
             return;
         }
         amountField.readOnly = false;
