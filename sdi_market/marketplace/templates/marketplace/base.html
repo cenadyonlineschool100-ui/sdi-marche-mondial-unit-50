@@ -6526,7 +6526,6 @@
 
                 toggle.addEventListener('click', () => {
                     const opening = panel.hidden;
-                    if (opening) this.stopCurrentSound();
                     panel.hidden = !opening;
                     toggle.setAttribute('aria-expanded', String(opening));
                     if (opening) this.refreshNotifications();
@@ -6668,12 +6667,10 @@
             }
 
             async checkNotifications() {
-                const panel = document.getElementById('notification-panel');
                 if (
                     !this.soundEnabled
                     || !this.audioUnlocked
                     || this.soundCheckInProgress
-                    || (panel && !panel.hidden)
                 ) return;
                 this.soundCheckInProgress = true;
                 try {
@@ -6681,7 +6678,7 @@
                     if (!response.ok) throw new Error(`Vérification sonore impossible (${response.status})`);
                     const data = await response.json();
                     const notifications = data.notifications_to_sound || [];
-                    if (notifications.length && (!panel || panel.hidden)) this.playSound(notifications);
+                    if (notifications.length) this.playSound(notifications);
                 } catch (error) {
                     console.error('Erreur lors de la vérification sonore:', error);
                 } finally {

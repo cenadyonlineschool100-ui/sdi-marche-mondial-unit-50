@@ -7996,26 +7996,6 @@ def check_notifications_sound_api(request):
         notifications = PersistentNotification.objects.filter(
             recipient=request.user,
             is_read=False,
-            notification_type__in=[
-                'new_order',
-                'money_received',
-                'admin_money_received',
-                'private_message',
-                'refund',
-                'delivery_assigned',
-                'admin_delivery_assigned',
-                'delivery_confirmed',
-                'delivery_completed',
-                'delivery_ready',
-                'delivery_in_progress',
-                'delivery_picked_up',
-                'delivery_in_transit',
-                'delivery_arrived',
-                'delivery_failed',
-            ],
-        ).filter(
-            Q(last_sound_at__isnull=True)
-            | Q(notification_type='admin_money_received'),
         )
 
         sound_data = []
