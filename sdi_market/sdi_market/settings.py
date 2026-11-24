@@ -21,20 +21,56 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-your-secret-key-cha
 DEBUG = os.getenv('DEBUG', 'False').lower() in ['true', '1', 'yes']
 DISPLAY_MODE_OWNER_USERNAME = os.getenv('DISPLAY_MODE_OWNER_USERNAME', 'SDI').strip() or 'SDI'
 
-host_env = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,chouchoum.pythonanywhere.com,www.chouchoum.pythonanywhere.com')
-if host_env.strip() == '*':
-    ALLOWED_HOSTS = ['*']
-else:
-    ALLOWED_HOSTS = [host.strip() for host in host_env.split(',') if host.strip()]
+DEFAULT_ALLOWED_HOSTS = 'localhost,127.0.0.1,chouchoum.pythonanywhere.com,www.chouchoum.pythonanywhere.com,1sdi.pythonanywhere.com,sdimarchemondialunit.com,www.sdimarchemondialunit.com'
+MANDATORY_ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    'chouchoum.pythonanywhere.com',
+    'www.chouchoum.pythonanywhere.com',
+    '1sdi.pythonanywhere.com',
+    'sdimarchemondialunit.com',
+    'www.sdimarchemondialunit.com',
+]
+host_env = os.getenv('ALLOWED_HOSTS', DEFAULT_ALLOWED_HOSTS)
+configured_hosts = [host.strip() for host in host_env.split(',') if host.strip() and host.strip() != '*']
+ALLOWED_HOSTS = list(dict.fromkeys(configured_hosts + MANDATORY_ALLOWED_HOSTS))
 
-DEFAULT_CSRF_ORIGINS = 'http://localhost:8000,http://127.0.0.1:8000,https://localhost:8000,https://127.0.0.1:8000,https://chouchoum.pythonanywhere.com,https://www.chouchoum.pythonanywhere.com,https://*.pythonanywhere.com'
-CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.getenv('CSRF_TRUSTED_ORIGINS', DEFAULT_CSRF_ORIGINS).split(',') if origin.strip()]
+DEFAULT_CSRF_ORIGINS = 'http://localhost:8000,http://127.0.0.1:8000,https://localhost:8000,https://127.0.0.1:8000,https://chouchoum.pythonanywhere.com,https://www.chouchoum.pythonanywhere.com,https://1sdi.pythonanywhere.com,https://*.pythonanywhere.com,https://sdimarchemondialunit.com,https://www.sdimarchemondialunit.com'
+MANDATORY_CSRF_ORIGINS = [
+    'https://chouchoum.pythonanywhere.com',
+    'https://www.chouchoum.pythonanywhere.com',
+    'https://1sdi.pythonanywhere.com',
+    'https://sdimarchemondialunit.com',
+    'https://www.sdimarchemondialunit.com',
+]
+csrf_origins_env = os.getenv('CSRF_TRUSTED_ORIGINS', DEFAULT_CSRF_ORIGINS)
+CSRF_TRUSTED_ORIGINS = list(dict.fromkeys(
+    [origin.strip() for origin in csrf_origins_env.split(',') if origin.strip()] + MANDATORY_CSRF_ORIGINS
+))
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', 'True' if not DEBUG else 'False').lower() in ['true', '1', 'yes']
 SESSION_COOKIE_SECURE = os.getenv('SESSION_COOKIE_SECURE', 'True' if not DEBUG else 'False').lower() in ['true', '1', 'yes']
 CSRF_COOKIE_SECURE = os.getenv('CSRF_COOKIE_SECURE', 'True' if not DEBUG else 'False').lower() in ['true', '1', 'yes']
 # Google Maps API Key - À configurer pour le système de livraison
 GOOGLE_MAPS_API_KEY = os.getenv('GOOGLE_MAPS_API_KEY', 'VOTRE_CLE_GOOGLE_MAPS_API_ICI')
+
+PAYPAL_MODE = os.getenv('PAYPAL_MODE', 'sandbox').strip().lower()
+PAYPAL_CLIENT_ID = os.getenv('PAYPAL_CLIENT_ID', '').strip()
+PAYPAL_CLIENT_SECRET = os.getenv('PAYPAL_CLIENT_SECRET', '').strip()
+PAYPAL_WEBHOOK_ID = os.getenv('PAYPAL_WEBHOOK_ID', '').strip()
+PAYPAL_LIVE_ENABLED = os.getenv('PAYPAL_LIVE_ENABLED', 'False').lower() in ['true', '1', 'yes']
+PAYPAL_CHECKOUT_ENABLED = bool(
+    PAYPAL_CLIENT_ID
+    and PAYPAL_CLIENT_SECRET
+    and PAYPAL_WEBHOOK_ID
+    and (
+        PAYPAL_MODE == 'sandbox'
+        or (PAYPAL_MODE == 'live' and PAYPAL_LIVE_ENABLED)
+    )
+)
+PAYPAL_STOCK_RESERVATION_TTL_HOURS = int(
+    os.getenv('PAYPAL_STOCK_RESERVATION_TTL_HOURS', '24')
+)
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -233,6 +269,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
     "http://localhost:8000",
     "http://127.0.0.1:8000",
+    "https://sdimarchemondialunit.com",
+    "https://www.sdimarchemondialunit.com",
 ]
 CORS_ALLOW_CREDENTIALS = True
 
@@ -299,4 +337,3 @@ if DEBUG and not is_running_tests:
     DEBUG_TOOLBAR_CONFIG = {
         'SHOW_TOOLBAR_CALLBACK': lambda request: True,
     }
-

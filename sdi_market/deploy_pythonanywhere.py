@@ -50,7 +50,8 @@ def deploy_to_pythonanywhere(username, token, repo_url, branch="feature/ma-modif
         env_vars = {
             "DJANGO_SETTINGS_MODULE": "sdi_market.settings",
             "DEBUG": "False",
-            "ALLOWED_HOSTS": domain,
+            "ALLOWED_HOSTS": f"{domain},sdimarchemondialunit.com,www.sdimarchemondialunit.com",
+            "CSRF_TRUSTED_ORIGINS": "https://sdimarchemondialunit.com,https://www.sdimarchemondialunit.com",
             "SECURE_SSL_REDIRECT": "True",
             "SESSION_COOKIE_SECURE": "True",
             "CSRF_COOKIE_SECURE": "True"
